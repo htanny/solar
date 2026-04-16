@@ -1,0 +1,36 @@
+{
+  "name": "solar",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "プロシージャル描画による太陽系・銀河系・惑星表面の3Dシミュレーター",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.0",
+    "gh-pages": "^6.1.1",
+    "vite": "^5.4.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/htanny/solar.git"
+  },
+  "keywords": [
+    "solar-system",
+    "simulator",
+    "astronomy",
+    "react",
+    "canvas",
+    "procedural",
+    "3d"
+  ],
+  "license": "MIT"
+}
