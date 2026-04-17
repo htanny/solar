@@ -1,4 +1,4 @@
-const CACHE = 'solar-v1';
+const CACHE = 'solar-v2';
 const PRECACHE = ['/solar/', '/solar/index.html'];
 
 self.addEventListener('install', e => {
@@ -16,13 +16,14 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request).then(r => r || fetch(e.request).then(res => {
-      if (res.ok && e.request.method === 'GET') {
+      if (res.ok) {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
       }
       return res;
-    }))
+    }).catch(() => caches.match('/solar/')))
   );
 });
