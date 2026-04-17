@@ -19,8 +19,14 @@ var COMETS=[
 ];
 var PL_MAP={};PL.forEach(function(p){PL_MAP[p.n]=p;});
 var COMET_MAP={};COMETS.forEach(function(c){COMET_MAP[c.key]=c;});
+var DWARFS=[
+  {n:"Ceres",j:"ケレス",e:"Ceres",d:414,r:0.47,p:1682,c:"rgba(155,150,143,1)",t:4.0,rot:0.378,type:"rock",mass:"9.39×10²⁰ kg",grav:"0.28 m/s²",moons:0,day:"9.1時間",year:"4.6年",atm:"なし",temp:"約−105℃"},
+  {n:"Pluto",j:"冥王星",e:"Pluto",d:5906,r:1.19,p:90560,c:"rgba(200,185,165,1)",t:122.5,rot:6.39,type:"rock",mass:"1.30×10²² kg",grav:"0.62 m/s²",moons:5,day:"6.39日",year:"248年",atm:"N₂ 微量",temp:"約−230℃"},
+  {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃"},
+];
+var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
 var SRR=695,DK=0.08,SK=0.18,TRAIL_LEN=200,TAU=6.2832;
-var FL=[{k:"all",l:"全体"},{k:"sun",l:"太陽"},{k:"Mercury",l:"水星"},{k:"Venus",l:"金星"},{k:"Earth",l:"地球"},{k:"Mars",l:"火星"},{k:"Jupiter",l:"木星"},{k:"Saturn",l:"土星"},{k:"Uranus",l:"天王星"},{k:"Neptune",l:"海王星"},{k:"Halley",l:"ハレー彗星"},{k:"Encke",l:"エンケ彗星"}];
+var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
 var SP=[0.5,1,4,15,50,100];
 var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,0.1,0.15,0.22,0.35,0.5,0.7,1,1.5,2.2,3.5,5,8,13,22,40,70,120,200,350,600,1100,2000,4000,8000,16000,35000,70000,150000];
 var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
@@ -319,6 +325,9 @@ var SURF={
   Saturn:{atm:2,sunSz:0.011,g:"rgba(175,155,115,1)",skyTop:"170,150,110",skyBot:"185,165,130"},
   Uranus:{atm:1.5,sunSz:0.0027,g:"rgba(130,175,180,1)",skyTop:"60,110,120",skyBot:"90,150,160"},
   Neptune:{atm:1.5,sunSz:0.0011,g:"rgba(35,55,135,1)",skyTop:"15,25,90",skyBot:"30,50,130"},
+  Ceres:{atm:0,sunSz:0.13,g:"rgba(100,95,88,1)",skyTop:"0,0,0",skyBot:"3,3,5"},
+  Pluto:{atm:0,sunSz:0.0025,g:"rgba(165,145,125,1)",skyTop:"0,0,0",skyBot:"2,2,4"},
+  Eris:{atm:0,sunSz:0.0007,g:"rgba(155,155,158,1)",skyTop:"0,0,0",skyBot:"1,1,3"},
 };
 function lerpColor(a,b,f){var pa=a.split(",").map(Number),pb=b.split(",").map(Number);return Math.round(pa[0]+(pb[0]-pa[0])*f)+","+Math.round(pa[1]+(pb[1]-pa[1])*f)+","+Math.round(pa[2]+(pb[2]-pa[2])*f);}
 
@@ -327,7 +336,7 @@ function terrainH(x,seed){return(Math.sin(x*0.02+seed)*0.4+Math.sin(x*0.057+seed
 
 function drawLanding(ctx,W,H,t,plName,yaw,lat,fov){
   var sf=SURF[plName];if(!sf)return;
-  var pl=PL_MAP[plName];if(!pl)return;
+  var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   fov=fov||1;/* FOV multiplier: <1 zoom in, >1 zoom out */
   var rot=pl.rot,rotAbs=Math.abs(rot);
   var solarDay;
@@ -549,7 +558,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov){
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
-  var descs={Mercury:"大気なし・灼熱の昼(430℃)と極寒の夜(−180℃)",Venus:"厚い硫酸雲・気温462℃・気圧90気圧",Earth:"青い空・白い雲・生命の惑星",Mars:"薄いCO₂大気・赤い空・砂嵐",Jupiter:"ガス惑星・巨大な雲の海",Saturn:"ガス惑星・空を横切る壮大なリング",Uranus:"氷の巨人・メタンの青い大気",Neptune:"最果ての惑星・時速2000kmの暴風"};
+  var descs={Mercury:"大気なし・灼熱の昼(430℃)と極寒の夜(−180℃)",Venus:"厚い硫酸雲・気温462℃・気圧90気圧",Earth:"青い空・白い雲・生命の惑星",Mars:"薄いCO₂大気・赤い空・砂嵐",Jupiter:"ガス惑星・巨大な雲の海",Saturn:"ガス惑星・空を横切る壮大なリング",Uranus:"氷の巨人・メタンの青い大気",Neptune:"最果ての惑星・時速2000kmの暴風",Ceres:"小惑星帯最大の天体・岩と氷の世界",Pluto:"冥王星・−230℃の極寒の世界",Eris:"最も遠い矮小惑星・太陽が極小"};
   ctx.fillText(descs[plName]||"",W/2,38);
   var tod=sunAlt>0.3?"昼":sunAlt>0.05?"朝/夕":sunAlt>-0.08?"薄明":"夜";
   var sdStr=solarDay<1?(solarDay*24).toFixed(1)+"h":solarDay<100?solarDay.toFixed(1)+"日":(solarDay/365.25).toFixed(1)+"年";
@@ -646,10 +655,14 @@ export default function App(){
   var[landing,setLanding]=useState(null);/* null or planet name */
   var[landYaw,setLandYaw]=useState(0);/* horizontal look angle */
   var[landLat,setLandLat]=useState(0);
-  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);
+  var[landFov,setLandFov]=useState(1);
+  var[lang,setLang]=useState("ja");
+  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landFovR=useRef(1);var langR=useRef("ja");
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){landYR.current=landYaw;},[landYaw]);
   useEffect(function(){landLatR.current=landLat;},[landLat]);
+  useEffect(function(){landFovR.current=landFov;},[landFov]);
+  useEffect(function(){langR.current=lang;},[lang]);
   var shR=useRef(sh),spR=useRef(spd),rsR=useRef(rSn),rpR=useRef(rPl),rdR=useRef(rDi),unR=useRef(uni),foR=useRef(foc),ziR=useRef(zi),pausR=useRef(paused),cmpR=useRef(compare);
   useEffect(function(){shR.current=sh;},[sh]);useEffect(function(){spR.current=spd;},[spd]);useEffect(function(){rsR.current=rSn;},[rSn]);useEffect(function(){rpR.current=rPl;},[rPl]);useEffect(function(){rdR.current=rDi;},[rDi]);useEffect(function(){unR.current=uni;},[uni]);useEffect(function(){foR.current=foc;},[foc]);useEffect(function(){ziR.current=zi;},[zi]);useEffect(function(){pausR.current=paused;},[paused]);useEffect(function(){cmpR.current=compare;},[compare]);
   useEffect(function(){tourRef.current.active=touring;if(touring){tourRef.current.idx=0;tourRef.current.timer=0;}},[touring]);
@@ -659,20 +672,20 @@ export default function App(){
   var zIn=useCallback(function(){setZi(function(p){var n=Math.min(ZS.length-1,p+1);dz(n);return n;});},[dz]);
   var zOut=useCallback(function(){setZi(function(p){var n=Math.max(0,p-1);dz(n);return n;});},[dz]);
   var tog=useCallback(function(k){setSh(function(p){var o={};for(var x in p)o[x]=p[x];o[k]=!p[k];return o;});},[]);
-  var autoZoom=useCallback(function(name,isUni){if(!isUni)return;var wr;if(name==="sun"){wr=(SRR/1000)*DK;}else if(name==="all"){return;}else{var pl=PL_MAP[name];if(!pl)return;wr=(pl.r/1000)*DK;}var ideal=30/Math.max(wr,0.00001),best=0,bd=1e15;for(var i=0;i<ZS.length;i++){var d=Math.abs(ZS[i]-ideal);if(d<bd){bd=d;best=i;}}dz(best);ziR.current=best;setZi(best);},[dz]);
+  var autoZoom=useCallback(function(name,isUni){if(!isUni)return;var wr;if(name==="sun"){wr=(SRR/1000)*DK;}else if(name==="all"){return;}else{var pl=PL_MAP[name]||DWARF_MAP[name];if(!pl)return;wr=(pl.r/1000)*DK;}var ideal=30/Math.max(wr,0.00001),best=0,bd=1e15;for(var i=0;i<ZS.length;i++){var d=Math.abs(ZS[i]-ideal);if(d<bd){bd=d;best=i;}}dz(best);ziR.current=best;setZi(best);},[dz]);
   useEffect(function(){if(uni&&foc!=="all"){autoZoom(foc,true);}},[uni,foc,autoZoom]);
 
-  function findInfo(k){if(k==="sun")return{type:"sun"};var pl=PL_MAP[k];if(pl)return{type:"planet",pl:pl};var cm=COMET_MAP[k];if(cm)return{type:"comet",cm:cm};return null;}
+  function findInfo(k){if(k==="sun")return{type:"sun"};var pl=PL_MAP[k]||DWARF_MAP[k];if(pl)return{type:"planet",pl:pl};var cm=COMET_MAP[k];if(cm)return{type:"comet",cm:cm};return null;}
   var stopTour=useCallback(function(){setTouring(false);tourRef.current.active=false;},[]);
   var focusOn=useCallback(function(k){
     stopTour();setFoc(k);autoZoom(k,uni);setInfo(k==="all"?null:findInfo(k));
     /* If currently landed, switch landing to new planet (or takeoff if not landable) */
-    if(landR.current){if(PL_MAP[k]){setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
+    if(landR.current){if(PL_MAP[k]||DWARF_MAP[k]){setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
   },[stopTour,autoZoom,uni]);
 
   /* Central landing helper: stops tour, exits galaxy view, focuses planet, lands */
   var doLanding=useCallback(function(plName){
-    if(!PL_MAP[plName])return;
+    if(!PL_MAP[plName]&&!DWARF_MAP[plName])return;
     stopTour();
     setFoc(plName);setInfo(findInfo(plName));
     if(ziR.current<10){var ssIdx=17;dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}
@@ -815,17 +828,18 @@ export default function App(){
       var ssFade=cam.zm<0.03?Math.max(0.05,cam.zm/0.03):1;
       if(ssFade<1)ctx.globalAlpha=ssFade;
 
-      var pd=[];for(var i=0;i<PL.length;i++){var pl=PL[i],oRv=oR(pl,_rd,_un),ang=(t/pl.p)*TAU;pd.push({pl:pl,oR:oRv,wx:Math.cos(ang)*oRv,wy:0,wz:Math.sin(ang)*oRv,vr:pRf(pl,_rp,_un),rotAng:(t/Math.abs(pl.rot))*TAU*(pl.rot<0?-1:1)});}
+      var allBodies=PL.concat(DWARFS);
+      var pd=[];for(var i=0;i<allBodies.length;i++){var pl=allBodies[i],oRv=oR(pl,_rd,_un),ang=(t/pl.p)*TAU;pd.push({pl:pl,oR:oRv,wx:Math.cos(ang)*oRv,wy:0,wz:Math.sin(ang)*oRv,vr:pRf(pl,_rp,_un),rotAng:(t/Math.abs(pl.rot))*TAU*(pl.rot<0?-1:1)});}
       var cd=[];for(var cci=0;cci<COMETS.length;cci++){var cm0=COMETS[cci],cm0E=cm0.e;var cm0OrbR=_rd||_un?cm0.a*DK:(160+Math.pow((cm0.a-228)/4267,0.55)*280);var cm0M=((t/cm0.p)+cm0.phase0)*TAU;var cm0Ecc=cm0M;for(var ki0=0;ki0<6;ki0++){cm0Ecc=cm0M+cm0E*Math.sin(cm0Ecc);}var cm0V=2*Math.atan2(Math.sqrt(1+cm0E)*Math.sin(cm0Ecc/2),Math.sqrt(1-cm0E)*Math.cos(cm0Ecc/2));var cm0R=cm0OrbR*(1-cm0E*cm0E)/(1+cm0E*Math.cos(cm0V));cd.push({cm:cm0,orbR:cm0OrbR,wx:Math.cos(cm0V+cm0.inc)*cm0R,wy:0,wz:Math.sin(cm0V+cm0.inc)*cm0R});}
 
-      trailTimer+=dt;if(trailTimer>0.05&&!pausR.current){trailTimer=0;for(var ti=0;ti<pd.length;ti++){sim.trails[ti].push({x:pd[ti].wx,z:pd[ti].wz});if(sim.trails[ti].length>TRAIL_LEN)sim.trails[ti].shift();}}
+      trailTimer+=dt;if(trailTimer>0.05&&!pausR.current){trailTimer=0;for(var ti=0;ti<sim.trails.length;ti++){sim.trails[ti].push({x:pd[ti].wx,z:pd[ti].wz});if(sim.trails[ti].length>TRAIL_LEN)sim.trails[ti].shift();}}
 
       var tfx=0,tfy=0,tfz=0,hasTarget=false;
       if(fc!=="all"&&fc!=="sun"){for(var fi=0;fi<pd.length;fi++){if(pd[fi].pl.n===fc){tfx=pd[fi].wx;tfy=pd[fi].wy;tfz=pd[fi].wz;hasTarget=true;break;}}if(!hasTarget){for(var fi2=0;fi2<cd.length;fi2++){if(cd[fi2].cm.key===fc){tfx=cd[fi2].wx;tfy=cd[fi2].wy;tfz=cd[fi2].wz;hasTarget=true;break;}}}}
       if(hasTarget||fc==="sun"){cam.fx=tfx;cam.fy=tfy;cam.fz=tfz;}else if(fc==="all"){cam.fx*=0.92;cam.fy*=0.92;cam.fz*=0.92;}
 
       if(show.orbits){for(var oi=0;oi<pd.length;oi++)dOb(ctx,pd[oi].oR,cam);}
-      if(show.trails){for(var tri=0;tri<pd.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
+      if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
       if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
 
       /* Sun */
@@ -842,6 +856,7 @@ export default function App(){
       }
 
       /* Sort + draw sun/planets */
+      var eclipseType=null,eclipseEarPj=null,eclipseEarRr=0;
       var items=[{k:"s",z:sunPj.z}],pjArr=[];for(var di=0;di<pd.length;di++){var pp=pj(pd[di].wx,pd[di].wy,pd[di].wz,cam);pjArr.push(pp);items.push({k:"p",z:pp.z,i:di});}items.sort(function(a,b){return b.z-a.z;});
       hits.push({n:"sun",x:sunPj.x,y:sunPj.y,r:Math.max(srScr,12)});
 
@@ -850,7 +865,7 @@ export default function App(){
         if(it.k==="s"){
           var gr=ctx.createRadialGradient(sunPj.x,sunPj.y,srScr*0.2,sunPj.x,sunPj.y,srScr*3);gr.addColorStop(0,"rgba(255,220,80,0.5)");gr.addColorStop(0.3,"rgba(255,180,50,0.12)");gr.addColorStop(1,"rgba(255,150,30,0)");ctx.fillStyle=gr;ctx.fillRect(sunPj.x-srScr*3,sunPj.y-srScr*3,srScr*6,srScr*6);
           drawSun(ctx,sunPj.x,sunPj.y,srScr,t);
-          if(show.labels){ctx.fillStyle="rgba(255,220,100,0.85)";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText("太陽",sunPj.x,sunPj.y-srScr-7);}
+          if(show.labels){ctx.fillStyle="rgba(255,220,100,0.85)";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(langR.current==="en"?"Sun":"太陽",sunPj.x,sunPj.y-srScr-7);}
         }else if(show.planets){
           var idx=it.i,pdt=pd[idx],ppp=pjArr[idx],rr=Math.max(pdt.vr*cam.zm,0.4);
           hits.push({n:pdt.pl.n,x:ppp.x,y:ppp.y,r:Math.max(rr,10)});
@@ -860,10 +875,12 @@ export default function App(){
           if(show.tilt)dAx(ctx,ppp.x,ppp.y,rr,pdt.pl.t);
           if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz+Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
           if(pdt.pl.n==="Jupiter"&&show.moon){for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi],gmOrb=_un?(gm.orbR/1e6)*DK:(_rd?(gm.orbR*0.001)*DK:(12+gmi*5)),gmAng=(t/gm.p)*TAU,gmWx=pdt.wx+Math.cos(gmAng)*gmOrb,gmWz=pdt.wz+Math.sin(gmAng)*gmOrb,gmPj=pj(gmWx,0,gmWz,cam),gmR=Math.max(_un?(gm.r/1e6)*DK*cam.zm:(_rp?gm.r*SK*0.01*cam.zm:(1.2+gmi*0.3)*cam.zm*0.3),0.4);dC(ctx,gmPj.x,gmPj.y,gmR,gm.col);if(gmR>1.5)sphereShade(ctx,gmPj.x,gmPj.y,gmR);dSh(ctx,gmPj.x,gmPj.y,gmR,gmWx,gmWz,cam);if(show.labels&&gmR>0.8){ctx.fillStyle="rgba(200,200,180,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmPj.x,gmPj.y-gmR-3);}}}
-          if(show.labels){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText(pdt.pl.j,ppp.x,ppp.y-rr-7);if(show.tilt){ctx.fillStyle="rgba(255,255,100,0.45)";ctx.font="8px sans-serif";ctx.fillText(pdt.pl.t+"°",ppp.x,ppp.y+rr+13);}}
+          if(pdt.pl.n==="Earth"){var moVe=mOf(_rd,_un),mAnge=(t/MD.p)*TAU,sunAngE=Math.atan2(-pdt.wz,-pdt.wx),cosPhaseE=Math.cos(mAnge-sunAngE),inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;if(inNode){if(cosPhaseE>0.9995)eclipseType="solar";else if(cosPhaseE<-0.9993)eclipseType="lunar";}eclipseEarPj=ppp;eclipseEarRr=rr;}
+          if(show.labels){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText(langR.current==="en"?pdt.pl.n:pdt.pl.j,ppp.x,ppp.y-rr-7);if(show.tilt){ctx.fillStyle="rgba(255,255,100,0.45)";ctx.font="8px sans-serif";ctx.fillText(pdt.pl.t+"°",ppp.x,ppp.y+rr+13);}}
         }
       }
       sim.hitAreas=hits;if(ssFade<1)ctx.globalAlpha=1;ctx.restore();
+      if(eclipseType&&!cmpR.current){var eTxt=langR.current==="en"?(eclipseType==="solar"?"🌑 Solar Eclipse":"🌕 Lunar Eclipse"):(eclipseType==="solar"?"🌑 日食":"🌕 月食");ctx.save();ctx.font="bold 13px system-ui,sans-serif";ctx.textAlign="center";var etW=ctx.measureText(eTxt).width+24;ctx.fillStyle="rgba(0,0,0,0.72)";ctx.fillRect(W/2-etW/2,H-72,etW,30);ctx.fillStyle=eclipseType==="solar"?"rgba(255,210,80,1)":"rgba(200,150,255,1)";ctx.fillText(eTxt,W/2,H-51);if(eclipseEarPj){ctx.strokeStyle=eclipseType==="solar"?"rgba(255,180,0,0.7)":"rgba(180,120,255,0.7)";ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(eclipseEarPj.x,eclipseEarPj.y,eclipseEarRr+10,0,TAU);ctx.stroke();ctx.setLineDash([]);}ctx.restore();}
 
       /* Galaxy info in screen space */
       if(galInfoFade>0){
@@ -904,7 +921,7 @@ export default function App(){
       <canvas ref={cR} style={{display:"block",width:"100%",height:"100%",touchAction:"none",cursor:"crosshair"}} onClick={handleClick}/>
 
       {/* Focus panel */}
-      {cleanView===0&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>フォーカス ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{f.l}</button>;})}</div></DragPanel>}
+      {cleanView===0&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
       {cleanView===0&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>速度 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
@@ -913,7 +930,7 @@ export default function App(){
       {cleanView===0&&<DragPanel style={Object.assign({},pn,{bottom:10,left:10,maxWidth:300})}>
         <div style={lb}>表示 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道"},{k:"trails",l:"軌跡"},{k:"belt",l:"小惑星帯"},{k:"tilt",l:"地軸"},{k:"moon",l:"月"},{k:"labels",l:"ラベル"},{k:"planets",l:"惑星"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{x.l}</button>;})}</div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>実スケール</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>太陽{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>惑星{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>距離{!uni&&rDi?" ●":""}</button></div>
-        <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>統一比率{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){return!p;});}}>比較{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);setTouring(true);setFoc("sun");setInfo({type:"sun"});}}}>{touring?"ツアー停止":"ツアー"}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button></div>
+        <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>統一比率{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){return!p;});}}>比較{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);setTouring(true);setFoc("sun");setInfo({type:"sun"});}}}>{touring?"ツアー停止":"ツアー"}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button></div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>ツール</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
           <button style={showDate?bN:bF} onClick={function(){setShowDate(function(p){return!p;});}}>日付移動</button>
@@ -938,11 +955,11 @@ export default function App(){
       {cleanView===0&&<DragPanel style={Object.assign({},pn,{bottom:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Info panel */}
-      {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?SUNINFO.j:info.type==="comet"?info.cm.name:info.pl.j}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?"🚀 ツアー停止後に着陸可":"🚀 着陸"}</button></div>}</DragPanel>}
+      {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>}
 
       {/* Landing mode takeoff button */}
       {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:20}}>
-        <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>🚀 離陸</button>
+        <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
 
       {cleanView===0&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
