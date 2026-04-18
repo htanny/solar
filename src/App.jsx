@@ -32,6 +32,23 @@ var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,
 var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
 var TOUR_NAMES=["太陽","水星","金星","地球","火星","木星","土星","天王星","海王星","ハレー彗星","エンケ彗星"];
 var TOUR_HOLD=4;
+var NAMED_STARS=[
+  {n:"シリウス",    ra:101.3,dec:-16.7,col:"rgba(200,220,255,"},
+  {n:"カノープス",  ra:95.9, dec:-52.7,col:"rgba(255,255,220,"},
+  {n:"アークトゥルス",ra:213.9,dec:19.2,col:"rgba(255,220,150,"},
+  {n:"ベガ",        ra:279.2,dec:38.8, col:"rgba(220,230,255,"},
+  {n:"カペラ",      ra:79.2, dec:46.0, col:"rgba(255,240,200,"},
+  {n:"リゲル",      ra:78.6, dec:-8.2, col:"rgba(200,220,255,"},
+  {n:"プロキオン",  ra:114.8,dec:5.2,  col:"rgba(255,250,230,"},
+  {n:"ベテルギウス",ra:88.8, dec:7.4,  col:"rgba(255,180,120,"},
+  {n:"アルタイル",  ra:297.7,dec:8.9,  col:"rgba(240,250,255,"},
+  {n:"アルデバラン",ra:69.0, dec:16.5, col:"rgba(255,200,130,"},
+  {n:"アンタレス",  ra:247.4,dec:-26.4,col:"rgba(255,160,100,"},
+  {n:"スピカ",      ra:201.3,dec:-11.2,col:"rgba(200,220,255,"},
+  {n:"デネブ",      ra:310.4,dec:45.3, col:"rgba(240,250,255,"},
+  {n:"フォーマルハウト",ra:344.4,dec:-29.6,col:"rgba(230,240,255,"},
+  {n:"北極星",      ra:37.9, dec:89.3, col:"rgba(255,255,255,"},
+];
 
 function oR(p,rd,un){if(un||rd)return p.d*DK;var v=p.d;if(v<=228)return 40+(v/228)*120;return 160+Math.pow((v-228)/4267,0.55)*280;}
 function pRf(p,rp,un){if(un)return Math.max((p.r/1000)*DK,0.0001);if(rp)return Math.max(p.r*SK,0.7);if(p.r>50)return 10+(p.r-50)*0.06;if(p.r>20)return 6+(p.r-20)*0.12;return 3+p.r*0.4;}
@@ -368,6 +385,30 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   /* ======== STARS ======== */
   var starA=sf.atm<0.5?0.7:(isNight?0.65:Math.max(0,(0.15-sunAlt)*3));
   if(starA>0.01){var sr2=seedR(42);for(var si=0;si<250;si++){var sx2=(sr2()*W*4+yaw*100)%W,sy2=sr2()*hrzY*0.92;var sb=0.3+sr2()*0.7;ctx.fillStyle="rgba(255,255,255,"+(sb*starA).toFixed(2)+")";var ss=sr2()<0.03?1.5:0.7;ctx.fillRect(sx2,sy2,ss,ss);}}
+
+  /* ======== NAMED STARS ======== */
+  if(starA>0.05){
+    var lstD=((280.46+360.98565*t)%360+360)%360;
+    ctx.font="7px sans-serif";ctx.textAlign="left";
+    for(var nsi=0;nsi<NAMED_STARS.length;nsi++){
+      var ns=NAMED_STARS[nsi];
+      var Hr2=(lstD-ns.ra)*TAU/360;
+      var decR2=ns.dec*TAU/360;
+      var sAltN=Math.sin(latRad)*Math.sin(decR2)+Math.cos(latRad)*Math.cos(decR2)*Math.cos(Hr2);
+      if(sAltN<0.03)continue;
+      var azN=Math.atan2(-Math.sin(Hr2)*Math.cos(decR2),Math.sin(decR2)*Math.cos(latRad)-Math.cos(decR2)*Math.sin(latRad)*Math.cos(Hr2));
+      var aDiff=((azN-yaw)%TAU+TAU)%TAU;if(aDiff>Math.PI)aDiff-=TAU;
+      if(Math.abs(aDiff)>TAU*0.28)continue;
+      var sxN=W/2+aDiff*W*0.8/TAU;
+      var syN=hrzY-sAltN*hrzY*0.75;
+      if(syN>hrzY-15)continue;
+      var nA=Math.min(1,starA*0.85);
+      fillCirc(ctx,sxN,syN,2,ns.col+nA.toFixed(2)+")");
+      ctx.fillStyle="rgba(255,255,255,"+(nA*0.5).toFixed(2)+")";
+      ctx.fillText(ns.n,sxN+4,syN+3);
+    }
+    ctx.textAlign="center";
+  }
 
   /* ======== SUN ======== */
   var sunY=hrzY-sunAlt*hrzY*0.75;
