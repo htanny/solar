@@ -351,7 +351,7 @@ function lerpColor(a,b,f){var pa=a.split(",").map(Number),pb=b.split(",").map(Nu
 /* Seeded terrain heightmap for horizon mountains */
 function terrainH(x,seed){return(Math.sin(x*0.02+seed)*0.4+Math.sin(x*0.057+seed*2.3)*0.3+Math.sin(x*0.13+seed*5.1)*0.2+Math.sin(x*0.31+seed*11)*0.1)*0.5+0.5;}
 
-function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
+function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
   var sf=SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   fov=fov||1;/* FOV multiplier: <1 zoom in, >1 zoom out */
@@ -361,7 +361,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   if(!isFinite(solarDay)||solarDay>1e6)solarDay=rotAbs;
   var dayPh=((t/solarDay)%1+1)%1;
   var sunDir=rot<0?-1:1;
-  var sunHourAng=dayPh*TAU*sunDir;
+  var sunHourAng=(dayPh+(lngDeg||0)/360)*TAU*sunDir;
   var effTilt=pl.t>90?(180-pl.t):pl.t;
   var season=Math.sin((t/pl.p)*TAU);
   var effTR=effTilt*0.01745;
@@ -388,7 +388,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
 
   /* ======== NAMED STARS ======== */
   if(starA>0.05){
-    var lstD=((280.46+360.98565*t)%360+360)%360;
+    var lstD=((280.46+360.98565*t+(lngDeg||0))%360+360)%360;
     ctx.font="7px sans-serif";ctx.textAlign="left";
     for(var nsi=0;nsi<NAMED_STARS.length;nsi++){
       var ns=NAMED_STARS[nsi];
@@ -583,7 +583,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   for(var gi3=1;gi3<=8;gi3++){var gy5=hrzY+gi3*gi3*(H-hrzY)/72;ctx.beginPath();ctx.moveTo(0,gy5);ctx.lineTo(W,gy5);ctx.stroke();}ctx.globalAlpha=1;
 
   /* ======== COMPASS BAR ======== */
-  var compassY=H<500?H-28:H-38;
+  var compassY=H<500?H-128:H-138;
   ctx.fillStyle="rgba(0,0,0,0.35)";ctx.fillRect(0,compassY-12,W,28);
   var dirs=[{a:0,l:"N"},{a:0.25,l:"E"},{a:0.5,l:"S"},{a:0.75,l:"W"}];
   var subDirs=[{a:0.125,l:"NE"},{a:0.375,l:"SE"},{a:0.625,l:"SW"},{a:0.875,l:"NW"}];
@@ -605,8 +605,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   var sdStr=solarDay<1?(solarDay*24).toFixed(1)+"h":solarDay<100?solarDay.toFixed(1)+"日":(solarDay/365.25).toFixed(1)+"年";
   var bearDeg=Math.round(((yawNorm)*360)%360);
   var bearName=bearDeg<23?"N":bearDeg<68?"NE":bearDeg<113?"E":bearDeg<158?"SE":bearDeg<203?"S":bearDeg<248?"SW":bearDeg<293?"W":bearDeg<338?"NW":"N";
-  var dayPh0=(((t0!=null?t0:t)/solarDay)%1+1)%1;
-  var lng=((dayPh0*360+180)%360-180).toFixed(1);
+  var lng=(lngDeg||0).toFixed(1);
   var latStr=(lat||0).toFixed(1);
   var sunAltDeg=Math.round(Math.asin(Math.max(-1,Math.min(1,sunAlt)))*57.3);
   var fovStr=fov<0.95?" 🔭×"+(1/fov).toFixed(1):fov>1.05?" 🔍×"+fov.toFixed(1):"";
@@ -615,7 +614,6 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   ctx.fillText("緯度 "+latStr+"°　経度 "+lng+"°　方位 "+bearDeg+"° "+bearName+"　太陽高度 "+sunAltDeg+"°",W/2,66);
   if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,80);}
   ctx.fillStyle="rgba(255,255,255,0.2)";ctx.font="8px sans-serif";
-  ctx.fillText("← 左右: 方位　↑↓: 緯度 →",W/2,H-50);
 }
 /* ===== LANDING ENVIRONMENT SOUND ===== */
 var LAND_AUDIO=null;
@@ -698,14 +696,16 @@ export default function App(){
   var[dateInput,setDateInput]=useState("");
   var[showDate,setShowDate]=useState(false);
   var[landing,setLanding]=useState(null);/* null or planet name */
-  var[landYaw,setLandYaw]=useState(0);/* horizontal look angle */
+  var[landYaw,setLandYaw]=useState(0);/* horizontal look angle radians */
   var[landLat,setLandLat]=useState(0);
+  var[landLng,setLandLng]=useState(0);
   var[landFov,setLandFov]=useState(1);
   var[lang,setLang]=useState("ja");
-  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landFovR=useRef(1);var landT0R=useRef(0);var langR=useRef("ja");
+  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landLngR=useRef(0);var landFovR=useRef(1);var langR=useRef("ja");
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){landYR.current=landYaw;},[landYaw]);
   useEffect(function(){landLatR.current=landLat;},[landLat]);
+  useEffect(function(){landLngR.current=landLng;},[landLng]);
   useEffect(function(){landFovR.current=landFov;},[landFov]);
   useEffect(function(){langR.current=lang;},[lang]);
   var shR=useRef(sh),spR=useRef(spd),rsR=useRef(rSn),rpR=useRef(rPl),rdR=useRef(rDi),unR=useRef(uni),foR=useRef(foc),ziR=useRef(zi),pausR=useRef(paused),cmpR=useRef(compare);
@@ -728,7 +728,7 @@ export default function App(){
       focTransRef.current={active:true,t:0,dur:2.0,ready:false,fromFx:_c.fx,fromFz:_c.fz,fromZm:_c.zm,toZm:_tz};
     }
     setFoc(k);autoZoom(k,uni);setInfo(k==="all"?null:findInfo(k));
-    if(landR.current){if(PL_MAP[k]||DWARF_MAP[k]){landT0R.current=S.current.t;setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
+    if(landR.current){if(PL_MAP[k]||DWARF_MAP[k]){landLngR.current=0;setLandLng(0);setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
   },[autoZoom,uni]);
 
   /* Central landing helper: stops tour, exits galaxy view, focuses planet, lands */
@@ -738,7 +738,7 @@ export default function App(){
     setFoc(plName);setInfo(findInfo(plName));
     if(ziR.current<10){var ssIdx=17;dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}
     setCompare(false);
-    landT0R.current=S.current.t;
+    landLngR.current=0;setLandLng(0);
     setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);
   },[dz,stopTour]);
 
@@ -794,12 +794,12 @@ export default function App(){
     var cv=cR.current;if(!cv)return;var ctx=cv.getContext("2d"),alive=true,lt=0,sim=S.current,trailTimer=0;
     function rsz(){var d=Math.min(window.devicePixelRatio||1,2),pa=cv.parentElement,w=pa.clientWidth,h=pa.clientHeight;cv.width=w*d;cv.height=h*d;cv.style.width=w+"px";cv.style.height=h+"px";ctx.setTransform(d,0,0,d,0,0);}rsz();window.addEventListener("resize",rsz);
     function md(e){e.preventDefault();sim.dragged=false;if(cmpR.current){sim.cmpDrag={x:e.clientX};return;}sim.dr={x:e.clientX,y:e.clientY};}
-    function mm(e){if(sim.cmpDrag){var dx0=e.clientX-sim.cmpDrag.x;cmpStateRef.current.offX+=dx0;sim.cmpDrag.x=e.clientX;sim.dragged=true;return;}if(!sim.dr)return;var dx=e.clientX-sim.dr.x,dy=e.clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(landR.current){landYR.current+=dx*0.008;setLandYaw(landYR.current);landLatR.current=Math.max(-90,Math.min(90,landLatR.current-dy*0.3));setLandLat(landLatR.current);}else{sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.clientX;sim.dr.y=e.clientY;}
+    function mm(e){if(sim.cmpDrag){var dx0=e.clientX-sim.cmpDrag.x;cmpStateRef.current.offX+=dx0;sim.cmpDrag.x=e.clientX;sim.dragged=true;return;}if(!sim.dr)return;var dx=e.clientX-sim.dr.x,dy=e.clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(!landR.current){sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.clientX;sim.dr.y=e.clientY;}
     function mu(){sim.cmpDrag=null;sim.dr=null;}
     function wl(e){e.preventDefault();if(cmpR.current){cmpStateRef.current.zm=Math.max(0.2,Math.min(5,cmpStateRef.current.zm*(e.deltaY>0?0.9:1.1)));return;}if(landR.current){var f=landFovR.current*(e.deltaY>0?1.1:0.9);f=Math.max(0.3,Math.min(3,f));landFovR.current=f;setLandFov(f);return;}var d2=e.deltaY>0?-1:1,c2=ziR.current,n=Math.max(0,Math.min(ZS.length-1,c2+d2));if(n!==c2){dz(n);ziR.current=n;setZi(n);sim.cam.tzm=ZS[n];}}
     function td3(e){if(e.touches.length<2)return 0;var a=e.touches[0],b=e.touches[1];return Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY);}
     function tst(e){if(cmpR.current){e.preventDefault();if(e.touches.length===1){sim.cmpDrag={x:e.touches[0].clientX};sim.dragged=false;}if(e.touches.length===2){sim.cmpPinch=td3(e);sim.cmpDrag=null;}return;}if(e.touches.length===1){sim.dr={x:e.touches[0].clientX,y:e.touches[0].clientY};sim.dragged=false;}if(e.touches.length===2){sim.pi=td3(e);sim.dr=null;}}
-    function tmv(e){e.preventDefault();if(cmpR.current){if(e.touches.length===1&&sim.cmpDrag){cmpStateRef.current.offX+=e.touches[0].clientX-sim.cmpDrag.x;sim.cmpDrag.x=e.touches[0].clientX;}if(e.touches.length===2&&sim.cmpPinch){var dp=td3(e),rp=dp/sim.cmpPinch;if(rp>1.01||rp<0.99){cmpStateRef.current.zm=Math.max(0.2,Math.min(5,cmpStateRef.current.zm*rp));sim.cmpPinch=dp;}}return;}if(e.touches.length===1&&sim.dr){var dx=e.touches[0].clientX-sim.dr.x,dy=e.touches[0].clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(landR.current){landYR.current+=dx*0.008;setLandYaw(landYR.current);landLatR.current=Math.max(-90,Math.min(90,landLatR.current-dy*0.3));setLandLat(landLatR.current);}else{sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.touches[0].clientX;sim.dr.y=e.touches[0].clientY;}if(e.touches.length===2&&sim.pi){var d3=td3(e),ratio=d3/sim.pi;if(landR.current){var newFov=Math.max(0.3,Math.min(3,landFovR.current/ratio));landFovR.current=newFov;setLandFov(newFov);sim.pi=d3;}else if(ratio>1.06||ratio<0.94){var dir=ratio>1?1:-1,c3=ziR.current,n2=Math.max(0,Math.min(ZS.length-1,c3+dir));if(n2!==c3){dz(n2);ziR.current=n2;setZi(n2);sim.cam.tzm=ZS[n2];}sim.pi=d3;}}}
+    function tmv(e){e.preventDefault();if(cmpR.current){if(e.touches.length===1&&sim.cmpDrag){cmpStateRef.current.offX+=e.touches[0].clientX-sim.cmpDrag.x;sim.cmpDrag.x=e.touches[0].clientX;}if(e.touches.length===2&&sim.cmpPinch){var dp=td3(e),rp=dp/sim.cmpPinch;if(rp>1.01||rp<0.99){cmpStateRef.current.zm=Math.max(0.2,Math.min(5,cmpStateRef.current.zm*rp));sim.cmpPinch=dp;}}return;}if(e.touches.length===1&&sim.dr){var dx=e.touches[0].clientX-sim.dr.x,dy=e.touches[0].clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(!landR.current){sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.touches[0].clientX;sim.dr.y=e.touches[0].clientY;}if(e.touches.length===2&&sim.pi){var d3=td3(e),ratio=d3/sim.pi;if(landR.current){var newFov=Math.max(0.3,Math.min(3,landFovR.current/ratio));landFovR.current=newFov;setLandFov(newFov);sim.pi=d3;}else if(ratio>1.06||ratio<0.94){var dir=ratio>1?1:-1,c3=ziR.current,n2=Math.max(0,Math.min(ZS.length-1,c3+dir));if(n2!==c3){dz(n2);ziR.current=n2;setZi(n2);sim.cam.tzm=ZS[n2];}sim.pi=d3;}}}
     function ten(e){if(e.touches.length<2){sim.pi=null;sim.cmpPinch=null;}if(e.touches.length===0){sim.dr=null;sim.cmpDrag=null;}}
     function kd(e){var k=e.key;if(k===" "){e.preventDefault();setPaused(function(p){return!p;});}else if(k==="0"){focusOn("all");}else if(k.toLowerCase()==="s"){focusOn("sun");}else if(k>="1"&&k<="8"){focusOn(PL[parseInt(k)-1].n);}else if(k==="9"){focusOn("Halley");}else if(k.toLowerCase()==="e"){focusOn("Encke");}else if(k==="+"||k==="="){e.preventDefault();zIn();}else if(k==="-"||k==="_"){e.preventDefault();zOut();}else if(k==="ArrowRight"){var ci2=SP.indexOf(spR.current);if(ci2<SP.length-1){setSpd(SP[ci2+1]);setPaused(false);}}else if(k==="ArrowLeft"){var ci3=SP.indexOf(spR.current);if(ci3>0){setSpd(SP[ci3-1]);setPaused(false);}}else if(k.toLowerCase()==="c"){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}else if(k.toLowerCase()==="t"){if(tourRef.current.active){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}}else if(k.toLowerCase()==="m"){setBgm(function(p){return!p;});}
       else if(k.toLowerCase()==="g"){var galIdx=2;var ssIdx=17;if(ziR.current>9){dz(galIdx);ziR.current=galIdx;setZi(galIdx);setFoc("all");setInfo(null);}else{dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}}
@@ -818,7 +818,7 @@ export default function App(){
       /* Landing view mode */
       var _land=landR.current;
       if(_land){
-        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landT0R.current);
+        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landLngR.current);
         fR.current=requestAnimationFrame(frame);return;
       }
 
@@ -1009,8 +1009,33 @@ export default function App(){
       {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>}
 
       {/* Landing mode takeoff button */}
-      {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:20}}>
+      {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26}}>
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
+      </div>}
+
+      {/* Landing mode control panel */}
+      {landing&&<div style={{position:"absolute",bottom:0,left:0,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"7px 14px 9px",fontFamily:"system-ui,sans-serif"}}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>緯度</span>
+          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="1" value={landLat}
+            onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
+          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>{landLat>=0?"+":""}{landLat}°</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>経度</span>
+          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="1" value={landLng}
+            onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
+          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>{landLng>=0?"+":""}{landLng}°</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6}}>
+          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>方位</span>
+          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
+            value={Math.round(((landYaw*57.296)%360+360)%360)}
+            onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
+          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>
+            {Math.round(((landYaw*57.296)%360+360)%360)}°{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);return d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";})()}
+          </span>
+        </div>
       </div>}
 
       {cleanView===0&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
