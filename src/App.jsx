@@ -429,10 +429,35 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
     var moonAng=(t/27.3)*TAU;var moonPhX=((moonAng/(TAU)+0.3)%1)*W;
     var moonAlt2=0.5+Math.sin(moonAng*0.5)*0.3;var moonY2=hrzY*(1-moonAlt2);
     var moonScrX=(moonPhX+yaw*40)%W;
-    if(moonAlt2>0.1){fillCirc(ctx,moonScrX,moonY2,5/fov,"rgba(230,230,220,"+(0.8*nightAlpha).toFixed(2)+")");
-      /* Moon phase shadow */
-      ctx.globalAlpha=0.5*nightAlpha;ctx.beginPath();ctx.arc(moonScrX,moonY2,5,0,TAU);ctx.fillStyle="rgba(40,40,50,1)";ctx.fill();ctx.globalAlpha=1;
-      fillCirc(ctx,moonScrX+2,moonY2,5/fov,"rgba(230,230,220,"+(0.7*nightAlpha).toFixed(2)+")");}
+    if(moonAlt2>0.1){
+      var moonRad=Math.max(4,8/fov);
+      /* Moon phase via ecliptic longitudes */
+      var sunLngE=(280.46+0.9856*t+36000)%360;
+      var moonLngE=(218.316+13.176396*t+360000)%360;
+      var moonPh=((moonLngE-sunLngE)/360+100)%1;
+      var mkx=moonRad*Math.cos(moonPh*TAU);
+      var mA=Math.min(0.95,nightAlpha*0.85+0.1);
+      ctx.save();ctx.beginPath();ctx.arc(moonScrX,moonY2,moonRad,0,TAU);ctx.clip();
+      ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(moonScrX-moonRad,moonY2-moonRad,moonRad*2,moonRad*2);
+      if(moonPh>0.02&&moonPh<0.98){
+        ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
+        if(moonPh<0.5){ctx.arc(moonScrX,moonY2,moonRad,-Math.PI/2,Math.PI/2,false);}
+        else{ctx.arc(moonScrX,moonY2,moonRad,-Math.PI/2,Math.PI/2,true);}
+        ctx.bezierCurveTo(moonScrX+mkx,moonY2+moonRad,moonScrX+mkx,moonY2-moonRad,moonScrX,moonY2-moonRad);
+        ctx.fill();
+      }else{
+        ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";
+        ctx.beginPath();ctx.arc(moonScrX,moonY2,moonRad,0,TAU);ctx.fill();
+      }
+      ctx.restore();
+      /* Glow */
+      var mg=ctx.createRadialGradient(moonScrX,moonY2,moonRad,moonScrX,moonY2,moonRad*3);
+      mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=mg;ctx.fillRect(moonScrX-moonRad*3,moonY2-moonRad*3,moonRad*6,moonRad*6);
+      /* Phase label */
+      ctx.fillStyle="rgba(200,200,180,"+(0.4*nightAlpha).toFixed(2)+")";ctx.font="7px sans-serif";ctx.textAlign="center";
+      var phaseNames=["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];ctx.fillText(phaseNames[Math.round(moonPh*8)%8],moonScrX,moonY2+moonRad+9);
+    }
     /* Venus as evening/morning star */
     if(!isNight||sunAlt>-0.3){var venX=(W*0.3+t*0.1+yaw*60)%W,venY=hrzY*0.4+Math.sin(t*0.01)*hrzY*0.1;
       ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
@@ -583,7 +608,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
   for(var gi3=1;gi3<=8;gi3++){var gy5=hrzY+gi3*gi3*(H-hrzY)/72;ctx.beginPath();ctx.moveTo(0,gy5);ctx.lineTo(W,gy5);ctx.stroke();}ctx.globalAlpha=1;
 
   /* ======== COMPASS BAR ======== */
-  var compassY=H<500?H-128:H-138;
+  var compassY=H<500?H-118:H-128;
   ctx.fillStyle="rgba(0,0,0,0.35)";ctx.fillRect(0,compassY-12,W,28);
   var dirs=[{a:0,l:"N"},{a:0.25,l:"E"},{a:0.5,l:"S"},{a:0.75,l:"W"}];
   var subDirs=[{a:0.125,l:"NE"},{a:0.375,l:"SE"},{a:0.625,l:"SW"},{a:0.875,l:"NW"}];
@@ -971,13 +996,13 @@ export default function App(){
       <canvas ref={cR} style={{display:"block",width:"100%",height:"100%",touchAction:"none",cursor:"crosshair"}} onClick={handleClick}/>
 
       {/* Focus panel */}
-      {cleanView===0&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
-      {cleanView===0&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>速度 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>速度 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
 
       {/* Toggles panel */}
-      {cleanView===0&&<DragPanel style={Object.assign({},pn,{bottom:10,left:10,maxWidth:300})}>
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:10,left:10,maxWidth:300})}>
         <div style={lb}>表示 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道"},{k:"trails",l:"軌跡"},{k:"belt",l:"小惑星帯"},{k:"tilt",l:"地軸"},{k:"moon",l:"月"},{k:"labels",l:"ラベル"},{k:"planets",l:"惑星"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{x.l}</button>;})}</div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>実スケール</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>太陽{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>惑星{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>距離{!uni&&rDi?" ●":""}</button></div>
         <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>統一比率{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>比較{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}}}>{touring?"ツアー停止":"ツアー"}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button></div>
@@ -1003,7 +1028,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Zoom panel */}
-      {cleanView===0&&<DragPanel style={Object.assign({},pn,{bottom:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Info panel */}
       {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>}
@@ -1013,32 +1038,38 @@ export default function App(){
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
 
-      {/* Landing mode control panel */}
-      {landing&&<div style={{position:"absolute",bottom:0,left:0,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"7px 14px 9px",fontFamily:"system-ui,sans-serif"}}>
-        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>緯度</span>
-          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="1" value={landLat}
-            onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
-          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>{landLat>=0?"+":""}{landLat}°</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>経度</span>
-          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="1" value={landLng}
+      {/* Landing mode control panel — left: latitude vertical, bottom: lng+az+speed */}
+      {landing&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
+        <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>N</span>
+        <span style={{color:"rgba(255,255,255,0.85)",fontSize:9}}>{landLat>=0?"+":""}{landLat}°</span>
+        <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>緯度</span>
+        <input type="range" min="-90" max="90" step="1" value={landLat}
+          style={{writingMode:"vertical-lr",direction:"rtl",height:130,width:24,cursor:"pointer",accentColor:"#64b4ff"}}
+          onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
+        <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
+      </div>}
+      {landing&&<div style={{position:"absolute",bottom:0,left:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
+        <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>経度</span>
+          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
-          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>{landLng>=0?"+":""}{landLng}°</span>
+          <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landLng>=0?"+":""}{landLng}°</span>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:6}}>
-          <span style={{color:"rgba(180,210,255,0.75)",fontSize:10,width:24,flexShrink:0}}>方位</span>
-          <input type="range" style={{flex:1,height:18,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
+        <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>方位</span>
+          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
             value={Math.round(((landYaw*57.296)%360+360)%360)}
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
-          <span style={{color:"rgba(255,255,255,0.9)",fontSize:10,width:52,textAlign:"right",flexShrink:0}}>
-            {Math.round(((landYaw*57.296)%360+360)%360)}°{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);return d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";})()}
-          </span>
+          <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
+        </div>
+        <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>速度</span>
+          <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 7px",fontSize:11})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
+          {SP.map(function(s){return <button key={s} style={Object.assign({},spd===s&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}
         </div>
       </div>}
 
-      {cleanView===0&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
+      {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
       <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.1.4</div>
 
       {/* Clean view mode for native screenshot */}
