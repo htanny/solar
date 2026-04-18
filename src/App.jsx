@@ -334,7 +334,7 @@ function lerpColor(a,b,f){var pa=a.split(",").map(Number),pb=b.split(",").map(Nu
 /* Seeded terrain heightmap for horizon mountains */
 function terrainH(x,seed){return(Math.sin(x*0.02+seed)*0.4+Math.sin(x*0.057+seed*2.3)*0.3+Math.sin(x*0.13+seed*5.1)*0.2+Math.sin(x*0.31+seed*11)*0.1)*0.5+0.5;}
 
-function drawLanding(ctx,W,H,t,plName,yaw,lat,fov){
+function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,t0){
   var sf=SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   fov=fov||1;/* FOV multiplier: <1 zoom in, >1 zoom out */
@@ -564,7 +564,8 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov){
   var sdStr=solarDay<1?(solarDay*24).toFixed(1)+"h":solarDay<100?solarDay.toFixed(1)+"日":(solarDay/365.25).toFixed(1)+"年";
   var bearDeg=Math.round(((yawNorm)*360)%360);
   var bearName=bearDeg<23?"N":bearDeg<68?"NE":bearDeg<113?"E":bearDeg<158?"SE":bearDeg<203?"S":bearDeg<248?"SW":bearDeg<293?"W":bearDeg<338?"NW":"N";
-  var lng=((dayPh*360+180)%360-180).toFixed(1);
+  var dayPh0=(((t0!=null?t0:t)/solarDay)%1+1)%1;
+  var lng=((dayPh0*360+180)%360-180).toFixed(1);
   var latStr=(lat||0).toFixed(1);
   var sunAltDeg=Math.round(Math.asin(Math.max(-1,Math.min(1,sunAlt)))*57.3);
   var fovStr=fov<0.95?" 🔭×"+(1/fov).toFixed(1):fov>1.05?" 🔍×"+fov.toFixed(1):"";
@@ -660,7 +661,7 @@ export default function App(){
   var[landLat,setLandLat]=useState(0);
   var[landFov,setLandFov]=useState(1);
   var[lang,setLang]=useState("ja");
-  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landFovR=useRef(1);var langR=useRef("ja");
+  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landFovR=useRef(1);var landT0R=useRef(0);var langR=useRef("ja");
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){landYR.current=landYaw;},[landYaw]);
   useEffect(function(){landLatR.current=landLat;},[landLat]);
@@ -686,7 +687,7 @@ export default function App(){
       focTransRef.current={active:true,t:0,dur:2.0,ready:false,fromFx:_c.fx,fromFz:_c.fz,fromZm:_c.zm,toZm:_tz};
     }
     setFoc(k);autoZoom(k,uni);setInfo(k==="all"?null:findInfo(k));
-    if(landR.current){if(PL_MAP[k]||DWARF_MAP[k]){setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
+    if(landR.current){if(PL_MAP[k]||DWARF_MAP[k]){landT0R.current=S.current.t;setLanding(k);setLandYaw(0);setLandLat(0);setLandFov(1);}else{setLanding(null);}}
   },[autoZoom,uni]);
 
   /* Central landing helper: stops tour, exits galaxy view, focuses planet, lands */
@@ -696,6 +697,7 @@ export default function App(){
     setFoc(plName);setInfo(findInfo(plName));
     if(ziR.current<10){var ssIdx=17;dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}
     setCompare(false);
+    landT0R.current=S.current.t;
     setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);
   },[dz,stopTour]);
 
@@ -775,7 +777,7 @@ export default function App(){
       /* Landing view mode */
       var _land=landR.current;
       if(_land){
-        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current);
+        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landT0R.current);
         fR.current=requestAnimationFrame(frame);return;
       }
 
