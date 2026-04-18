@@ -49,7 +49,7 @@ function sphereShade(ctx,cx,cy,r){var g=ctx.createRadialGradient(cx-r*0.25,cy-r*
 function limbDarken(ctx,cx,cy,r,i){var g=ctx.createRadialGradient(cx,cy,r*0.3,cx,cy,r);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(0.7,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,"+(i||0.35)+")");ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fillStyle=g;ctx.fill();}
 function atmosGlow(ctx,cx,cy,r,col,w){var g=ctx.createRadialGradient(cx,cy,r*(1-w),cx,cy,r*1.08);g.addColorStop(0,"rgba("+col+",0)");g.addColorStop(0.5,"rgba("+col+",0.08)");g.addColorStop(1,"rgba("+col+",0)");ctx.fillStyle=g;ctx.fillRect(cx-r*1.1,cy-r*1.1,r*2.2,r*2.2);}
 function dC(ctx,cx,cy,r,f){if(r<0.3){ctx.fillStyle=f;ctx.fillRect(cx-0.5,cy-0.5,1,1);return;}fillCirc(ctx,cx,cy,r,f);}
-function dOb(ctx,rad,cam){var n=Math.max(90,Math.min(1200,Math.floor(rad*cam.zm*0.6)));ctx.beginPath();ctx.strokeStyle="rgba(255,255,255,0.13)";ctx.lineWidth=0.7;ctx.setLineDash([4,6]);for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,Math.sin(a)*rad,cam);if(i===0)ctx.moveTo(pp.x,pp.y);else ctx.lineTo(pp.x,pp.y);}ctx.stroke();ctx.setLineDash([]);}
+function dOb(ctx,rad,cam){var n=Math.max(60,Math.min(360,Math.floor(rad*cam.zm*0.3)));ctx.beginPath();ctx.strokeStyle="rgba(255,255,255,0.13)";ctx.lineWidth=0.7;ctx.setLineDash([4,6]);for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,Math.sin(a)*rad,cam);if(i===0)ctx.moveTo(pp.x,pp.y);else ctx.lineTo(pp.x,pp.y);}ctx.stroke();ctx.setLineDash([]);}
 function dRi(ctx,wx,wy,wz,pr,cam,td){var tr=td*0.01745,n=Math.max(36,Math.min(300,Math.floor(pr*2.3*cam.zm*0.6)));var ls=[{i:1.4,o:1.7,c:"rgba(200,180,130,0.45)"},{i:1.7,o:2.0,c:"rgba(190,170,120,0.35)"},{i:2.0,o:2.3,c:"rgba(170,150,100,0.25)"}];for(var li=0;li<3;li++){var L=ls[li],ot=[],it=[];for(var j=0;j<=n;j++){var a=(j/n)*TAU,ca=Math.cos(a),sa=Math.sin(a);ot.push(pj(wx+ca*pr*L.o,wy+sa*pr*L.o*Math.cos(tr),wz+sa*pr*L.o*Math.sin(tr),cam));it.push(pj(wx+ca*pr*L.i,wy+sa*pr*L.i*Math.cos(tr),wz+sa*pr*L.i*Math.sin(tr),cam));}ctx.beginPath();for(var k=0;k<ot.length;k++){if(k===0)ctx.moveTo(ot[k].x,ot[k].y);else ctx.lineTo(ot[k].x,ot[k].y);}for(var k2=it.length-1;k2>=0;k2--)ctx.lineTo(it[k2].x,it[k2].y);ctx.closePath();ctx.fillStyle=L.c;ctx.fill();}}
 function dSh(ctx,px,py,r,wx,wz,cam){if(r<0.8)return;
   /* Compute light direction in view space */
@@ -749,7 +749,7 @@ export default function App(){
 
   useEffect(function(){
     var cv=cR.current;if(!cv)return;var ctx=cv.getContext("2d"),alive=true,lt=0,sim=S.current,trailTimer=0;
-    function rsz(){var d=window.devicePixelRatio||1,pa=cv.parentElement,w=pa.clientWidth,h=pa.clientHeight;cv.width=w*d;cv.height=h*d;cv.style.width=w+"px";cv.style.height=h+"px";ctx.setTransform(d,0,0,d,0,0);}rsz();window.addEventListener("resize",rsz);
+    function rsz(){var d=Math.min(window.devicePixelRatio||1,2),pa=cv.parentElement,w=pa.clientWidth,h=pa.clientHeight;cv.width=w*d;cv.height=h*d;cv.style.width=w+"px";cv.style.height=h+"px";ctx.setTransform(d,0,0,d,0,0);}rsz();window.addEventListener("resize",rsz);
     function md(e){e.preventDefault();sim.dragged=false;if(cmpR.current){sim.cmpDrag={x:e.clientX};return;}sim.dr={x:e.clientX,y:e.clientY};}
     function mm(e){if(sim.cmpDrag){var dx0=e.clientX-sim.cmpDrag.x;cmpStateRef.current.offX+=dx0;sim.cmpDrag.x=e.clientX;sim.dragged=true;return;}if(!sim.dr)return;var dx=e.clientX-sim.dr.x,dy=e.clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(landR.current){landYR.current+=dx*0.008;setLandYaw(landYR.current);landLatR.current=Math.max(-90,Math.min(90,landLatR.current-dy*0.3));setLandLat(landLatR.current);}else{sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.clientX;sim.dr.y=e.clientY;}
     function mu(){sim.cmpDrag=null;sim.dr=null;}
@@ -839,7 +839,7 @@ export default function App(){
       var pd=[];for(var i=0;i<allBodies.length;i++){var pl=allBodies[i],oRv=oR(pl,_rd,_un),ang=(t/pl.p)*TAU;pd.push({pl:pl,oR:oRv,wx:Math.cos(ang)*oRv,wy:0,wz:Math.sin(ang)*oRv,vr:pRf(pl,_rp,_un),rotAng:(t/Math.abs(pl.rot))*TAU*(pl.rot<0?-1:1)});}
       var cd=[];for(var cci=0;cci<COMETS.length;cci++){var cm0=COMETS[cci],cm0E=cm0.e;var cm0OrbR=_rd||_un?cm0.a*DK:(160+Math.pow((cm0.a-228)/4267,0.55)*280);var cm0M=((t/cm0.p)+cm0.phase0)*TAU;var cm0Ecc=cm0M;for(var ki0=0;ki0<6;ki0++){cm0Ecc=cm0M+cm0E*Math.sin(cm0Ecc);}var cm0V=2*Math.atan2(Math.sqrt(1+cm0E)*Math.sin(cm0Ecc/2),Math.sqrt(1-cm0E)*Math.cos(cm0Ecc/2));var cm0R=cm0OrbR*(1-cm0E*cm0E)/(1+cm0E*Math.cos(cm0V));cd.push({cm:cm0,orbR:cm0OrbR,wx:Math.cos(cm0V+cm0.inc)*cm0R,wy:0,wz:Math.sin(cm0V+cm0.inc)*cm0R});}
 
-      trailTimer+=dt;if(trailTimer>0.05&&!pausR.current){trailTimer=0;for(var ti=0;ti<sim.trails.length;ti++){sim.trails[ti].push({x:pd[ti].wx,z:pd[ti].wz});if(sim.trails[ti].length>TRAIL_LEN)sim.trails[ti].shift();}}
+      trailTimer+=dt;if(trailTimer>0.05&&!pausR.current&&!tourRef.current.trans){trailTimer=0;for(var ti=0;ti<sim.trails.length;ti++){sim.trails[ti].push({x:pd[ti].wx,z:pd[ti].wz});if(sim.trails[ti].length>TRAIL_LEN)sim.trails[ti].shift();}}
 
       var tfx=0,tfy=0,tfz=0,hasTarget=false;
       if(fc!=="all"&&fc!=="sun"){for(var fi=0;fi<pd.length;fi++){if(pd[fi].pl.n===fc){tfx=pd[fi].wx;tfy=pd[fi].wy;tfz=pd[fi].wz;hasTarget=true;break;}}if(!hasTarget){for(var fi2=0;fi2<cd.length;fi2++){if(cd[fi2].cm.key===fc){tfx=cd[fi2].wx;tfy=cd[fi2].wy;tfz=cd[fi2].wz;hasTarget=true;break;}}}}
@@ -945,6 +945,7 @@ export default function App(){
           <button style={bF} onClick={shareURL}>🔗 共有</button>
           <button style={bF} onClick={function(){setImportMode(true);}}>📥 読込</button>
           <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>今日</button>
+          <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>軌跡クリア</button>
         </div>
         {showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
