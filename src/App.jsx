@@ -32,6 +32,11 @@ var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,
 var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
 var TOUR_NAMES=["太陽","水星","金星","地球","火星","木星","土星","天王星","海王星","ハレー彗星","エンケ彗星"];
 var TOUR_HOLD=4;
+var LAND_SP=[
+  {v:1/86400,l:"実速"},{v:60/86400,l:"1分/s"},
+  {v:3600/86400,l:"1時/s"},{v:1,l:"1日/s"},
+  {v:30,l:"1月/s"},{v:365,l:"1年/s"}
+];
 var NAMED_STARS=[
   {n:"シリウス",    ra:101.3,dec:-16.7,col:"rgba(200,220,255,"},
   {n:"カノープス",  ra:95.9, dec:-52.7,col:"rgba(255,255,220,"},
@@ -351,7 +356,7 @@ function lerpColor(a,b,f){var pa=a.split(",").map(Number),pb=b.split(",").map(Nu
 /* Seeded terrain heightmap for horizon mountains */
 function terrainH(x,seed){return(Math.sin(x*0.02+seed)*0.4+Math.sin(x*0.057+seed*2.3)*0.3+Math.sin(x*0.13+seed*5.1)*0.2+Math.sin(x*0.31+seed*11)*0.1)*0.5+0.5;}
 
-function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
+function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   var sf=SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   fov=fov||1;/* FOV multiplier: <1 zoom in, >1 zoom out */
@@ -369,10 +374,12 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
   var decl=effTR*season;
   var sinAlt=Math.sin(latRad)*Math.sin(decl)+Math.cos(latRad)*Math.cos(decl)*Math.sin(sunHourAng);
   var sunAlt=Math.max(-0.95,Math.min(0.95,sinAlt));
-  var sunScreenX=W*0.5+Math.cos(sunHourAng-yaw)*W*0.45;
+  var sunAz=Math.atan2(Math.cos(sunHourAng)*Math.cos(decl),Math.sin(decl)*Math.cos(latRad)-Math.cos(decl)*Math.sin(latRad)*Math.sin(sunHourAng));
+  var aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
+  var sunScreenX=W/2+aDiffSun*W*0.8/TAU;
   var isNight=sunAlt<-0.08;
   var dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
-  var hrzY=H*0.58;
+  var hrzY=Math.max(H*0.05,Math.min(H*0.92,H*(0.58-(tilt||0)*0.01)));
   var rng=seedR(plName.length*7+31);
 
   /* ======== SKY ======== */
@@ -412,7 +419,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg){
 
   /* ======== SUN ======== */
   var sunY=hrzY-sunAlt*hrzY*0.75;
-  if(sunAlt>-0.2&&sunY<hrzY+30){
+  if(sunAlt>-0.2&&sunY<hrzY+30&&Math.abs(aDiffSun)<TAU*0.32){
     var sunR=Math.max(2,14*Math.sqrt(sf.sunSz)/fov);
     var glR=sunR*10;var sg=ctx.createRadialGradient(sunScreenX,sunY,sunR,sunScreenX,sunY,glR);
     sg.addColorStop(0,"rgba(255,240,200,0.25)");sg.addColorStop(0.3,"rgba(255,200,100,0.06)");sg.addColorStop(1,"rgba(255,180,80,0)");
@@ -725,13 +732,17 @@ export default function App(){
   var[landLat,setLandLat]=useState(0);
   var[landLng,setLandLng]=useState(0);
   var[landFov,setLandFov]=useState(1);
+  var[landSpd,setLandSpd]=useState(3600/86400);
+  var[landTilt,setLandTilt]=useState(0);
   var[lang,setLang]=useState("ja");
-  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landLngR=useRef(0);var landFovR=useRef(1);var langR=useRef("ja");
+  var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landLngR=useRef(0);var landFovR=useRef(1);var landSpdR=useRef(3600/86400);var landTiltR=useRef(0);var langR=useRef("ja");
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){landYR.current=landYaw;},[landYaw]);
   useEffect(function(){landLatR.current=landLat;},[landLat]);
   useEffect(function(){landLngR.current=landLng;},[landLng]);
   useEffect(function(){landFovR.current=landFov;},[landFov]);
+  useEffect(function(){landSpdR.current=landSpd;},[landSpd]);
+  useEffect(function(){landTiltR.current=landTilt;},[landTilt]);
   useEffect(function(){langR.current=lang;},[lang]);
   var shR=useRef(sh),spR=useRef(spd),rsR=useRef(rSn),rpR=useRef(rPl),rdR=useRef(rDi),unR=useRef(uni),foR=useRef(foc),ziR=useRef(zi),pausR=useRef(paused),cmpR=useRef(compare);
   useEffect(function(){shR.current=sh;},[sh]);useEffect(function(){spR.current=spd;},[spd]);useEffect(function(){rsR.current=rSn;},[rSn]);useEffect(function(){rpR.current=rPl;},[rPl]);useEffect(function(){rdR.current=rDi;},[rDi]);useEffect(function(){unR.current=uni;},[uni]);useEffect(function(){foR.current=foc;},[foc]);useEffect(function(){ziR.current=zi;},[zi]);useEffect(function(){pausR.current=paused;},[paused]);useEffect(function(){cmpR.current=compare;},[compare]);
@@ -764,6 +775,7 @@ export default function App(){
     if(ziR.current<10){var ssIdx=17;dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}
     setCompare(false);
     landLngR.current=0;setLandLng(0);
+    landTiltR.current=0;setLandTilt(0);
     setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);
   },[dz,stopTour]);
 
@@ -834,7 +846,7 @@ export default function App(){
     var sArr=SD.s,sCols=SD.c,nArr=NB;
 
     function frame(ts2){
-      if(!alive)return;var dt=lt?Math.min((ts2-lt)/1000,0.1):0.016;lt=ts2;if(!pausR.current)sim.t+=dt*spR.current;
+      if(!alive)return;var dt=lt?Math.min((ts2-lt)/1000,0.1):0.016;lt=ts2;if(!pausR.current){if(landR.current)sim.t+=dt*landSpdR.current;else sim.t+=dt*spR.current;}
       var pa=cv.parentElement,W=pa.clientWidth,H=pa.clientHeight;if(cv.style.width!==W+"px")rsz();
       var show=shR.current,_rs=rsR.current,_rp=rpR.current,_rd=rdR.current,_un=unR.current,fc=foR.current,cam=sim.cam,t=sim.t;
       if(!focTransRef.current.active&&cam.tzm&&Math.abs(cam.tzm-cam.zm)>0.00005){cam.zm+=(cam.tzm-cam.zm)*Math.min(1,dt*5);}
@@ -843,7 +855,7 @@ export default function App(){
       /* Landing view mode */
       var _land=landR.current;
       if(_land){
-        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landLngR.current);
+        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landLngR.current,landTiltR.current);
         fR.current=requestAnimationFrame(frame);return;
       }
 
@@ -1033,8 +1045,13 @@ export default function App(){
       {/* Info panel */}
       {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>}
 
-      {/* Landing mode takeoff button */}
-      {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26}}>
+      {/* Landing mode top-right: speed + liftoff */}
+      {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+        <div style={{background:"rgba(0,5,18,0.82)",border:"1px solid rgba(100,160,255,0.2)",borderRadius:6,padding:"6px 8px",display:"flex",flexWrap:"wrap",justifyContent:"flex-end",gap:3,maxWidth:220}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>速度</span>
+          <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
+          {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
+        </div>
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
 
@@ -1062,10 +1079,11 @@ export default function App(){
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
         </div>
-        <div style={{display:"flex",gap:4,alignItems:"center",justifyContent:"center"}}>
-          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>速度</span>
-          <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 7px",fontSize:11})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
-          {SP.map(function(s){return <button key={s} style={Object.assign({},spd===s&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}
+        <div style={{display:"flex",alignItems:"center",gap:5}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>仰角</span>
+          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
+            onChange={function(e){var v=+e.target.value;setLandTilt(v);landTiltR.current=v;}}/>
+          <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landTilt>=0?"+":""}{landTilt}°</span>
         </div>
       </div>}
 
