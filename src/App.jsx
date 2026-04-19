@@ -374,7 +374,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   var solarDay;
   if(rot<0)solarDay=1/(1/rotAbs+1/pl.p);else solarDay=Math.abs(1/(1/rotAbs-1/pl.p));
   if(!isFinite(solarDay)||solarDay>1e6)solarDay=rotAbs;
-  var dayPh=((t/solarDay)%1+1)%1;
+  var dayPh=((t/solarDay+0.25)%1+1)%1;
   var sunDir=rot<0?-1:1;
   var sunHourAng=(dayPh+(lngDeg||0)/360)*TAU*sunDir;
   var effTilt=pl.t>90?(180-pl.t):pl.t;
