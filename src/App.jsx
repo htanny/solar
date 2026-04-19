@@ -37,6 +37,16 @@ var LAND_SP=[
   {v:3600/86400,l:"1時/s"},{v:1,l:"1日/s"},
   {v:30,l:"1月/s"},{v:365,l:"1年/s"}
 ];
+var MAP_CTNS=[
+  [[10,-35],[36,-35],[52,-8],[55,12],[42,37],[18,37],[2,32],[-5,22],[-18,15],[-18,-5],[10,-35]],
+  [[-10,35],[40,35],[40,52],[28,60],[20,71],[5,71],[-5,62],[-10,52],[-10,35]],
+  [[25,5],[100,5],[145,12],[150,50],[145,62],[90,75],[50,75],[25,65],[25,5]],
+  [[-170,65],[-55,65],[-52,47],[-52,10],[-80,8],[-90,22],[-120,5],[-170,40],[-170,65]],
+  [[-82,12],[-35,5],[-34,-30],[-52,-56],[-70,-56],[-82,12]],
+  [[114,-10],[154,-10],[154,-39],[114,-39]],
+  [[-72,60],[-18,60],[-18,84],[-72,82]],
+  [[-180,-65],[180,-65],[180,-90],[-180,-90]],
+];
 var NAMED_STARS=[
   {n:"シリウス",    ra:101.3,dec:-16.7,col:"rgba(200,220,255,"},
   {n:"カノープス",  ra:95.9, dec:-52.7,col:"rgba(255,255,220,"},
@@ -626,6 +636,26 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   ctx.strokeStyle="rgba(255,255,255,0.12)";ctx.lineWidth=0.5;for(var tk2=0;tk2<36;tk2++){var tkOff=((tk2/36-yawNorm+0.5)%1-0.5)*W*0.8;if(Math.abs(tkOff)<W*0.48){ctx.beginPath();ctx.moveTo(W*0.5+tkOff,compassY-8);ctx.lineTo(W*0.5+tkOff,compassY-4);ctx.stroke();}}
   ctx.fillStyle="rgba(255,100,80,0.8)";ctx.beginPath();ctx.moveTo(W*0.5,compassY-10);ctx.lineTo(W*0.5-4,compassY-14);ctx.lineTo(W*0.5+4,compassY-14);ctx.closePath();ctx.fill();
 
+  /* ======== MINI WORLD MAP (Earth only) ======== */
+  if(plName==="Earth"){
+    var mW=130,mH=65,mX=52,mY=90;
+    ctx.save();
+    ctx.fillStyle="rgba(8,20,60,0.78)";ctx.fillRect(mX,mY,mW,mH);
+    ctx.fillStyle="rgba(52,115,45,0.88)";
+    for(var mci=0;mci<MAP_CTNS.length;mci++){var mc2=MAP_CTNS[mci];ctx.beginPath();for(var mcj=0;mcj<mc2.length;mcj++){var mcpx=mX+(mc2[mcj][0]+180)/360*mW,mcpy=mY+(90-mc2[mcj][1])/180*mH;if(mcj===0)ctx.moveTo(mcpx,mcpy);else ctx.lineTo(mcpx,mcpy);}ctx.closePath();ctx.fill();}
+    ctx.strokeStyle="rgba(80,130,255,0.25)";ctx.lineWidth=0.5;
+    var eqY2=mY+mH/2;ctx.beginPath();ctx.moveTo(mX,eqY2);ctx.lineTo(mX+mW,eqY2);ctx.stroke();
+    var pmX2=mX+mW/2;ctx.beginPath();ctx.moveTo(pmX2,mY);ctx.lineTo(pmX2,mY+mH);ctx.stroke();
+    ctx.strokeStyle="rgba(100,160,255,0.55)";ctx.lineWidth=0.8;ctx.strokeRect(mX,mY,mW,mH);
+    var mPoX=mX+((lngDeg||0)+180)/360*mW,mPoY=mY+(90-(lat||0))/180*mH;
+    mPoX=Math.max(mX+1,Math.min(mX+mW-1,mPoX));mPoY=Math.max(mY+1,Math.min(mY+mH-1,mPoY));
+    ctx.strokeStyle="rgba(255,55,55,1)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(mPoX-4,mPoY);ctx.lineTo(mPoX+4,mPoY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mPoX,mPoY-4);ctx.lineTo(mPoX,mPoY+4);ctx.stroke();
+    fillCirc(ctx,mPoX,mPoY,1.8,"rgba(255,55,55,1)");
+    ctx.restore();
+  }
+
   /* ======== HUD ======== */
   ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,rot<0?86:76);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
@@ -1051,6 +1081,10 @@ export default function App(){
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>速度</span>
           <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
           {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
+          <button style={Object.assign({},bT("100,230,160"),{padding:"2px 6px",fontSize:9,marginTop:2,width:"100%"})} onClick={function(){
+            S.current.t=(Date.now()-J2000)/86400000;setPaused(false);
+            if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){var lng2=Math.round(pos.coords.longitude),lat3=Math.round(pos.coords.latitude);setLandLng(lng2);landLngR.current=lng2;setLandLat(lat3);landLatR.current=lat3;},function(){});}
+          }}>📍 今</button>
         </div>
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
