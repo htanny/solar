@@ -64,6 +64,31 @@ var NAMED_STARS=[
   {n:"フォーマルハウト",ra:344.4,dec:-29.6,col:"rgba(230,240,255,"},
   {n:"北極星",      ra:37.9, dec:89.3, col:"rgba(255,255,255,"},
 ];
+/* Constellation line data: {n,s:[[ra,dec],...],l:[[i,j],...]} */
+var CONST_LINES=[
+  {n:"オリオン",s:[[88.79,7.41],[78.63,-8.20],[81.28,6.35],[83.00,-0.30],[84.05,-1.20],[85.19,-1.94],[76.96,-9.67],[83.78,9.93]],
+   l:[[7,0],[7,2],[0,2],[0,5],[2,3],[3,4],[4,5],[1,3],[6,5]]},
+  {n:"おおぐま",s:[[165.93,61.75],[165.46,56.38],[178.46,53.69],[183.86,57.03],[193.51,55.96],[200.98,54.93],[206.89,49.31]],
+   l:[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]]},
+  {n:"カシオペア",s:[[2.29,59.15],[10.13,56.54],[14.18,60.72],[21.45,60.24],[28.60,63.67]],
+   l:[[0,1],[1,2],[2,3],[3,4]]},
+  {n:"さそり",s:[[247.35,-26.43],[241.36,-19.81],[240.08,-22.62],[252.54,-34.29],[263.40,-37.10],[264.33,-43.00],[255.99,-39.03]],
+   l:[[1,2],[2,0],[0,3],[3,6],[6,4],[4,5]]},
+  {n:"しし",s:[[152.09,11.97],[177.26,14.57],[154.99,19.84],[168.53,20.52],[171.13,15.43],[146.46,23.77]],
+   l:[[0,2],[2,5],[2,3],[3,4],[4,1],[0,4]]},
+  {n:"はくちょう",s:[[310.36,45.28],[305.56,40.26],[292.68,27.96],[311.55,33.97],[296.24,45.13]],
+   l:[[0,1],[1,2],[0,3],[4,1]]},
+  {n:"みなみじゅうじ",s:[[186.65,-63.10],[191.93,-59.69],[187.79,-57.11],[183.79,-58.75]],
+   l:[[0,2],[3,1]]},
+  {n:"おうし",s:[[69.0,16.5],[84.41,21.14],[81.57,28.61],[56.87,24.11],[67.15,19.18]],
+   l:[[0,1],[1,2],[0,4],[0,3]]},
+];
+/* Zodiac signs: [ecliptic_longitude_deg, jp_name, symbol] */
+var ZODIAC=[[0,"おひつじ","♈"],[30,"おうし","♉"],[60,"ふたご","♊"],[90,"かに","♋"],
+  [120,"しし","♌"],[150,"おとめ","♍"],[180,"てんびん","♎"],[210,"さそり","♏"],
+  [240,"いて","♐"],[270,"やぎ","♑"],[300,"みずがめ","♒"],[330,"うお","♓"]];
+/* Spring equinox sim angle: Earth at sim_angle=eqAng when sun enters Aries */
+var ZODIAC_BASE=(79/365)*TAU+Math.PI;/* Aries direction from Sun in simulation frame */
 
 function oR(p,rd,un){if(un||rd)return p.d*DK;var v=p.d;if(v<=228)return 40+(v/228)*120;return 160+Math.pow((v-228)/4267,0.55)*280;}
 function pRf(p,rp,un){if(un)return Math.max((p.r/1000)*DK,0.0001);if(rp)return Math.max(p.r*SK,0.7);if(p.r>50)return 10+(p.r-50)*0.06;if(p.r>20)return 6+(p.r-20)*0.12;return 3+p.r*0.4;}
@@ -428,6 +453,36 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
     ctx.textAlign="center";
   }
 
+  /* ======== CONSTELLATION LINES ======== */
+  if(starA>0.05){
+    ctx.save();ctx.lineWidth=0.6;
+    for(var cli=0;cli<CONST_LINES.length;cli++){
+      var cl=CONST_LINES[cli];
+      var clSx=[],clSy=[],clVis=[];
+      for(var csi=0;csi<cl.s.length;csi++){
+        var csHr=(lstD-cl.s[csi][0])*TAU/360,csDecR=cl.s[csi][1]*TAU/360;
+        var csAlt=Math.sin(latRad)*Math.sin(csDecR)+Math.cos(latRad)*Math.cos(csDecR)*Math.cos(csHr);
+        var csAz=Math.atan2(-Math.sin(csHr)*Math.cos(csDecR),Math.sin(csDecR)*Math.cos(latRad)-Math.cos(csDecR)*Math.sin(latRad)*Math.cos(csHr));
+        var csDiff=((csAz-yaw)%TAU+TAU)%TAU;if(csDiff>Math.PI)csDiff-=TAU;
+        clSx.push(W/2+csDiff*W*0.8/TAU);clSy.push(hrzY-csAlt*hrzY*0.75);
+        clVis.push(csAlt>0.03&&Math.abs(csDiff)<TAU*0.32&&hrzY-csAlt*hrzY*0.75<hrzY-10);
+      }
+      var anyVis=false;for(var cv=0;cv<clVis.length;cv++)if(clVis[cv])anyVis=true;
+      if(!anyVis)continue;
+      ctx.strokeStyle="rgba(100,160,255,"+(starA*0.35).toFixed(2)+")";
+      for(var lli=0;lli<cl.l.length;lli++){
+        var la=cl.l[lli][0],lb2=cl.l[lli][1];
+        if(!clVis[la]||!clVis[lb2])continue;
+        ctx.beginPath();ctx.moveTo(clSx[la],clSy[la]);ctx.lineTo(clSx[lb2],clSy[lb2]);ctx.stroke();
+      }
+      /* Constellation name at centroid of visible stars */
+      var cxSum=0,cySum=0,cCount=0;
+      for(var cvi=0;cvi<clVis.length;cvi++){if(clVis[cvi]){cxSum+=clSx[cvi];cySum+=clSy[cvi];cCount++;}}
+      if(cCount>0){ctx.fillStyle="rgba(130,180,255,"+(starA*0.5).toFixed(2)+")";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(cl.n,cxSum/cCount,cySum/cCount-8);}
+    }
+    ctx.restore();
+  }
+
   /* ======== SUN ======== */
   var sunY=hrzY-sunAlt*hrzY*0.75;
   if(sunAlt>-0.2&&sunY<hrzY+30&&Math.abs(aDiffSun)<TAU*0.32){
@@ -744,6 +799,57 @@ function stopLandSound(){
 var J2000=946728000000;/* ms */
 function dateToSimDays(dateStr){var d=new Date(dateStr);if(isNaN(d))return null;return(d.getTime()-J2000)/86400000;}
 function simDaysToDate(days){var d=new Date(J2000+days*86400000);return d.toISOString().slice(0,10);}
+function scanEvents(t0){
+  var evts=[],PI2=TAU,t1=t0+730;/* scan 2 years ahead */
+  var p2=function(n){return n<10?"0"+n:""+n;};
+  var fmtD=function(t){var d=new Date(J2000+t*86400000);return d.getUTCFullYear()+"年"+p2(d.getUTCMonth()+1)+"月"+p2(d.getUTCDate())+"日";};
+  /* Seasonal events */
+  var SEAS=[{d:79.5,n:"春分"},{d:172,n:"夏至"},{d:265,n:"秋分"},{d:355.5,n:"冬至"}];
+  /* Meteor showers */
+  var SHW=[{d:3,n:"しぶんぎ座流星群"},{d:125,n:"みずがめ座η流星群"},{d:223,n:"ペルセウス座流星群"},{d:294,n:"オリオン座流星群"},{d:321,n:"しし座流星群"},{d:347,n:"ふたご座流星群"}];
+  for(var yr=Math.floor(t0/365.25);yr<=Math.ceil(t1/365.25)+1;yr++){
+    var yB=yr*365.25;
+    SEAS.forEach(function(s){var te=yB+s.d;if(te>=t0&&te<=t1)evts.push({t:te,n:s.n,ic:"🌸",date:fmtD(te)});});
+    SHW.forEach(function(s){var te=yB+s.d;if(te>=t0&&te<=t1)evts.push({t:te,n:s.n,ic:"🌠",date:fmtD(te)});});
+  }
+  /* Outer planet oppositions */
+  var OPL=[{n:"火星",p:687,d:228},{n:"木星",p:4333,d:778},{n:"土星",p:10759,d:1427},{n:"天王星",p:30687,d:2871},{n:"海王星",p:60190,d:4497}];
+  var prevCos={};OPL.forEach(function(op){prevCos[op.n]=[null,null];});
+  for(var tc=t0;tc<=t1;tc+=1){
+    var eA=(tc/365.25)*PI2,eX=Math.cos(eA)*150,eZ=-Math.sin(eA)*150;
+    OPL.forEach(function(op){
+      var pA=(tc/op.p)*PI2,pX=Math.cos(pA)*op.d,pZ=-Math.sin(pA)*op.d;
+      var dx=pX-eX,dz=pZ-eZ,sl=Math.sqrt(dx*dx+dz*dz);
+      var ex=-eX,ez=-eZ,el=Math.sqrt(ex*ex+ez*ez);
+      var cosEl=(dx*ex+dz*ez)/(sl*el);
+      var pr=prevCos[op.n];
+      if(pr[0]!==null&&pr[1]!==null&&cosEl>pr[0]&&pr[0]<pr[1]&&pr[0]<-0.97){
+        evts.push({t:tc-1,n:op.n+"が衝",ic:"🔭",date:fmtD(tc-1)});
+      }
+      pr[1]=pr[0];pr[0]=cosEl;
+    });
+  }
+  /* Inner planet greatest elongation */
+  var IPL=[{n:"水星",p:88,d:58,me:0.45},{n:"金星",p:225,d:108,me:0.70}];
+  IPL.forEach(function(ip){
+    var prevEl=[null,null];
+    for(var tc2=t0;tc2<=t1;tc2+=1){
+      var eA2=(tc2/365.25)*PI2,eX2=Math.cos(eA2)*150,eZ2=-Math.sin(eA2)*150;
+      var pA2=(tc2/ip.p)*PI2,pX2=Math.cos(pA2)*ip.d,pZ2=-Math.sin(pA2)*ip.d;
+      var dx2=pX2-eX2,dz2=pZ2-eZ2,sl2=Math.sqrt(dx2*dx2+dz2*dz2);
+      var ex2=-eX2,ez2=-eZ2,el2=Math.sqrt(ex2*ex2+ez2*ez2);
+      var cosEl2=(dx2*ex2+dz2*ez2)/(sl2*el2);
+      var eDeg=Math.acos(Math.max(-1,Math.min(1,cosEl2)))*180/Math.PI;
+      if(prevEl[0]!==null&&prevEl[1]!==null&&eDeg<prevEl[0]&&prevEl[0]>prevEl[1]&&prevEl[0]>ip.me*90){
+        var dir=((Math.atan2(pZ2-eZ2,pX2-eX2)-Math.atan2(-eZ2,-eX2)+PI2*2)%(PI2))<Math.PI?"東方":"西方";
+        evts.push({t:tc2-1,n:ip.n+"が"+dir+"最大離角("+prevEl[0].toFixed(0)+"°)",ic:"💫",date:fmtD(tc2-1)});
+      }
+      prevEl[1]=prevEl[0];prevEl[0]=eDeg;
+    }
+  });
+  evts.sort(function(a,b){return a.t-b.t;});
+  return evts.slice(0,40);/* max 40 events */
+}
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -756,6 +862,7 @@ export default function App(){
   var focTransRef=useRef({active:false});
   var tourRef=useRef({active:false,idx:0,timer:0,trans:false});
   var[touring,setTouring]=useState(false);
+  var[showEvents,setShowEvents]=useState(false);var eventsRef=useRef([]);
   var cmpStateRef=useRef({offX:0,zm:1});
   var[bgm,setBgm]=useState(false);var audioRef=useRef(null);
   var[dateInput,setDateInput]=useState("");
@@ -962,6 +1069,25 @@ export default function App(){
       if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
       if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),-Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
 
+      /* ======== ZODIAC RING ======== */
+      if(!_un&&cam.zm<10){
+        var sunEclLng=((((t/365.25)*TAU-(ZODIAC_BASE-Math.PI))*180/Math.PI)%360+360)%360;
+        var curZIdx=Math.floor(sunEclLng/30);
+        var maxEdge=Math.min(W,H)*0.435;
+        ctx.save();ctx.font="10px sans-serif";ctx.textAlign="center";
+        for(var zi2=0;zi2<ZODIAC.length;zi2++){
+          var zAng2=ZODIAC_BASE+ZODIAC[zi2][0]*Math.PI/180;
+          var zPP=pj(Math.cos(zAng2)*800,0,-Math.sin(zAng2)*800,cam);
+          var zLen=Math.sqrt(zPP.x*zPP.x+zPP.y*zPP.y);if(zLen<1)continue;
+          var lx2=W/2+zPP.x/zLen*maxEdge,ly2=H/2+zPP.y/zLen*maxEdge;
+          var isCur=(zi2===curZIdx);
+          ctx.fillStyle=isCur?"rgba(255,220,80,0.85)":"rgba(180,200,255,0.35)";
+          ctx.font=(isCur?"bold ":"")+"10px sans-serif";
+          ctx.fillText(ZODIAC[zi2][2]+ZODIAC[zi2][1],lx2,ly2);
+        }
+        ctx.restore();
+      }
+
       /* Sun */
       var sunPj=pj(0,0,0,cam),srScr=(_rs||_un)?sRf(_rs,_un)*cam.zm:Math.min(sRf(false,false)*Math.pow(cam.zm,0.35),40);
       var hits=[];
@@ -1059,6 +1185,7 @@ export default function App(){
           <button style={bF} onClick={function(){setImportMode(true);}}>📥 読込</button>
           <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>今日</button>
           <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>軌跡クリア</button>
+          <button style={showEvents?bT("255,200,80"):bF} onClick={function(){if(!showEvents){eventsRef.current=scanEvents(S.current.t);}setShowEvents(function(p){return!p;});}}>📅 天文イベント</button>
         </div>
         {showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
@@ -1074,6 +1201,25 @@ export default function App(){
 
       {/* Zoom panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+
+      {/* Event calendar panel */}
+      {cleanView===0&&!landing&&showEvents&&<DragPanel style={Object.assign({},pn,{top:80,left:10,width:260,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,220,80,0.95)"}}>📅 天文イベント（2年先まで）</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setShowEvents(false);}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",flex:1}}>
+          {eventsRef.current.length===0&&<div style={{color:"rgba(255,255,255,0.4)",fontSize:9}}>イベントが見つかりません</div>}
+          {eventsRef.current.map(function(ev,ei){return <div key={ei} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+            <span style={{fontSize:12,flexShrink:0}}>{ev.ic}</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:9,color:"rgba(255,255,255,0.9)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.n}</div>
+              <div style={{fontSize:8,color:"rgba(180,200,255,0.6)"}}>{ev.date}</div>
+            </div>
+            <button style={Object.assign({},bF,{padding:"2px 5px",fontSize:8,flexShrink:0})} onClick={function(){S.current.t=ev.t;setShowEvents(false);}}>→移動</button>
+          </div>;})}
+        </div>
+      </DragPanel>}
 
       {/* Info panel */}
       {cleanView===0&&!landing&&info!==null&&<DragPanel style={Object.assign({},pn,{top:80,right:10,width:180,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div><button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>}
