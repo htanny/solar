@@ -374,6 +374,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   var solarDay;
   if(rot<0)solarDay=1/(1/rotAbs+1/pl.p);else solarDay=Math.abs(1/(1/rotAbs-1/pl.p));
   if(!isFinite(solarDay)||solarDay>1e6)solarDay=rotAbs;
+  if(plName==="Earth")solarDay=1;/* rot=1 in data = solar day, not sidereal; use 1.0 exactly */
   var dayPh=((t/solarDay+0.25)%1+1)%1;
   var sunDir=rot<0?-1:1;
   var sunHourAng=(dayPh+(lngDeg||0)/360)*TAU*sunDir;
@@ -657,7 +658,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,rot<0?86:76);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -674,8 +675,10 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   ctx.fillText(tod+"　重力"+pl.grav+"　太陽日:"+sdStr+"　☀×"+sf.sunSz+fovStr,W/2,52);
   ctx.fillStyle="rgba(180,210,255,0.5)";ctx.font="9px sans-serif";
   ctx.fillText("緯度 "+latStr+"°　経度 "+lng+"°　方位 "+bearDeg+"° "+bearName+"　太陽高度 "+sunAltDeg+"°",W/2,66);
-  if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,80);}
-  ctx.fillStyle="rgba(255,255,255,0.2)";ctx.font="8px sans-serif";
+  var _p2=function(n){return n<10?"0"+n:""+n;};var _dms=new Date(946728000000+t*86400000);
+  var _utc=_dms.getUTCFullYear()+"/"+_p2(_dms.getUTCMonth()+1)+"/"+_p2(_dms.getUTCDate())+" "+_p2(_dms.getUTCHours())+":"+_p2(_dms.getUTCMinutes())+":"+_p2(_dms.getUTCSeconds())+" UTC";
+  ctx.fillStyle="rgba(140,200,255,0.6)";ctx.font="9px monospace";ctx.fillText(_utc,W/2,80);
+  if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.font="9px sans-serif";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,94);}
 }
 /* ===== LANDING ENVIRONMENT SOUND ===== */
 var LAND_AUDIO=null;
