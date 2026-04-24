@@ -877,7 +877,7 @@ function scanEvents(t0){
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
-  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:-0.5,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
+  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:-0.9,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
   var[sh,setSh]=useState({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true});
   var[spd,setSpd]=useState(1);
   var[rSn,setRSn]=useState(false);var[rPl,setRPl]=useState(false);var[rDi,setRDi]=useState(false);var[uni,setUni]=useState(false);
