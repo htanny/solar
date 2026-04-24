@@ -1079,7 +1079,7 @@ export default function App(){
           var zAng2=ZODIAC_BASE+ZODIAC[zi2][0]*Math.PI/180;
           var zPP=pj(Math.cos(zAng2)*800,0,-Math.sin(zAng2)*800,cam);
           var zLen=Math.sqrt(zPP.x*zPP.x+zPP.y*zPP.y);if(zLen<1)continue;
-          var lx2=W/2+zPP.x/zLen*maxEdge,ly2=H/2+zPP.y/zLen*maxEdge;
+          var lx2=zPP.x/zLen*maxEdge,ly2=zPP.y/zLen*maxEdge;
           var isCur=(zi2===curZIdx);
           ctx.fillStyle=isCur?"rgba(255,220,80,0.85)":"rgba(180,200,255,0.35)";
           ctx.font=(isCur?"bold ":"")+"10px sans-serif";
