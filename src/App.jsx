@@ -122,7 +122,7 @@ function dOb(ctx,rad,cam,col){
   /* Direction arrow at near-bottom of ellipse (front arc midpoint) */
   var aArr=cam.ry+Math.PI*1.5,p0=pj(Math.cos(aArr)*rad,0,Math.sin(aArr)*rad,cam);
   if(p0.z<0){
-    var p1=pj(Math.cos(aArr+0.12)*rad,0,Math.sin(aArr+0.12)*rad,cam);
+    var p1=pj(Math.cos(aArr-0.12)*rad,0,Math.sin(aArr-0.12)*rad,cam);
     var adx=p1.x-p0.x,ady=p1.y-p0.y,al=Math.sqrt(adx*adx+ady*ady);
     if(al>1){adx/=al;ady/=al;var as=Math.min(5,Math.max(2,rad*cam.zm*0.06));
       ctx.strokeStyle="rgba("+bc+",0.45)";ctx.lineWidth=0.9;
