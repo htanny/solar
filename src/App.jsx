@@ -1073,7 +1073,8 @@ export default function App(){
       if(!_un&&cam.zm<10){
         var sunEclLng=((((t/365.25)*TAU-(ZODIAC_BASE-Math.PI))*180/Math.PI)%360+360)%360;
         var curZIdx=Math.floor(sunEclLng/30);
-        var maxEdge=Math.min(W,H)*0.435;
+        var halfMin=Math.min(W,H)*0.47;
+        var maxEdge=Math.min(halfMin,Math.max(440*cam.zm*1.15,Math.min(W,H)*0.28));
         ctx.save();ctx.font="10px sans-serif";ctx.textAlign="center";
         for(var zi2=0;zi2<ZODIAC.length;zi2++){
           var zAng2=ZODIAC_BASE+ZODIAC[zi2][0]*Math.PI/180;
