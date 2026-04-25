@@ -120,7 +120,7 @@ function dOb(ctx,rad,cam,col){
   for(var i=0;i<n;i++){if(pts[i].z<0){if(!ifa){ctx.moveTo(pts[i].x,pts[i].y);ifa=true;}else ctx.lineTo(pts[i].x,pts[i].y);}else{if(ifa)ctx.lineTo(pts[i].x,pts[i].y);ifa=false;}}
   ctx.stroke();
   /* Direction arrow on front arc — CCW (matches planet motion) */
-  var aArr=cam.ry+Math.PI*1.5,p0=pj(Math.cos(aArr)*rad,0,-Math.sin(aArr)*rad,cam);
+  var aArr=cam.ry+Math.PI*0.5,p0=pj(Math.cos(aArr)*rad,0,-Math.sin(aArr)*rad,cam);
   if(p0.z<0){
     var p1=pj(Math.cos(aArr+0.12)*rad,0,-Math.sin(aArr+0.12)*rad,cam);
     var adx=p1.x-p0.x,ady=p1.y-p0.y,al=Math.sqrt(adx*adx+ady*ady);
@@ -1296,7 +1296,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.1.6</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.1.7</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
