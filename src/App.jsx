@@ -108,7 +108,8 @@ function atmosGlow(ctx,cx,cy,r,col,w){var g=ctx.createRadialGradient(cx,cy,r*(1-
 function dC(ctx,cx,cy,r,f){if(r<0.3){ctx.fillStyle=f;ctx.fillRect(cx-0.5,cy-0.5,1,1);return;}fillCirc(ctx,cx,cy,r,f);}
 function dOb(ctx,rad,cam,col){
   var n=Math.max(80,Math.min(360,Math.floor(rad*cam.zm*0.3)));
-  var pts=[];for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,Math.sin(a)*rad,cam);pts.push(pp);}
+  /* Use -sin to match planet orbit direction (wz=-sin(ang)*r → CCW from above) */
+  var pts=[];for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,-Math.sin(a)*rad,cam);pts.push(pp);}
   /* Back arc (z≥0, far from viewer): dim dashed */
   var bc=col||"255,255,255";ctx.strokeStyle="rgba("+bc+",0.09)";ctx.lineWidth=0.6;ctx.setLineDash([3,7]);
   ctx.beginPath();var ib=false;
@@ -119,10 +120,10 @@ function dOb(ctx,rad,cam,col){
   ctx.beginPath();var ifa=false;
   for(var i=0;i<n;i++){if(pts[i].z<0){if(!ifa){ctx.moveTo(pts[i].x,pts[i].y);ifa=true;}else ctx.lineTo(pts[i].x,pts[i].y);}else{if(ifa)ctx.lineTo(pts[i].x,pts[i].y);ifa=false;}}
   ctx.stroke();
-  /* Direction arrow at near-bottom of ellipse (front arc midpoint) */
-  var aArr=cam.ry+Math.PI*1.5,p0=pj(Math.cos(aArr)*rad,0,Math.sin(aArr)*rad,cam);
+  /* Direction arrow: midpoint of front arc (a = π/2 - cam.ry for -sin orbit) */
+  var aArr=Math.PI/2-cam.ry,p0=pj(Math.cos(aArr)*rad,0,-Math.sin(aArr)*rad,cam);
   if(p0.z<0){
-    var p1=pj(Math.cos(aArr-0.12)*rad,0,Math.sin(aArr-0.12)*rad,cam);
+    var p1=pj(Math.cos(aArr+0.12)*rad,0,-Math.sin(aArr+0.12)*rad,cam);
     var adx=p1.x-p0.x,ady=p1.y-p0.y,al=Math.sqrt(adx*adx+ady*ady);
     if(al>1){adx/=al;ady/=al;var as=Math.min(5,Math.max(2,rad*cam.zm*0.06));
       ctx.strokeStyle="rgba("+bc+",0.45)";ctx.lineWidth=0.9;
@@ -877,7 +878,7 @@ function scanEvents(t0){
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
-  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:-0.9,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
+  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:-0.18,ry:0.0,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
   var[sh,setSh]=useState({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true});
   var[spd,setSpd]=useState(1);
   var[rSn,setRSn]=useState(false);var[rPl,setRPl]=useState(false);var[rDi,setRDi]=useState(false);var[uni,setUni]=useState(false);
