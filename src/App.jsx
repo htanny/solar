@@ -108,8 +108,7 @@ function atmosGlow(ctx,cx,cy,r,col,w){var g=ctx.createRadialGradient(cx,cy,r*(1-
 function dC(ctx,cx,cy,r,f){if(r<0.3){ctx.fillStyle=f;ctx.fillRect(cx-0.5,cy-0.5,1,1);return;}fillCirc(ctx,cx,cy,r,f);}
 function dOb(ctx,rad,cam,col){
   var n=Math.max(80,Math.min(360,Math.floor(rad*cam.zm*0.3)));
-  /* Use -sin to match planet orbit direction (wz=-sin(ang)*r → CCW from above) */
-  var pts=[];for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,-Math.sin(a)*rad,cam);pts.push(pp);}
+  var pts=[];for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,Math.sin(a)*rad,cam);pts.push(pp);}
   /* Back arc (z≥0, far from viewer): dim dashed */
   var bc=col||"255,255,255";ctx.strokeStyle="rgba("+bc+",0.09)";ctx.lineWidth=0.6;ctx.setLineDash([3,7]);
   ctx.beginPath();var ib=false;
@@ -120,10 +119,10 @@ function dOb(ctx,rad,cam,col){
   ctx.beginPath();var ifa=false;
   for(var i=0;i<n;i++){if(pts[i].z<0){if(!ifa){ctx.moveTo(pts[i].x,pts[i].y);ifa=true;}else ctx.lineTo(pts[i].x,pts[i].y);}else{if(ifa)ctx.lineTo(pts[i].x,pts[i].y);ifa=false;}}
   ctx.stroke();
-  /* Direction arrow: midpoint of front arc (a = π/2 - cam.ry for -sin orbit) */
-  var aArr=Math.PI/2-cam.ry,p0=pj(Math.cos(aArr)*rad,0,-Math.sin(aArr)*rad,cam);
+  /* Direction arrow on front arc */
+  var aArr=cam.ry+Math.PI*1.5,p0=pj(Math.cos(aArr)*rad,0,Math.sin(aArr)*rad,cam);
   if(p0.z<0){
-    var p1=pj(Math.cos(aArr+0.12)*rad,0,-Math.sin(aArr+0.12)*rad,cam);
+    var p1=pj(Math.cos(aArr+0.12)*rad,0,Math.sin(aArr+0.12)*rad,cam);
     var adx=p1.x-p0.x,ady=p1.y-p0.y,al=Math.sqrt(adx*adx+ady*ady);
     if(al>1){adx/=al;ady/=al;var as=Math.min(5,Math.max(2,rad*cam.zm*0.06));
       ctx.strokeStyle="rgba("+bc+",0.45)";ctx.lineWidth=0.9;
@@ -1081,7 +1080,7 @@ export default function App(){
       if(ssFade<1)ctx.globalAlpha=ssFade;
 
       var allBodies=PL.concat(DWARFS);
-      var pd=[];for(var i=0;i<allBodies.length;i++){var pl=allBodies[i],oRv=oR(pl,_rd,_un),ang=(t/pl.p)*TAU;pd.push({pl:pl,oR:oRv,wx:Math.cos(ang)*oRv,wy:0,wz:-Math.sin(ang)*oRv,vr:pRf(pl,_rp,_un),rotAng:(t/Math.abs(pl.rot))*TAU*(pl.rot<0?-1:1)});}
+      var pd=[];for(var i=0;i<allBodies.length;i++){var pl=allBodies[i],oRv=oR(pl,_rd,_un),ang=(t/pl.p)*TAU;pd.push({pl:pl,oR:oRv,wx:Math.cos(ang)*oRv,wy:0,wz:Math.sin(ang)*oRv,vr:pRf(pl,_rp,_un),rotAng:(t/Math.abs(pl.rot))*TAU*(pl.rot<0?-1:1)});}
       var cd=[];for(var cci=0;cci<COMETS.length;cci++){var cm0=COMETS[cci],cm0E=cm0.e;var cm0OrbR=_rd||_un?cm0.a*DK:(160+Math.pow((cm0.a-228)/4267,0.55)*280);var cm0M=((t/cm0.p)+cm0.phase0)*TAU;var cm0Ecc=cm0M;for(var ki0=0;ki0<6;ki0++){cm0Ecc=cm0M+cm0E*Math.sin(cm0Ecc);}var cm0V=2*Math.atan2(Math.sqrt(1+cm0E)*Math.sin(cm0Ecc/2),Math.sqrt(1-cm0E)*Math.cos(cm0Ecc/2));var cm0R=cm0OrbR*(1-cm0E*cm0E)/(1+cm0E*Math.cos(cm0V));cd.push({cm:cm0,orbR:cm0OrbR,wx:Math.cos(cm0V+cm0.inc)*cm0R,wy:0,wz:Math.sin(cm0V+cm0.inc)*cm0R});}
 
       trailTimer+=dt;if(trailTimer>0.05&&!pausR.current&&!tourRef.current.trans){trailTimer=0;for(var ti=0;ti<sim.trails.length;ti++){sim.trails[ti].push({x:pd[ti].wx,z:pd[ti].wz});if(sim.trails[ti].length>TRAIL_LEN)sim.trails[ti].shift();}}
@@ -1145,8 +1144,8 @@ export default function App(){
           drawPlanetBody(ctx,ppp.x,ppp.y,rr,pdt.pl,pdt.rotAng);
           dSh(ctx,ppp.x,ppp.y,rr,pdt.wx,pdt.wz,cam);
           if(show.tilt)dAx(ctx,ppp.x,ppp.y,rr,pdt.pl.t);
-          if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz-Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
-          if(pdt.pl.n==="Jupiter"&&show.moon){for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi],gmOrb=_un?(gm.orbR/1e6)*DK:(_rd?(gm.orbR*0.001)*DK:(12+gmi*5)),gmAng=(t/gm.p)*TAU,gmWx=pdt.wx+Math.cos(gmAng)*gmOrb,gmWz=pdt.wz-Math.sin(gmAng)*gmOrb,gmPj=pj(gmWx,0,gmWz,cam),gmR=Math.max(_un?(gm.r/1e6)*DK*cam.zm:(_rp?gm.r*SK*0.01*cam.zm:(1.2+gmi*0.3)*cam.zm*0.3),0.4);dC(ctx,gmPj.x,gmPj.y,gmR,gm.col);if(gmR>1.5)sphereShade(ctx,gmPj.x,gmPj.y,gmR);dSh(ctx,gmPj.x,gmPj.y,gmR,gmWx,gmWz,cam);if(show.labels&&gmR>0.8){ctx.fillStyle="rgba(200,200,180,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmPj.x,gmPj.y-gmR-3);}}}
+          if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz+Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
+          if(pdt.pl.n==="Jupiter"&&show.moon){for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi],gmOrb=_un?(gm.orbR/1e6)*DK:(_rd?(gm.orbR*0.001)*DK:(12+gmi*5)),gmAng=(t/gm.p)*TAU,gmWx=pdt.wx+Math.cos(gmAng)*gmOrb,gmWz=pdt.wz+Math.sin(gmAng)*gmOrb,gmPj=pj(gmWx,0,gmWz,cam),gmR=Math.max(_un?(gm.r/1e6)*DK*cam.zm:(_rp?gm.r*SK*0.01*cam.zm:(1.2+gmi*0.3)*cam.zm*0.3),0.4);dC(ctx,gmPj.x,gmPj.y,gmR,gm.col);if(gmR>1.5)sphereShade(ctx,gmPj.x,gmPj.y,gmR);dSh(ctx,gmPj.x,gmPj.y,gmR,gmWx,gmWz,cam);if(show.labels&&gmR>0.8){ctx.fillStyle="rgba(200,200,180,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmPj.x,gmPj.y-gmR-3);}}}
           if(pdt.pl.n==="Earth"){var moVe=mOf(_rd,_un),mAnge=(t/MD.p)*TAU,sunAngE=Math.atan2(-pdt.wz,-pdt.wx),cosPhaseE=Math.cos(mAnge-sunAngE),inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;if(inNode){if(cosPhaseE>0.9995)eclipseType="solar";else if(cosPhaseE<-0.9993)eclipseType="lunar";}eclipseEarPj=ppp;eclipseEarRr=rr;}
           if(show.labels){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText(langR.current==="en"?pdt.pl.n:pdt.pl.j,ppp.x,ppp.y-rr-7);if(show.tilt){ctx.fillStyle="rgba(255,255,100,0.45)";ctx.font="8px sans-serif";ctx.fillText(pdt.pl.t+"°",ppp.x,ppp.y+rr+13);}}
         }
