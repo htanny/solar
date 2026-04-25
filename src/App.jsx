@@ -877,7 +877,7 @@ function scanEvents(t0){
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
-  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:-0.22,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
+  var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:0.22,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
   var[sh,setSh]=useState({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true});
   var[spd,setSpd]=useState(1);
   var[rSn,setRSn]=useState(false);var[rPl,setRPl]=useState(false);var[rDi,setRDi]=useState(false);var[uni,setUni]=useState(false);
@@ -1296,7 +1296,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.1.7</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.1.8</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
