@@ -58,6 +58,14 @@ git push origin main
 
 `vite.config.js` の `base: '/solar/'` が GitHub Pages のサブパス対応に必要。
 
+## バージョン管理ルール
+
+**`src/App.jsx` に変更をコミットする際は、必ずバージョン文字列を更新すること。**
+
+- バージョン表示箇所: `src/App.jsx` 末尾付近の `<div>v2.x.x</div>`
+- パッチ変更（バグ修正・小改善）: 末尾の数字を +1（例: v2.1.5 → v2.1.6）
+- 機能追加: 中間の数字を +1（例: v2.1.x → v2.2.0）
+
 ## 注意事項
 
 - `canvas.toDataURL` はArtifact環境でブロックされる（スクリーンショットはOSネイティブ機能を使用）
