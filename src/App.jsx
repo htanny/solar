@@ -552,9 +552,15 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
         /* moonPh: 0=新月(暗), 0.25=上弦, 0.5=満月(明), 0.75=下弦 */
         if(moonPh>0.02&&moonPh<0.98){
           ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
-          if(moonPh<0.5){ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,false);}
-          else{ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,true);}
-          ctx.bezierCurveTo(moonX+mkx,moonY+moonRad,moonX+mkx,moonY-moonRad,moonX,moonY-moonRad);
+          if(moonPh<0.5){
+            /* 上弦(右側が光る): 右弧 + 左に曲がるベジェ */
+            ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,false);
+            ctx.bezierCurveTo(moonX+mkx,moonY+moonRad,moonX+mkx,moonY-moonRad,moonX,moonY-moonRad);
+          }else{
+            /* 下弦(左側が光る): 左弧 + 右に曲がるベジェ(mkx符号反転) */
+            ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,true);
+            ctx.bezierCurveTo(moonX-mkx,moonY+moonRad,moonX-mkx,moonY-moonRad,moonX,moonY-moonRad);
+          }
           ctx.fill();
         }
         /* moonPh≈0 or ≈1 → 新月: 背景の黒塗りのままで何も追加しない */
@@ -1308,7 +1314,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.4</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.5</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
