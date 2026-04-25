@@ -451,7 +451,7 @@ function getEarthBiome(lat,lng){
   return'temperate';
 }
 
-function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
+function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var sf=SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   /* Earth biome config */
@@ -524,7 +524,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   }
 
   /* ======== CONSTELLATION LINES ======== */
-  if(starA>0.05){
+  if(constOn&&starA>0.05){
     ctx.save();ctx.lineWidth=0.6;
     for(var cli=0;cli<CONST_LINES.length;cli++){
       var cl=CONST_LINES[cli];
@@ -553,6 +553,34 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
     ctx.restore();
   }
 
+  /* ======== METEOR SHOWERS (Earth landing mode) ======== */
+  if(plName==="Earth"&&starA>0.1){
+    var dayY=((t%365.25)+365.25)%365.25;
+    var MSHW=[{d:3,n:"しぶんぎ座"},{d:125,n:"みずがめ座η"},{d:223,n:"ペルセウス座"},{d:294,n:"オリオン座"},{d:321,n:"しし座"},{d:347,n:"ふたご座"}];
+    var shwI=1.0,bestI=0,bestSi=0;
+    for(var msi=0;msi<MSHW.length;msi++){var mdiff=Math.min(Math.abs(dayY-MSHW[msi].d),365-Math.abs(dayY-MSHW[msi].d));var si2=Math.exp(-mdiff*mdiff*0.04)*8;shwI+=si2;if(si2>bestI){bestI=si2;bestSi=msi;}}
+    var nMet=Math.min(20,Math.floor(shwI*1.5));
+    var metDur=0.004;ctx.lineWidth=1.2;
+    for(var mii=0;mii<nMet;mii++){
+      var mPer=metDur*(1+mii*0.65);
+      var mSlotT=(t%mPer)/mPer;if(mSlotT>0.45)continue;
+      var mSeed=Math.floor(t/mPer)*97+mii*53;
+      var mr=seedR(mSeed);
+      var mProgress=mSlotT/0.45;
+      var mSX=mr()*W,mSY=mr()*hrzY*0.72;
+      var mAng=Math.PI*0.4+mr()*Math.PI*0.2;
+      var mLen=25+mr()*55;
+      var mDX=Math.cos(mAng)*mLen*mProgress,mDY=Math.sin(mAng)*mLen*mProgress;
+      var mAlpha=(1-mProgress)*starA*(0.5+mr()*0.5);
+      if(mAlpha<0.05)continue;
+      var mGrad=ctx.createLinearGradient(mSX,mSY,mSX+mDX,mSY+mDY);
+      mGrad.addColorStop(0,"rgba(255,255,255,0)");
+      mGrad.addColorStop(1,"rgba(255,255,255,"+mAlpha.toFixed(2)+")");
+      ctx.strokeStyle=mGrad;ctx.beginPath();ctx.moveTo(mSX,mSY);ctx.lineTo(mSX+mDX,mSY+mDY);ctx.stroke();
+    }
+    if(bestI>3){ctx.fillStyle="rgba(200,220,255,"+(Math.min(0.6,bestI*0.07)).toFixed(2)+")";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("🌠 "+MSHW[bestSi].n+"流星群",W/2,16);}
+  }
+
   /* ======== SUN ======== */
   var sunY=hrzY-sunAlt*hrzY*0.75;
   if(sunAlt>-0.2&&sunY<hrzY+30&&Math.abs(aDiffSun)<TAU*0.32){
@@ -562,6 +590,18 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
     ctx.fillStyle=sg;ctx.fillRect(sunScreenX-glR,sunY-glR,glR*2,glR*2);
     ctx.globalAlpha=plName==="Venus"?0.25:1;
     fillCirc(ctx,sunScreenX,sunY,sunR,"rgba(255,245,220,1)");ctx.globalAlpha=1;
+    /* Solar eclipse overlay */
+    if(eclLand==='solar'&&moonSinAlt>-0.1){
+      var eStr=eclStrength;
+      var corR2=sunR*(1+eStr*1.5);
+      var cg=ctx.createRadialGradient(sunScreenX,sunY,sunR*0.9,sunScreenX,sunY,corR2*2.2);
+      cg.addColorStop(0,"rgba(255,240,180,"+(0.5*eStr).toFixed(2)+")");cg.addColorStop(0.4,"rgba(255,200,80,"+(0.2*eStr).toFixed(2)+")");cg.addColorStop(1,"rgba(255,150,30,0)");
+      ctx.fillStyle=cg;ctx.beginPath();ctx.arc(sunScreenX,sunY,corR2*2.2,0,TAU);ctx.fill();
+      fillCirc(ctx,sunScreenX,sunY,sunR*(0.95+eStr*0.1),"rgba(5,5,15,1)");
+      if(eStr>0.9){ctx.globalAlpha=0.25*eStr;ctx.strokeStyle="rgba(255,240,200,1)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(sunScreenX,sunY,sunR*1.02,0,TAU);ctx.stroke();ctx.globalAlpha=1;}
+      ctx.fillStyle="rgba(255,230,100,"+(0.7*eStr).toFixed(2)+")";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+      ctx.fillText(eStr>0.85?"🌑 皆既日食":"🌑 日食",W/2,hrzY*0.08);
+    }
     if(sunAlt>-0.1&&sunAlt<0.35){var ga=Math.max(0,(0.35-Math.abs(sunAlt-0.1))*1.5);var hg=ctx.createLinearGradient(0,hrzY-80,0,hrzY);hg.addColorStop(0,"rgba(255,130,40,0)");hg.addColorStop(1,"rgba(255,100,30,"+(ga*0.25).toFixed(2)+")");ctx.fillStyle=hg;ctx.fillRect(0,hrzY-80,W,80);}
   }
 
@@ -572,6 +612,9 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
     var sunLngE=(280.46+0.9856*t+36000)%360;
     var moonLngE=(218.316+13.176396*t+360000)%360;
     var moonPh=((moonLngE-sunLngE)/360+100)%1;
+    var inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;
+    var eclLand=null,eclStrength=0;
+    if(inNode){var ep=Math.min(moonPh,1-moonPh);if(ep<0.018){eclLand='solar';eclStrength=1-ep/0.018;}var elp=Math.abs(moonPh-0.5);if(elp<0.022){eclLand='lunar';eclStrength=1-elp/0.022;}}
     /* Moon RA ≈ ecliptic longitude (low inclination approx) */
     var moonRaD=moonLngE%360;
     var moonDecD=5.1*Math.sin((moonLngE-125.04)*0.01745); /* 5.1° max declination from inclination */
@@ -598,7 +641,8 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
         ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(-moonRad,-moonRad,moonRad*2,moonRad*2);
         /* moonPh: 0=新月(暗), 0.25=上弦, 0.5=満月(明), 0.75=下弦 */
         if(moonPh>0.02&&moonPh<0.98){
-          ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
+          var moonCol=eclLand==='lunar'?"rgba(200,60,20,":moonPh>0.45&&moonPh<0.55&&eclStrength>0.3?"rgba(180,80,30,":"rgba(235,235,210,";
+          ctx.fillStyle=moonCol+mA.toFixed(2)+")";ctx.beginPath();
           if(moonPh<0.5){
             ctx.arc(0,0,moonRad,-Math.PI/2,Math.PI/2,false);
             ctx.bezierCurveTo(mkx,moonRad,mkx,-moonRad,0,-moonRad);
@@ -610,6 +654,14 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
         }
         /* moonPh≈0 or ≈1 → 新月: 暗いまま */
         ctx.restore();
+        if(eclLand==='lunar'){
+          var lstr=eclStrength;ctx.globalAlpha=0.18*lstr;
+          var lg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
+          lg.addColorStop(0,"rgba(200,50,0,1)");lg.addColorStop(1,"rgba(200,50,0,0)");
+          ctx.fillStyle=lg;ctx.fillRect(moonX-moonRad*3,moonY-moonRad*3,moonRad*6,moonRad*6);ctx.globalAlpha=1;
+          ctx.fillStyle="rgba(255,150,80,"+(0.7*lstr).toFixed(2)+")";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+          ctx.fillText(lstr>0.85?"🌕 皆既月食":"🌕 月食",W/2,hrzY*0.08);
+        }
         var mg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
         mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");
         ctx.fillStyle=mg;ctx.fillRect(moonX-moonRad*3,moonY-moonRad*3,moonRad*6,moonRad*6);
@@ -1030,6 +1082,7 @@ export default function App(){
   var[landTilt,setLandTilt]=useState(0);
   var[lang,setLang]=useState("ja");
   var landR=useRef(null);var landYR=useRef(0);var landLatR=useRef(0);var landLngR=useRef(0);var landFovR=useRef(1);var landSpdR=useRef(3600/86400);var landTiltR=useRef(0);var langR=useRef("ja");
+  var showConstR=useRef(true);var[showConst,setShowConst]=useState(true);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){landYR.current=landYaw;},[landYaw]);
   useEffect(function(){landLatR.current=landLat;},[landLat]);
@@ -1149,7 +1202,7 @@ export default function App(){
       /* Landing view mode */
       var _land=landR.current;
       if(_land){
-        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landLngR.current,landTiltR.current);
+        drawLanding(ctx,W,H,t,_land,landYR.current,landLatR.current,landFovR.current,landLngR.current,landTiltR.current,showConstR.current);
         fR.current=requestAnimationFrame(frame);return;
       }
 
@@ -1386,6 +1439,7 @@ export default function App(){
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>速度</span>
           <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
           {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
+          <button style={showConst?bT("100,160,255"):bF} onClick={function(){var v=!showConst;setShowConst(v);showConstR.current=v;}}>星座線{showConst?" ●":""}</button>
           <button style={Object.assign({},bT("100,230,160"),{padding:"2px 6px",fontSize:9,marginTop:2,width:"100%"})} onClick={function(){
             S.current.t=(Date.now()-J2000)/86400000;setPaused(false);
             if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){var lng2=Math.round(pos.coords.longitude),lat3=Math.round(pos.coords.latitude);setLandLng(lng2);landLngR.current=lng2;setLandLat(lat3);landLatR.current=lat3;},function(){});}
@@ -1427,7 +1481,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.3.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.3.1</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
