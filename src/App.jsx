@@ -527,38 +527,45 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
   /* ======== OTHER CELESTIAL BODIES IN SKY ======== */
   var nightAlpha=Math.max(0.2,1-dayF);
   if(plName==="Earth"){
-    /* Moon - visible day and night */
-    var moonAng=(t/27.3)*TAU;
-    var moonX=W*0.5+Math.cos(moonAng+yaw)*W*0.38;
-    var moonY=hrzY*0.38+Math.sin(moonAng)*hrzY*0.22;
-    if(moonY<hrzY){
-      var moonRad=Math.max(4,8/fov);
-      /* Moon phase via ecliptic longitudes */
-      var sunLngE=(280.46+0.9856*t+36000)%360;
-      var moonLngE=(218.316+13.176396*t+360000)%360;
-      var moonPh=((moonLngE-sunLngE)/360+100)%1;
-      var mkx=moonRad*Math.cos(moonPh*TAU);
-      var mA=Math.min(0.95,nightAlpha*0.85+0.1);
-      ctx.save();ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.clip();
-      ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(moonX-moonRad,moonY-moonRad,moonRad*2,moonRad*2);
-      if(moonPh>0.02&&moonPh<0.98){
-        ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
-        if(moonPh<0.5){ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,false);}
-        else{ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,true);}
-        ctx.bezierCurveTo(moonX+mkx,moonY+moonRad,moonX+mkx,moonY-moonRad,moonX,moonY-moonRad);
-        ctx.fill();
-      }else{
-        ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";
-        ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.fill();
+    /* Moon - proper alt/az from RA/Dec, matching star calculation */
+    var sunLngE=(280.46+0.9856*t+36000)%360;
+    var moonLngE=(218.316+13.176396*t+360000)%360;
+    var moonPh=((moonLngE-sunLngE)/360+100)%1;
+    /* Moon RA ≈ ecliptic longitude (low inclination approx) */
+    var moonRaD=moonLngE%360;
+    var moonDecD=5.1*Math.sin((moonLngE-125.04)*0.01745); /* 5.1° max declination from inclination */
+    var lstD2=((280.46+360.98565*t+(lngDeg||0))%360+360)%360;
+    var moonHr=(lstD2-moonRaD)*TAU/360;
+    var moonDecR2=moonDecD*0.01745;
+    var moonSinAlt=Math.sin(latRad)*Math.sin(moonDecR2)+Math.cos(latRad)*Math.cos(moonDecR2)*Math.cos(moonHr);
+    if(moonSinAlt>-0.1){
+      var moonAz2=Math.atan2(-Math.sin(moonHr)*Math.cos(moonDecR2),Math.sin(moonDecR2)*Math.cos(latRad)-Math.cos(moonDecR2)*Math.sin(latRad)*Math.cos(moonHr));
+      var moonADiff=((moonAz2-yaw)%TAU+TAU)%TAU;if(moonADiff>Math.PI)moonADiff-=TAU;
+      var moonX=W/2+moonADiff*W*0.8/TAU;
+      var moonY=hrzY-moonSinAlt*hrzY*0.75;
+      if(moonY>4&&moonY<hrzY+10){
+        var moonRad=Math.max(4,8/fov);
+        var mkx=moonRad*Math.cos(moonPh*TAU);
+        var mA=Math.min(0.95,nightAlpha*0.85+0.1);
+        ctx.save();ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(moonX-moonRad,moonY-moonRad,moonRad*2,moonRad*2);
+        if(moonPh>0.02&&moonPh<0.98){
+          ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
+          if(moonPh<0.5){ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,false);}
+          else{ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,true);}
+          ctx.bezierCurveTo(moonX+mkx,moonY+moonRad,moonX+mkx,moonY-moonRad,moonX,moonY-moonRad);
+          ctx.fill();
+        }else{
+          ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";
+          ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.fill();
+        }
+        ctx.restore();
+        var mg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
+        mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=mg;ctx.fillRect(moonX-moonRad*3,moonY-moonRad*3,moonRad*6,moonRad*6);
+        ctx.fillStyle="rgba(200,200,180,"+(0.4*nightAlpha).toFixed(2)+")";ctx.font="7px sans-serif";ctx.textAlign="center";
+        var phaseNames=["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];ctx.fillText(phaseNames[Math.round(moonPh*8)%8],moonX,moonY+moonRad+9);
       }
-      ctx.restore();
-      /* Glow */
-      var mg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
-      mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");
-      ctx.fillStyle=mg;ctx.fillRect(moonX-moonRad*3,moonY-moonRad*3,moonRad*6,moonRad*6);
-      /* Phase label */
-      ctx.fillStyle="rgba(200,200,180,"+(0.4*nightAlpha).toFixed(2)+")";ctx.font="7px sans-serif";ctx.textAlign="center";
-      var phaseNames=["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];ctx.fillText(phaseNames[Math.round(moonPh*8)%8],moonX,moonY+moonRad+9);
     }
     /* Venus as evening/morning star */
     if(!isNight||sunAlt>-0.3){var venX=(W*0.3+t*0.1+yaw*60)%W,venY=hrzY*0.4+Math.sin(t*0.01)*hrzY*0.1;
@@ -1302,7 +1309,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.1</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.2</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
