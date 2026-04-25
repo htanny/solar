@@ -546,24 +546,28 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
       if(moonY>4&&moonY<hrzY+10){
         var moonRad=Math.max(4,8/fov);
         var mkx=moonRad*Math.cos(moonPh*TAU);
-        var mA=Math.max(0.75,nightAlpha*0.85+0.1); /* 昼間も月は白く見える */
-        ctx.save();ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.clip();
-        ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(moonX-moonRad,moonY-moonRad,moonRad*2,moonRad*2);
+        var mA=Math.max(0.75,nightAlpha*0.85+0.1);
+        /* 傾き: 月→太陽のスクリーン方向から計算 */
+        var dxSun2=sunScreenX-moonX, dySun2=sunY-moonY;
+        var toSun=Math.atan2(dxSun2,-dySun2); /* 上方向=0, 時計回り正 */
+        var moonTilt=moonPh<0.5 ? toSun-Math.PI/2 : toSun+Math.PI/2;
+        ctx.save();
+        ctx.translate(moonX,moonY);ctx.rotate(moonTilt);
+        ctx.beginPath();ctx.arc(0,0,moonRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(-moonRad,-moonRad,moonRad*2,moonRad*2);
         /* moonPh: 0=新月(暗), 0.25=上弦, 0.5=満月(明), 0.75=下弦 */
         if(moonPh>0.02&&moonPh<0.98){
           ctx.fillStyle="rgba(235,235,210,"+mA.toFixed(2)+")";ctx.beginPath();
           if(moonPh<0.5){
-            /* 上弦(右側が光る): 右弧 + 左に曲がるベジェ */
-            ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,false);
-            ctx.bezierCurveTo(moonX+mkx,moonY+moonRad,moonX+mkx,moonY-moonRad,moonX,moonY-moonRad);
+            ctx.arc(0,0,moonRad,-Math.PI/2,Math.PI/2,false);
+            ctx.bezierCurveTo(mkx,moonRad,mkx,-moonRad,0,-moonRad);
           }else{
-            /* 下弦(左側が光る): 左弧 + 右に曲がるベジェ(mkx符号反転) */
-            ctx.arc(moonX,moonY,moonRad,-Math.PI/2,Math.PI/2,true);
-            ctx.bezierCurveTo(moonX-mkx,moonY+moonRad,moonX-mkx,moonY-moonRad,moonX,moonY-moonRad);
+            ctx.arc(0,0,moonRad,-Math.PI/2,Math.PI/2,true);
+            ctx.bezierCurveTo(-mkx,moonRad,-mkx,-moonRad,0,-moonRad);
           }
           ctx.fill();
         }
-        /* moonPh≈0 or ≈1 → 新月: 背景の黒塗りのままで何も追加しない */
+        /* moonPh≈0 or ≈1 → 新月: 暗いまま */
         ctx.restore();
         var mg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
         mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");
@@ -1314,7 +1318,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.5</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.6</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
