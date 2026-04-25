@@ -546,7 +546,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt){
       if(moonY>4&&moonY<hrzY+10){
         var moonRad=Math.max(4,8/fov);
         var mkx=moonRad*Math.cos(moonPh*TAU);
-        var mA=Math.min(0.95,nightAlpha*0.85+0.1);
+        var mA=Math.max(0.75,nightAlpha*0.85+0.1); /* 昼間も月は白く見える */
         ctx.save();ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.clip();
         ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(moonX-moonRad,moonY-moonRad,moonRad*2,moonRad*2);
         /* moonPh: 0=新月(暗), 0.25=上弦, 0.5=満月(明), 0.75=下弦 */
@@ -1308,7 +1308,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.3</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.2.4</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
