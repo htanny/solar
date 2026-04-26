@@ -451,6 +451,7 @@ function getEarthBiome(lat,lng){
   return'temperate';
 }
 
+var MSHW=[{d:3,n:"しぶんぎ座"},{d:125,n:"みずがめ座η"},{d:223,n:"ペルセウス座"},{d:294,n:"オリオン座"},{d:321,n:"しし座"},{d:347,n:"ふたご座"}];
 function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var sf=SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
@@ -556,7 +557,6 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   /* ======== METEOR SHOWERS (Earth landing mode) ======== */
   if(plName==="Earth"&&starA>0.1){
     var dayY=((t%365.25)+365.25)%365.25;
-    var MSHW=[{d:3,n:"しぶんぎ座"},{d:125,n:"みずがめ座η"},{d:223,n:"ペルセウス座"},{d:294,n:"オリオン座"},{d:321,n:"しし座"},{d:347,n:"ふたご座"}];
     var shwI=1.0,bestI=0,bestSi=0;
     for(var msi=0;msi<MSHW.length;msi++){var mdiff=Math.min(Math.abs(dayY-MSHW[msi].d),365-Math.abs(dayY-MSHW[msi].d));var si2=Math.exp(-mdiff*mdiff*0.04)*8;shwI+=si2;if(si2>bestI){bestI=si2;bestSi=msi;}}
     var nMet=Math.min(20,Math.floor(shwI*1.5));
@@ -580,6 +580,10 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     }
     if(bestI>3){ctx.fillStyle="rgba(200,220,255,"+(Math.min(0.6,bestI*0.07)).toFixed(2)+")";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("🌠 "+MSHW[bestSi].n+"流星群",W/2,16);}
   }
+
+  /* Eclipse detection must precede sun section which uses eclLand/moonSinAlt */
+  var eclLand=null,eclStrength=0,moonSinAlt=-1;
+  if(plName==="Earth"){var _sl=(280.46+0.9856*t+36000)%360,_ml=(218.316+13.176396*t+360000)%360,_mp=((_ml-_sl)/360+100)%1;var _md2=5.1*Math.sin((_ml-125.04)*0.01745)*0.01745,_lst2=((280.46+360.98565*t+(lngDeg||0))%360+360)%360,_mh=(_lst2-_ml%360)*TAU/360;moonSinAlt=Math.sin(latRad)*Math.sin(_md2)+Math.cos(latRad)*Math.cos(_md2)*Math.cos(_mh);var inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;if(inNode){var _ep=Math.min(_mp,1-_mp);if(_ep<0.018){eclLand='solar';eclStrength=1-_ep/0.018;}var _elp=Math.abs(_mp-0.5);if(_elp<0.022){eclLand='lunar';eclStrength=1-_elp/0.022;}}}
 
   /* ======== SUN ======== */
   var sunY=hrzY-sunAlt*hrzY*0.75;
@@ -612,9 +616,6 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     var sunLngE=(280.46+0.9856*t+36000)%360;
     var moonLngE=(218.316+13.176396*t+360000)%360;
     var moonPh=((moonLngE-sunLngE)/360+100)%1;
-    var inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;
-    var eclLand=null,eclStrength=0;
-    if(inNode){var ep=Math.min(moonPh,1-moonPh);if(ep<0.018){eclLand='solar';eclStrength=1-ep/0.018;}var elp=Math.abs(moonPh-0.5);if(elp<0.022){eclLand='lunar';eclStrength=1-elp/0.022;}}
     /* Moon RA ≈ ecliptic longitude (low inclination approx) */
     var moonRaD=moonLngE%360;
     var moonDecD=5.1*Math.sin((moonLngE-125.04)*0.01745); /* 5.1° max declination from inclination */
