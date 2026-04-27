@@ -212,7 +212,10 @@ export default function App(){
       if(fc!=="all"&&fc!=="sun"){for(var fi=0;fi<pd.length;fi++){if(pd[fi].pl.n===fc){tfx=pd[fi].wx;tfy=pd[fi].wy;tfz=pd[fi].wz;hasTarget=true;break;}}if(!hasTarget){for(var fi2=0;fi2<cd.length;fi2++){if(cd[fi2].cm.key===fc){tfx=cd[fi2].wx;tfy=cd[fi2].wy;tfz=cd[fi2].wz;hasTarget=true;break;}}}}
       var ft=focTransRef.current;if(ft.active){if(!ft.ready){if(hasTarget){ft.toFx=tfx;ft.toFz=tfz;ft.ready=true;}else if(fc==="sun"||fc==="all"){ft.toFx=0;ft.toFz=0;ft.ready=true;}}if(ft.ready){ft.t=Math.min(1,ft.t+dt/ft.dur);var ease2=ft.t*ft.t*(3-2*ft.t);cam.fx=ft.fromFx+(ft.toFx-ft.fromFx)*ease2;cam.fz=ft.fromFz+(ft.toFz-ft.fromFz)*ease2;var midZm=Math.max(0.0001,Math.min(ft.fromZm,ft.toZm)*0.15);if(ease2<0.5){cam.zm=ft.fromZm+(midZm-ft.fromZm)*(ease2*2);}else{cam.zm=midZm+(ft.toZm-midZm)*((ease2-0.5)*2);}if(ft.t>=1){ft.active=false;cam.fx=ft.toFx;cam.fz=ft.toFz;cam.zm=ft.toZm;}}}else if(hasTarget||fc==="sun"){var lf=Math.min(1,dt*7);cam.fx+=(tfx-cam.fx)*lf;cam.fy+=(tfy-cam.fy)*lf;cam.fz+=(tfz-cam.fz)*lf;}else if(fc==="all"){cam.fx*=0.92;cam.fy*=0.92;cam.fz*=0.92;}
 
-      if(show.orbits){for(var oi=0;oi<pd.length;oi++){var _oc=pd[oi].pl.c.match(/(\d+),(\d+),(\d+)/);dOb(ctx,pd[oi].oR,cam,_oc?_oc[1]+","+_oc[2]+","+_oc[3]:null,false);}}
+      /* sunPj needed for orbit culling below */
+      var sunPj=pj(0,0,0,cam);
+      var _orbMaxR=Math.max(W,H)*20;
+      if(show.orbits){for(var oi=0;oi<pd.length;oi++){var _osr=pd[oi].oR*cam.zm;if(_osr<0.5)continue;var _snx=Math.max(-W/2,Math.min(W/2,sunPj.x)),_sny=Math.max(-H/2,Math.min(H/2,sunPj.y));if(Math.sqrt((_snx-sunPj.x)*(_snx-sunPj.x)+(_sny-sunPj.y)*(_sny-sunPj.y))>=_osr||_osr>_orbMaxR)continue;var _oc=pd[oi].pl.c.match(/(\d+),(\d+),(\d+)/);dOb(ctx,pd[oi].oR,cam,_oc?_oc[1]+","+_oc[2]+","+_oc[3]:null,false);}}
       if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
       if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
 
@@ -237,7 +240,7 @@ export default function App(){
       }
 
       /* Sun */
-      var sunPj=pj(0,0,0,cam),srScr=(_rs||_un)?sRf(_rs,_un)*cam.zm:Math.min(sRf(false,false)*Math.pow(cam.zm,0.35),40);
+      var srScr=(_rs||_un)?sRf(_rs,_un)*cam.zm:Math.min(sRf(false,false)*Math.pow(cam.zm,0.35),40);
       var hits=[];
 
       /* Comets */
@@ -245,7 +248,7 @@ export default function App(){
         if(tLen>2){for(var tp2=0;tp2<20;tp2++){var tf=tp2/20;ctx.fillStyle="rgba("+cm.col[0]+","+cm.col[1]+","+cm.col[2]+","+((1-tf)*0.35*Math.min(tI,1)).toFixed(3)+")";var tsz=cmH*(0.8+tf*1.5);ctx.fillRect(cmPj.x+tnx*tLen*tf+tpx*Math.sin(tp2*1.7+t*2)*tLen*0.01-tsz*0.5,cmPj.y+tny*tLen*tf+tpy*Math.sin(tp2*1.7+t*2)*tLen*0.01-tsz*0.5,tsz,tsz);}for(var tp3=0;tp3<14;tp3++){var tf2=tp3/14,cv2=tf2*tf2*tLen*0.15;ctx.fillStyle="rgba(255,230,180,"+((1-tf2)*0.22*Math.min(tI,1)).toFixed(3)+")";var tsz2=cmH*(0.6+tf2*1.2);ctx.fillRect(cmPj.x+tnx*tLen*tf2*0.7+tpx*cv2-tsz2*0.5,cmPj.y+tny*tLen*tf2*0.7+tpy*cv2-tsz2*0.5,tsz2,tsz2);}}
         var comaR=cmH*(3+tI*4);var comaG=ctx.createRadialGradient(cmPj.x,cmPj.y,0,cmPj.x,cmPj.y,comaR);var cA=Math.min(0.7,0.2+tI*0.3);comaG.addColorStop(0,"rgba(255,255,255,"+cA.toFixed(2)+")");comaG.addColorStop(0.3,"rgba(200,230,255,"+(cA*0.3).toFixed(2)+")");comaG.addColorStop(1,"rgba(150,200,255,0)");ctx.fillStyle=comaG;ctx.fillRect(cmPj.x-comaR,cmPj.y-comaR,comaR*2,comaR*2);fillCirc(ctx,cmPj.x,cmPj.y,cmH,"rgba(240,250,255,1)");
         hits.push({n:cm.key,x:cmPj.x,y:cmPj.y,r:Math.max(comaR,15)});
-        if(show.orbits){ctx.beginPath();ctx.strokeStyle="rgba(100,180,255,0.08)";ctx.lineWidth=0.5;ctx.setLineDash([3,5]);var cmN=Math.max(80,Math.min(600,Math.floor(cmOrbR*cam.zm*0.25)));for(var cj=0;cj<=cmN;cj++){var cja=(cj/cmN)*TAU,cjr=cmOrbR*(1-cmE*cmE)/(1+cmE*Math.cos(cja)),cjp=pj(Math.cos(cja+cm.inc)*cjr,0,Math.sin(cja+cm.inc)*cjr,cam);if(cj===0)ctx.moveTo(cjp.x,cjp.y);else ctx.lineTo(cjp.x,cjp.y);}ctx.stroke();ctx.setLineDash([]);}
+        if(show.orbits){var _cmosr=cmOrbR*cam.zm;if(_cmosr<_orbMaxR){ctx.beginPath();ctx.strokeStyle="rgba(100,180,255,0.08)";ctx.lineWidth=0.5;ctx.setLineDash([3,5]);var cmN=Math.max(80,Math.min(600,Math.floor(cmOrbR*cam.zm*0.25)));for(var cj=0;cj<=cmN;cj++){var cja=(cj/cmN)*TAU,cjr=cmOrbR*(1-cmE*cmE)/(1+cmE*Math.cos(cja)),cjp=pj(Math.cos(cja+cm.inc)*cjr,0,Math.sin(cja+cm.inc)*cjr,cam);if(cj===0)ctx.moveTo(cjp.x,cjp.y);else ctx.lineTo(cjp.x,cjp.y);}ctx.stroke();ctx.setLineDash([]);}}
         if(show.labels){ctx.fillStyle="rgba(150,210,255,0.7)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText(cm.name,cmPj.x,cmPj.y-comaR-5);}
       }
 
@@ -273,7 +276,7 @@ export default function App(){
           if(show.labels){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText(langR.current==="en"?pdt.pl.n:pdt.pl.j,ppp.x,ppp.y-rr-7);if(show.tilt){ctx.fillStyle="rgba(255,255,100,0.45)";ctx.font="8px sans-serif";ctx.fillText(pdt.pl.t+"°",ppp.x,ppp.y+rr+13);}}
         }
       }
-      if(show.orbits){for(var oi2=0;oi2<pd.length;oi2++){var _oc2=pd[oi2].pl.c.match(/(\d+),(\d+),(\d+)/);dOb(ctx,pd[oi2].oR,cam,_oc2?_oc2[1]+","+_oc2[2]+","+_oc2[3]:null,true);}}
+      if(show.orbits){for(var oi2=0;oi2<pd.length;oi2++){var _osr2=pd[oi2].oR*cam.zm;if(_osr2<0.5)continue;var _snx2=Math.max(-W/2,Math.min(W/2,sunPj.x)),_sny2=Math.max(-H/2,Math.min(H/2,sunPj.y));if(Math.sqrt((_snx2-sunPj.x)*(_snx2-sunPj.x)+(_sny2-sunPj.y)*(_sny2-sunPj.y))>=_osr2||_osr2>_orbMaxR)continue;var _oc2=pd[oi2].pl.c.match(/(\d+),(\d+),(\d+)/);dOb(ctx,pd[oi2].oR,cam,_oc2?_oc2[1]+","+_oc2[2]+","+_oc2[3]:null,true);}}
       sim.hitAreas=hits;if(ssFade<1)ctx.globalAlpha=1;ctx.restore();
       if(eclipseType&&!cmpR.current){var eTxt=langR.current==="en"?(eclipseType==="solar"?"🌑 Solar Eclipse":"🌕 Lunar Eclipse"):(eclipseType==="solar"?"🌑 日食":"🌕 月食");ctx.save();ctx.font="bold 13px system-ui,sans-serif";ctx.textAlign="center";var etW=ctx.measureText(eTxt).width+24;ctx.fillStyle="rgba(0,0,0,0.72)";ctx.fillRect(W/2-etW/2,H-72,etW,30);ctx.fillStyle=eclipseType==="solar"?"rgba(255,210,80,1)":"rgba(200,150,255,1)";ctx.fillText(eTxt,W/2,H-51);if(eclipseEarPj){ctx.strokeStyle=eclipseType==="solar"?"rgba(255,180,0,0.7)":"rgba(180,120,255,0.7)";ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(eclipseEarPj.x,eclipseEarPj.y,eclipseEarRr+10,0,TAU);ctx.stroke();ctx.setLineDash([]);}ctx.restore();}
 
@@ -421,7 +424,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.4.2</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.4.3</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
