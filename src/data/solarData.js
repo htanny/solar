@@ -14,7 +14,7 @@ export var PL=[
 ];
 export var SUNINFO={j:"太陽",mass:"1.99×10³⁰ kg",r:"69.6万km",temp:"表面5,500℃ / 中心1,500万℃",type:"G型主系列星",age:"約46億年"};
 export var MD={oR:18,r:2.5,p:27.3,rd:0.384,rr:1.737};
-export var GMOONS=[{name:"イオ",orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
+export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
   {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
   {key:"Encke",name:"エンケ彗星",a:2.22*150,e:0.848,p:1204,inc:-0.03,col:[180,220,200],sz:1,tailLen:40,phase0:0.35,info:"周期: 約3.3年\n離心率: 0.848\n近日点: 0.336 AU\n遠日点: 4.09 AU\n既知の彗星で最短周期"},
@@ -27,6 +27,8 @@ export var DWARFS=[
   {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃"},
 ];
 export var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
+/* Pre-parse "rgba(R,G,B,A)" → "R,G,B" once at module load (used in render hot path) */
+PL.concat(DWARFS).forEach(function(p){var m=p.c.match(/(\d+),(\d+),(\d+)/);p.cRGB=m?m[1]+","+m[2]+","+m[3]:null;});
 
 export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
 export var SP=[0.5,1,4,15,50,100];

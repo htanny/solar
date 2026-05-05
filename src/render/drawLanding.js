@@ -268,24 +268,20 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     /* Earth as bright point */
     var eaX=(W*0.7+t*0.05+yaw*50)%W;ctx.globalAlpha=0.6*nightAlpha;fillCirc(ctx,eaX,hrzY*0.3,1.5,"rgba(100,150,255,1)");ctx.globalAlpha=1;
   }else if(plName==="Jupiter"){
-    /* Galilean moons - proper alt/az from observer latitude + longitude */
+    /* Galilean moons in equatorial plane (dec≈0): alt/az from observer lat+lng */
+    var gmLST=(t/rotAbs+(lngDeg||0)/360)*TAU*sunDir;
+    var cosLat=Math.cos(latRad),sinLat=Math.sin(latRad);
     for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi];
-      /* Moon orbital angle (inertial frame) */
-      var gmOrbA=(t/gm.p)*TAU;
-      /* Jupiter local sidereal time at observer's longitude */
-      var gmLST=(t/rotAbs+(lngDeg||0)/360)*TAU*sunDir;
-      /* Hour angle: how far moon is west of observer's meridian */
-      var gmHA=gmLST-gmOrbA;
-      /* Altitude (moons orbit in equatorial plane: dec≈0) */
-      var gmSinAlt=Math.cos(latRad)*Math.cos(gmHA);
-      if(gmSinAlt<-0.05)continue;/* below horizon */
-      /* Azimuth */
-      var gmAz2=Math.atan2(-Math.sin(gmHA),-Math.sin(latRad)*Math.cos(gmHA));
+      var gmHA=gmLST-(t/gm.p)*TAU;
+      var cosHA=Math.cos(gmHA),sinHA=Math.sin(gmHA);
+      var gmSinAlt=cosLat*cosHA;
+      if(gmSinAlt<-0.05)continue;
+      var gmAz2=Math.atan2(-sinHA,-sinLat*cosHA);
       var gmAzDiff=((gmAz2-yaw)%TAU+TAU)%TAU;if(gmAzDiff>Math.PI)gmAzDiff-=TAU;
       var gmScrX=W/2+gmAzDiff*W*0.8/TAU;
       var gmScrY=hrzY-gmSinAlt*hrzY*0.88;
       if(gmScrX<-50||gmScrX>W+50||gmScrY<2)continue;
-      var gmSz=(gmi===2?4:gmi===3?3.5:gmi===0?3:2.5)/fov;
+      var gmSz=gm.sz/fov;
       ctx.globalAlpha=0.85;fillCirc(ctx,gmScrX,gmScrY,gmSz,gm.col);
       if(gmSz>2.5){ctx.fillStyle="rgba(255,255,255,0.25)";ctx.font="7px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmScrX,gmScrY-gmSz-3);}
       ctx.globalAlpha=1;}
