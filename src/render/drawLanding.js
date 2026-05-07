@@ -138,11 +138,25 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     ctx.restore();
   }
 
-  /* ======== METEOR SHOWERS (Earth landing mode) ======== */
+  /* ======== METEOR SHOWERS (Earth landing mode, radiant-based) ======== */
   if(plName==="Earth"&&starA>0.1){
     var dayY=((t%365.25)+365.25)%365.25;
     var shwI=1.0,bestI=0,bestSi=0;
     for(var msi=0;msi<MSHW.length;msi++){var mdiff=Math.min(Math.abs(dayY-MSHW[msi].d),365-Math.abs(dayY-MSHW[msi].d));var si2=Math.exp(-mdiff*mdiff*0.04)*8;shwI+=si2;if(si2>bestI){bestI=si2;bestSi=msi;}}
+    var radX=W/2,radY=hrzY*0.4,hasRadiant=false,radSinAlt=0;
+    if(bestI>0.5&&MSHW[bestSi].raD!==undefined){
+      var lstD3=((280.46+360.98565*t+(lngDeg||0))%360+360)%360;
+      var radHA=(lstD3-MSHW[bestSi].raD)*TAU/360;
+      var radDec=MSHW[bestSi].decD*TAU/360;
+      radSinAlt=Math.sin(latRad)*Math.sin(radDec)+Math.cos(latRad)*Math.cos(radDec)*Math.cos(radHA);
+      if(radSinAlt>-0.1){
+        var radAz=Math.atan2(-Math.sin(radHA)*Math.cos(radDec),Math.sin(radDec)*Math.cos(latRad)-Math.cos(radDec)*Math.sin(latRad)*Math.cos(radHA));
+        var radADiff=((radAz-yaw)%TAU+TAU)%TAU;if(radADiff>Math.PI)radADiff-=TAU;
+        radX=W/2+radADiff*W*0.8/TAU;
+        radY=hrzY-radSinAlt*hrzY*0.88;
+        hasRadiant=true;
+      }
+    }
     var nMet=Math.min(20,Math.floor(shwI*1.5));
     var metDur=0.004;ctx.lineWidth=1.2;
     for(var mii=0;mii<nMet;mii++){
@@ -151,8 +165,15 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
       var mSeed=Math.floor(t/mPer)*97+mii*53;
       var mr=seedR(mSeed);
       var mProgress=mSlotT/0.45;
-      var mSX=mr()*W,mSY=mr()*hrzY*0.72;
-      var mAng=Math.PI*0.4+mr()*Math.PI*0.2;
+      var mAng,mSX,mSY;
+      if(hasRadiant&&radSinAlt>-0.05){
+        mAng=mr()*TAU;
+        var mr0=15+mr()*70;
+        mSX=radX+Math.cos(mAng)*mr0;mSY=radY+Math.sin(mAng)*mr0;
+      }else{
+        mSX=mr()*W;mSY=mr()*hrzY*0.72;
+        mAng=Math.PI*0.4+mr()*Math.PI*0.2;
+      }
       var mLen=25+mr()*55;
       var mDX=Math.cos(mAng)*mLen*mProgress,mDY=Math.sin(mAng)*mLen*mProgress;
       var mAlpha=(1-mProgress)*starA*(0.5+mr()*0.5);
@@ -162,7 +183,15 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
       mGrad.addColorStop(1,"rgba(255,255,255,"+mAlpha.toFixed(2)+")");
       ctx.strokeStyle=mGrad;ctx.beginPath();ctx.moveTo(mSX,mSY);ctx.lineTo(mSX+mDX,mSY+mDY);ctx.stroke();
     }
-    if(bestI>3){ctx.fillStyle="rgba(200,220,255,"+(Math.min(0.6,bestI*0.07)).toFixed(2)+")";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("🌠 "+MSHW[bestSi].n+"流星群",W/2,16);}
+    if(bestI>3){
+      var rateStr=MSHW[bestSi].rate?" (ZHR ~"+MSHW[bestSi].rate+")":"";
+      ctx.fillStyle="rgba(200,220,255,"+(Math.min(0.7,bestI*0.07)).toFixed(2)+")";ctx.font="9px sans-serif";ctx.textAlign="center";
+      ctx.fillText("🌠 "+MSHW[bestSi].n+"流星群"+rateStr,W/2,16);
+      if(hasRadiant&&radSinAlt>0.05){
+        ctx.strokeStyle="rgba(200,220,255,"+(Math.min(0.5,bestI*0.06)).toFixed(2)+")";ctx.lineWidth=0.8;
+        ctx.beginPath();ctx.moveTo(radX-6,radY);ctx.lineTo(radX+6,radY);ctx.moveTo(radX,radY-6);ctx.lineTo(radX,radY+6);ctx.stroke();
+      }
+    }
   }
 
   /* Eclipse detection must precede sun section which uses eclLand/moonSinAlt */
@@ -534,6 +563,40 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var _utc=_dms.getUTCFullYear()+"/"+_p2(_dms.getUTCMonth()+1)+"/"+_p2(_dms.getUTCDate())+" "+_p2(_dms.getUTCHours())+":"+_p2(_dms.getUTCMinutes())+":"+_p2(_dms.getUTCSeconds())+" UTC";
   ctx.fillStyle="rgba(140,200,255,0.6)";ctx.font="9px monospace";ctx.fillText(_utc,W/2,80);
   if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.font="9px sans-serif";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,94);}
+
+  /* ======== COMPASS STRIP (just above horizon) ======== */
+  var compY=hrzY-2;
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,compY-12,W,18);
+  ctx.strokeStyle="rgba(255,255,255,0.3)";ctx.lineWidth=0.5;
+  ctx.beginPath();ctx.moveTo(0,compY);ctx.lineTo(W,compY);ctx.stroke();
+  var compDirs=[{a:0,n:"N"},{a:0.7854,n:"NE"},{a:1.5708,n:"E"},{a:2.3562,n:"SE"},{a:3.1416,n:"S"},{a:3.927,n:"SW"},{a:4.7124,n:"W"},{a:5.4978,n:"NW"}];
+  for(var cdi=0;cdi<8;cdi++){
+    var cdDiff=((compDirs[cdi].a-yaw)%TAU+TAU)%TAU;if(cdDiff>Math.PI)cdDiff-=TAU;
+    if(Math.abs(cdDiff)>TAU*0.28)continue;
+    var cdX=W/2+cdDiff*W*0.8/TAU;
+    var isCard=compDirs[cdi].n.length===1;
+    ctx.fillStyle=isCard?"rgba(255,200,120,0.95)":"rgba(180,210,255,0.7)";
+    ctx.font=(isCard?"bold 11px":"9px")+" sans-serif";ctx.textAlign="center";
+    ctx.fillText(compDirs[cdi].n,cdX,compY-2);
+    ctx.strokeStyle=isCard?"rgba(255,200,120,0.7)":"rgba(255,255,255,0.4)";ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.moveTo(cdX,compY-1);ctx.lineTo(cdX,compY+3);ctx.stroke();
+  }
+
+  /* ======== RISE/SET/TRANSIT (sun) ======== */
+  var sunEcl2=(280.46+0.9856*t)*0.01745;
+  var sunDecR3=Math.asin(Math.sin(0.40928)*Math.sin(sunEcl2));
+  var cosHaS=-Math.tan(latRad)*Math.tan(sunDecR3);
+  var rsStr;
+  if(cosHaS>1)rsStr="極夜（太陽昇らず）";
+  else if(cosHaS<-1)rsStr="白夜（太陽沈まず）";
+  else{
+    var haS=Math.acos(cosHaS);
+    var fmtT=function(h){var hh=Math.floor(h),mm=Math.floor((h-hh)*60);return (hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;};
+    var rT=((0.5-haS/TAU)*24+24)%24,sT=((0.5+haS/TAU)*24)%24;
+    rsStr="日の出 "+fmtT(rT)+"　南中 12:00　日の入り "+fmtT(sT);
+  }
+  ctx.fillStyle="rgba(255,200,140,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";
+  ctx.fillText(rsStr,W/2,108);
 }
 
 export { drawLanding, earthIsLand, getEarthBiome };

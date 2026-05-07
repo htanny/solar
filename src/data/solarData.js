@@ -30,6 +30,60 @@ export var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
 /* Pre-parse "rgba(R,G,B,A)" → "R,G,B" once at module load (used in render hot path) */
 PL.concat(DWARFS).forEach(function(p){var m=p.c.match(/(\d+),(\d+),(\d+)/);p.cRGB=m?m[1]+","+m[2]+","+m[3]:null;});
 
+/* Major moons keyed by parent planet (Earth's Moon and Galilean moons handled separately).
+   orbR in 1000 km, p in days (negative = retrograde), r in km. */
+export var EXTRA_MOONS={
+  Mars:[
+    {name:"フォボス",sz:1.5,orbR:9.4,r:11,p:0.319,col:"rgba(140,120,105,1)"},
+    {name:"ダイモス",sz:1.2,orbR:23.5,r:6,p:1.262,col:"rgba(150,135,118,1)"}
+  ],
+  Saturn:[
+    {name:"タイタン",sz:3.5,orbR:1222,r:2575,p:15.95,col:"rgba(220,170,90,1)"},
+    {name:"エンケラドゥス",sz:1.5,orbR:238,r:252,p:1.37,col:"rgba(240,245,250,1)"},
+    {name:"ミマス",sz:1.3,orbR:185,r:198,p:0.94,col:"rgba(220,220,210,1)"},
+    {name:"レア",sz:2.2,orbR:527,r:764,p:4.52,col:"rgba(195,190,180,1)"},
+    {name:"イアペトゥス",sz:2,orbR:3561,r:735,p:79.32,col:"rgba(150,140,120,1)"}
+  ],
+  Uranus:[
+    {name:"ミランダ",sz:1.3,orbR:129.9,r:236,p:1.41,col:"rgba(180,180,185,1)"},
+    {name:"ティタニア",sz:2,orbR:436.3,r:789,p:8.71,col:"rgba(170,165,160,1)"},
+    {name:"オベロン",sz:1.9,orbR:583.5,r:761,p:13.46,col:"rgba(160,150,140,1)"}
+  ],
+  Neptune:[
+    {name:"トリトン",sz:2.5,orbR:354.8,r:1353,p:-5.876,col:"rgba(220,210,195,1)"}
+  ],
+  Pluto:[
+    {name:"カロン",sz:2,orbR:19.59,r:606,p:6.387,col:"rgba(180,165,150,1)"}
+  ]
+};
+
+/* Named asteroids — orbital elements in AU/years, displayed as named dots in belt */
+export var NAMED_ASTEROIDS=[
+  {n:"Vesta",j:"ベスタ",a:2.36,e:0.089,p:1325,inc:0.125,col:"rgba(220,210,180,1)",info:"4 Vesta — 小惑星帯第2の大きさ・玄武岩質"},
+  {n:"Pallas",j:"パラス",a:2.77,e:0.231,p:1684,inc:0.609,col:"rgba(180,180,170,1)",info:"2 Pallas — 軌道傾斜角が大きい・氷岩質"},
+  {n:"Eros",j:"エロス",a:1.46,e:0.222,p:643,inc:0.193,col:"rgba(190,150,120,1)",info:"433 Eros — 地球近傍小惑星・NEAR探査機が着陸"},
+  {n:"Itokawa",j:"イトカワ",a:1.32,e:0.28,p:556,inc:0.030,col:"rgba(170,140,110,1)",info:"25143 Itokawa — はやぶさが試料採取した小惑星"}
+];
+
+/* Spacecraft trajectories — simplified linear post-launch or elliptical */
+/* launchD = J2000-relative day. linear: pos = (dx,dy,dz)*speed*(t-launchD) sim units */
+export var SPACECRAFT=[
+  {key:"Voyager1",name:"ボイジャー1号",launchD:-8154,col:"rgba(255,200,80,1)",type:"linear",dx:0.60,dy:0.30,dz:0.74,speed:1.46,info:"1977年打ち上げ・最も遠い人工物・地球から167 AU"},
+  {key:"Voyager2",name:"ボイジャー2号",launchD:-8170,col:"rgba(255,180,100,1)",type:"linear",dx:-0.40,dy:-0.55,dz:-0.74,speed:1.22,info:"1977年打ち上げ・唯一天王星/海王星を探査"},
+  {key:"NewHorizons",name:"ニュー・ホライズンズ",launchD:2210,col:"rgba(180,255,200,1)",type:"linear",dx:0.40,dy:0.0,dz:0.92,speed:1.28,info:"2006年打ち上げ・2015年冥王星接近通過"},
+  {key:"Parker",name:"パーカー・ソーラー",launchD:6798,col:"rgba(255,160,80,1)",type:"elliptical",a:58.1,e:0.893,p:88,phase0:0,inc:0.07,info:"2018年打ち上げ・太陽コロナへ最接近"}
+];
+
+/* Lagrange points — 5 equilibrium positions in Earth-Sun system */
+export var LAGRANGE=[
+  {n:"L1",info:"地球-太陽 L1（150万km太陽側）SOHO等"},
+  {n:"L2",info:"地球-太陽 L2（150万km反太陽側）JWST等"},
+  {n:"L3",info:"地球-太陽 L3（太陽の反対側）"},
+  {n:"L4",info:"地球-太陽 L4（地球の60°前方・トロヤ群）"},
+  {n:"L5",info:"地球-太陽 L5（地球の60°後方）"}
+];
+
+
 export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
 export var SP=[0.5,1,4,15,50,100];
 export var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,0.1,0.15,0.22,0.35,0.5,0.7,1,1.5,2.2,3.5,5,8,13,22,40,70,120,200,350,600,1100,2000,4000,8000,16000,35000,70000,150000];
@@ -105,4 +159,5 @@ export var SURF={
   Eris:{atm:0,sunSz:0.0007,g:"rgba(155,155,158,1)",skyTop:"0,0,0",skyBot:"1,1,3"},
 };
 
-export var MSHW=[{d:3,n:"しぶんぎ座"},{d:125,n:"みずがめ座η"},{d:223,n:"ペルセウス座"},{d:294,n:"オリオン座"},{d:321,n:"しし座"},{d:347,n:"ふたご座"}];
+/* Meteor showers - d = day-of-year peak, raD/decD = radiant equatorial coords (deg), rate = ZHR/h */
+export var MSHW=[{d:3,n:"しぶんぎ座",raD:230,decD:50,rate:120},{d:112,n:"こと座",raD:271,decD:34,rate:18},{d:125,n:"みずがめ座η",raD:338,decD:-1,rate:60},{d:223,n:"ペルセウス座",raD:48,decD:58,rate:100},{d:294,n:"オリオン座",raD:95,decD:16,rate:25},{d:321,n:"しし座",raD:152,decD:22,rate:15},{d:347,n:"ふたご座",raD:113,decD:33,rate:120}];
