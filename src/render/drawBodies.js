@@ -68,7 +68,7 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle){
   }else if(tp==="venus"){
     var vg=ctx.createRadialGradient(cx,cy,0,cx,cy,r);vg.addColorStop(0,"rgba(235,210,145,1)");vg.addColorStop(0.5,"rgba(220,195,120,1)");vg.addColorStop(1,"rgba(195,170,100,1)");ctx.fillStyle=vg;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     var vBands=[{y:-0.7,h:0.18,v:230},{y:-0.45,h:0.14,v:210},{y:-0.2,h:0.2,v:235},{y:0.3,h:0.18,v:228},{y:0.55,h:0.14,v:205}];
-    for(var vbi=0;vbi<vBands.length;vbi++){var vb=vBands[vbi];ctx.globalAlpha=0.35;ctx.fillStyle="rgba("+vb.v+","+(vb.v-25)+","+(vb.v-95)+",1)";ctx.fillRect(cx-R,cy+vb.y*r-vb.h*r,R*2,vb.h*r*2);}ctx.globalAlpha=1;
+    for(var vbi=0;vbi<vBands.length;vbi++){var vb=vBands[vbi];ctx.globalAlpha=0.35;ctx.fillStyle="rgba("+vb.v+","+(vb.v-25)+","+(vb.v-95)+",1)";ctx.fillRect(cx-R,cy+vb.y*r-vb.h*r,R*2,vb.h*r*2);}ctx.globalAlpha=1;atm="255,195,100";
   }else if(tp==="earth"){
     /* Deep ocean base with depth gradient */
     var eg=ctx.createRadialGradient(cx-r*0.15,cy-r*0.12,r*0.05,cx+r*0.05,cy+r*0.08,r);
@@ -148,12 +148,12 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle){
     for(var jbi=0;jbi<jB.length;jbi++){var jb2=jB[jbi];ctx.fillStyle="rgba("+jb2.v+","+(jb2.v-25)+","+(jb2.v-70)+",1)";ctx.fillRect(cx-R,cy+jb2.y*r-jb2.h*r*0.5,R*2,jb2.h*r);}
     var gx=((0.3+phase*1.1)%1)*2-1,gd=1-gx*gx;
     if(gd>0.12){ctx.globalAlpha=0.7*gd;fillCirc(ctx,cx+gx*r*0.75,cy+r*0.22,r*0.14*gd,"rgba(195,95,60,1)");ctx.globalAlpha=0.4*gd;fillCirc(ctx,cx+gx*r*0.75,cy+r*0.22,r*0.07*gd,"rgba(175,70,45,1)");ctx.globalAlpha=1;}
-    limbDarken(ctx,cx,cy,r,0.3);
+    limbDarken(ctx,cx,cy,r,0.3);atm="215,175,110";
   }else if(tp==="gas2"){
     var sg2=ctx.createRadialGradient(cx,cy,0,cx,cy,r);sg2.addColorStop(0,"rgba(225,210,165,1)");sg2.addColorStop(1,"rgba(190,175,130,1)");ctx.fillStyle=sg2;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     var sB=[{y:-0.8,h:0.12,v:210},{y:-0.6,h:0.15,v:225},{y:-0.38,h:0.12,v:200},{y:-0.18,h:0.18,v:228},{y:0.05,h:0.14,v:205},{y:0.25,h:0.16,v:222},{y:0.45,h:0.12,v:198},{y:0.62,h:0.14,v:218},{y:0.8,h:0.12,v:195}];
     for(var sbi=0;sbi<sB.length;sbi++){var sb2=sB[sbi];ctx.fillStyle="rgba("+sb2.v+","+(sb2.v-15)+","+(sb2.v-62)+",0.7)";ctx.fillRect(cx-R,cy+sb2.y*r-sb2.h*r*0.5,R*2,sb2.h*r);}
-    limbDarken(ctx,cx,cy,r,0.25);
+    limbDarken(ctx,cx,cy,r,0.25);atm="220,200,145";
   }else if(tp==="ice1"){
     var ug=ctx.createRadialGradient(cx,cy,0,cx,cy,r);ug.addColorStop(0,"rgba(170,228,232,1)");ug.addColorStop(1,"rgba(110,185,195,1)");ctx.fillStyle=ug;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     ctx.fillStyle="rgba(140,210,218,0.07)";ctx.fillRect(cx-R,cy-r*0.6,R*2,r*0.25);ctx.fillRect(cx-R,cy+r*0.2,R*2,r*0.25);
@@ -266,6 +266,36 @@ function drawSun(ctx,sx,sy,sr,t){
   ctx.globalAlpha=1;
   /* Limb darkening */
   var ld=ctx.createRadialGradient(sx,sy,sr*0.5,sx,sy,sr);ld.addColorStop(0,"rgba(0,0,0,0)");ld.addColorStop(0.7,"rgba(0,0,0,0)");ld.addColorStop(1,"rgba(100,40,0,0.4)");ctx.fillStyle=ld;ctx.beginPath();ctx.arc(sx,sy,sr,0,TAU);ctx.fill();
+  ctx.restore();
+}
+
+/* City cluster positions: [phaseFrac, yFrac, brightness]
+   phaseFrac 0-1 = longitude around planet (anchored to continent data at phase=0)
+   yFrac: negative=north hemisphere, positive=south hemisphere */
+var CITY_PTS=[
+  [0.85,-0.30,1.00],[0.74,-0.33,0.85],[0.80,-0.32,0.78],[0.78,-0.25,0.80], // Tokyo, Beijing, Seoul, Shanghai
+  [0.63,-0.19,0.75],[0.65,-0.30,0.70],[0.68,0.02,0.72],[0.58,-0.22,0.65], // Mumbai, Delhi, Singapore, Dubai
+  [0.54,-0.27,0.68],[0.52, 0.06,0.50],                                     // Cairo, W.Africa
+  [0.50,-0.38,0.92],[0.52,-0.36,0.90],[0.57,-0.44,0.75],[0.55,-0.40,0.70],[0.55,-0.33,0.68], // London, Paris, Moscow, Germany, SE Europe
+  [0.11,-0.29,0.95],[0.07,-0.33,0.80],[0.02,-0.22,0.75],[0.09,-0.36,0.72], // NYC, Chicago, LA, Toronto
+  [0.17, 0.22,0.65],[0.16, 0.31,0.60],[0.90, 0.27,0.65],[0.89, 0.31,0.60]  // São Paulo, BsAs, Sydney, Melbourne
+];
+export function drawEarthCityLights(ctx,cx,cy,r,rotAng,sdx,sdy){
+  if(r<10)return;
+  var phase=(((rotAng%TAU)/TAU)%1+1)%1,sl=Math.sqrt(sdx*sdx+sdy*sdy);if(sl<0.1)return;
+  var ndx=sdx/sl,ndy=sdy/sl;
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+  for(var ci=0;ci<CITY_PTS.length;ci++){
+    var cp=CITY_PTS[ci],pf=cp[0],yf=cp[1],br=cp[2];
+    var ecx2=((pf+phase)%1)*2-1,ecd=1-ecx2*ecx2;if(ecd<0.04)continue;
+    var px2=cx+ecx2*r*0.86,py2=cy+yf*r;
+    var dot=ecx2*ndx+yf*ndy;if(dot>-0.07)continue; /* day side */
+    var nf=Math.min(1,(-dot-0.07)*2.5)*ecd;var alpha=br*nf*0.9;if(alpha<0.04)continue;
+    var gr2=ctx.createRadialGradient(px2,py2,0,px2,py2,r*0.045+1.5);
+    gr2.addColorStop(0,"rgba(255,230,140,"+alpha.toFixed(2)+")");
+    gr2.addColorStop(1,"rgba(255,175,50,0)");
+    ctx.fillStyle=gr2;ctx.fillRect(px2-r*0.055,py2-r*0.055,r*0.11,r*0.11);
+  }
   ctx.restore();
 }
 

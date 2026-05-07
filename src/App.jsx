@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
 import { PL, SUNINFO, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
-import { dOb, dRi, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS } from "./render/drawBodies.js";
+import { dOb, dRi, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights } from "./render/drawBodies.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
@@ -32,6 +32,9 @@ export default function App(){
   var[landSpd,setLandSpd,landSpdR]=useRefSync(3600/86400);
   var[landTilt,setLandTilt,landTiltR]=useRefSync(0);
   var[lang,setLang,langR]=useRefSync("ja");
+  var[searchOpen,setSearchOpen]=useState(false);
+  var[searchQ,setSearchQ]=useState("");
+  var[dispColl,setDispColl]=useState(false);
   var landR=useRef(null);
   var[showConst,setShowConst,showConstR]=useRefSync(true);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
@@ -274,8 +277,10 @@ export default function App(){
           if(pdt.pl.n==="Saturn")dRi(ctx,pdt.wx,pdt.wy,pdt.wz,pdt.vr,cam,pdt.pl.t);
           drawPlanetBody(ctx,ppp.x,ppp.y,rr,pdt.pl,pdt.rotAng);
           dSh(ctx,ppp.x,ppp.y,rr,pdt.wx,pdt.wz,cam);
+          if(pdt.pl.n==="Earth"&&rr>8)drawEarthCityLights(ctx,ppp.x,ppp.y,rr,pdt.rotAng,sunPj.x-ppp.x,sunPj.y-ppp.y);
           if(show.tilt)dAx(ctx,ppp.x,ppp.y,rr,pdt.pl.t);
           if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz+Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);var moScrR=moV*cam.zm;if(moScrR>3){var moN=Math.min(120,Math.max(40,Math.floor(moScrR*0.5)));ctx.strokeStyle="rgba(200,200,200,0.25)";ctx.lineWidth=0.7;ctx.setLineDash([2,4]);ctx.beginPath();for(var moi=0;moi<=moN;moi++){var moa=(moi/moN)*TAU,mopp=pj(pdt.wx+Math.cos(moa)*moV,0,pdt.wz+Math.sin(moa)*moV,cam);if(moi===0)ctx.moveTo(mopp.x,mopp.y);else ctx.lineTo(mopp.x,mopp.y);}ctx.stroke();ctx.setLineDash([]);}dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
+          if(pdt.pl.n==="Earth"){var issOrb=_un?(6771/1e6)*DK:(_rd?(6771*0.001)*DK:pdt.vr*1.12);var issAng=(t/0.0683)*TAU,issWx=pdt.wx+Math.cos(issAng)*issOrb,issWz=pdt.wz+Math.sin(issAng)*issOrb,issPj2=pj(issWx,0,issWz,cam),issScr=issOrb*cam.zm;if(issScr>3){if(issScr>8){ctx.strokeStyle="rgba(120,200,255,0.25)";ctx.lineWidth=0.6;ctx.setLineDash([1,3]);ctx.beginPath();var issNN=Math.max(20,Math.min(80,Math.floor(issScr*0.4)));for(var iiSS=0;iiSS<=issNN;iiSS++){var iaSS=iiSS/issNN*TAU,ipSS=pj(pdt.wx+Math.cos(iaSS)*issOrb,0,pdt.wz+Math.sin(iaSS)*issOrb,cam);if(iiSS===0)ctx.moveTo(ipSS.x,ipSS.y);else ctx.lineTo(ipSS.x,ipSS.y);}ctx.stroke();ctx.setLineDash([]);}ctx.fillStyle="rgba(200,240,255,0.95)";ctx.fillRect(issPj2.x-1,issPj2.y-1,2,2);hits.push({n:"iss",x:issPj2.x,y:issPj2.y,r:12});if(show.labels&&issScr>16){ctx.fillStyle="rgba(180,230,255,0.8)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("ISS",issPj2.x,issPj2.y-5);}}}
           if(pdt.pl.n==="Jupiter"&&show.moon){for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi],gmOrb=_un?(gm.orbR/1e6)*DK:(_rd?(gm.orbR*0.001)*DK:(12+gmi*5)),gmAng=(t/gm.p)*TAU,gmWx=pdt.wx+Math.cos(gmAng)*gmOrb,gmWz=pdt.wz+Math.sin(gmAng)*gmOrb,gmPj=pj(gmWx,0,gmWz,cam),gmR=Math.max(_un?(gm.r/1e6)*DK*cam.zm:(_rp?gm.r*SK*0.01*cam.zm:(1.2+gmi*0.3)*cam.zm*0.3),0.4);dC(ctx,gmPj.x,gmPj.y,gmR,gm.col);if(gmR>1.5)sphereShade(ctx,gmPj.x,gmPj.y,gmR);dSh(ctx,gmPj.x,gmPj.y,gmR,gmWx,gmWz,cam);if(show.labels&&gmR>0.8){ctx.fillStyle="rgba(200,200,180,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmPj.x,gmPj.y-gmR-3);}}}
           if(EXTRA_MOONS[pdt.pl.n]&&show.moon){var emArr=EXTRA_MOONS[pdt.pl.n];for(var emi=0;emi<emArr.length;emi++){var em=emArr[emi],emOrb=_un?(em.orbR/1e6)*DK:(_rd?(em.orbR*0.001)*DK:(pdt.vr+2+emi*1.4)),emAng=(t/em.p)*TAU,emWx=pdt.wx+Math.cos(emAng)*emOrb,emWz=pdt.wz+Math.sin(emAng)*emOrb,emPj=pj(emWx,0,emWz,cam),emR=Math.max(_un?(em.r/1e6)*DK*cam.zm:(_rp?em.r*SK*0.01*cam.zm:em.sz*Math.min(cam.zm*0.5,2.5)),0.4);dC(ctx,emPj.x,emPj.y,emR,em.col);if(emR>1.5)sphereShade(ctx,emPj.x,emPj.y,emR);dSh(ctx,emPj.x,emPj.y,emR,emWx,emWz,cam);if(show.labels&&emR>0.7){ctx.fillStyle="rgba(200,200,180,0.55)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(em.name,emPj.x,emPj.y-emR-3);}}}
           if(pdt.pl.n==="Earth"){var moVe=mOf(_rd,_un),mAnge=(t/MD.p)*TAU,sunAngE=Math.atan2(-pdt.wz,-pdt.wx),cosPhaseE=Math.cos(mAnge-sunAngE),inNode=Math.abs(Math.sin(Math.PI*t/173.31))<0.22;if(inNode){if(cosPhaseE>0.9995)eclipseType="solar";else if(cosPhaseE<-0.9993)eclipseType="lunar";}eclipseEarPj=ppp;eclipseEarRr=rr;}
@@ -303,6 +308,8 @@ export default function App(){
       sim.hitAreas=hits;if(ssFade<1)ctx.globalAlpha=1;ctx.restore();
       if(eclipseType&&!cmpR.current){var eTxt=langR.current==="en"?(eclipseType==="solar"?"🌑 Solar Eclipse":"🌕 Lunar Eclipse"):(eclipseType==="solar"?"🌑 日食":"🌕 月食");ctx.save();ctx.font="bold 13px system-ui,sans-serif";ctx.textAlign="center";var etW=ctx.measureText(eTxt).width+24;ctx.fillStyle="rgba(0,0,0,0.72)";ctx.fillRect(W/2-etW/2,H-72,etW,30);ctx.fillStyle=eclipseType==="solar"?"rgba(255,210,80,1)":"rgba(200,150,255,1)";ctx.fillText(eTxt,W/2,H-51);if(eclipseEarPj){ctx.strokeStyle=eclipseType==="solar"?"rgba(255,180,0,0.7)":"rgba(180,120,255,0.7)";ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(eclipseEarPj.x,eclipseEarPj.y,eclipseEarRr+10,0,TAU);ctx.stroke();ctx.setLineDash([]);}ctx.restore();}
 
+      /* Conjunction/opposition alert */
+      if(!cmpR.current&&!_un&&cam.zm>0.08&&cam.zm<50){var earthPdIdx=-1;for(var ali0=0;ali0<pd.length;ali0++){if(pd[ali0].pl.n==="Earth"){earthPdIdx=ali0;break;}}if(earthPdIdx>=0){var aex=pd[earthPdIdx].wx,aez=pd[earthPdIdx].wz,aeSL=Math.sqrt(aex*aex+aez*aez);var alertMsg=null,alertIsOpp=false;for(var ali=0;ali<pd.length;ali++){if(ali===earthPdIdx)continue;var tpx2=pd[ali].wx-aex,tpz2=pd[ali].wz-aez,tpL=Math.sqrt(tpx2*tpx2+tpz2*tpz2);if(tpL<0.1||aeSL<0.1)continue;var elongDot=(-aex*tpx2-aez*tpz2)/(aeSL*tpL);var elongDeg=Math.acos(Math.max(-1,Math.min(1,elongDot)))*180/Math.PI;if(elongDeg>174&&!alertIsOpp){alertMsg="🌟 "+pd[ali].pl.j+"が衝 (Opposition)";alertIsOpp=true;}else if(elongDeg<4&&!alertMsg){alertMsg="☀ "+pd[ali].pl.j+"が合 (Conjunction)";}}if(alertMsg){ctx.save();ctx.font="bold 12px system-ui,sans-serif";ctx.textAlign="center";var alW=ctx.measureText(alertMsg).width+24;ctx.fillStyle="rgba(0,0,0,0.75)";ctx.fillRect(W/2-alW/2,8,alW,26);ctx.fillStyle=alertIsOpp?"rgba(100,210,255,1)":"rgba(255,230,80,1)";ctx.fillText(alertMsg,W/2,26);ctx.restore();}}}
       /* Distance comparison bar (log-scale planet distances from Sun) */
       if(show.distbar&&!cmpR.current&&fc==="all"){var dbY=H-78,dbW=Math.min(W-40,520),dbX=(W-dbW)/2,minAU=0.3,maxAU=50,lnMin=Math.log(minAU),lnRange=Math.log(maxAU)-lnMin;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(dbX-6,dbY-14,dbW+12,28);ctx.strokeStyle="rgba(255,255,255,0.18)";ctx.lineWidth=0.6;ctx.beginPath();ctx.moveTo(dbX,dbY);ctx.lineTo(dbX+dbW,dbY);ctx.stroke();var ticks=[1,5,10,30];ctx.fillStyle="rgba(255,255,255,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";for(var dti=0;dti<ticks.length;dti++){var fx=dbX+(Math.log(ticks[dti])-lnMin)/lnRange*dbW;ctx.beginPath();ctx.moveTo(fx,dbY-3);ctx.lineTo(fx,dbY+3);ctx.stroke();ctx.fillText(ticks[dti]+"AU",fx,dbY+11);}for(var dbi=0;dbi<pd.length;dbi++){var dbau=Math.sqrt(pd[dbi].wx*pd[dbi].wx+pd[dbi].wz*pd[dbi].wz)/150;if(dbau<minAU||dbau>maxAU)continue;var dbpos=dbX+(Math.log(dbau)-lnMin)/lnRange*dbW;ctx.fillStyle=pd[dbi].pl.c;ctx.beginPath();ctx.arc(dbpos,dbY,3,0,TAU);ctx.fill();}}
 
@@ -358,7 +365,7 @@ export default function App(){
 
       {/* Toggles panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:10,left:10,maxWidth:300})}>
-        <div style={lb}>表示 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道"},{k:"trails",l:"軌跡"},{k:"belt",l:"小惑星帯"},{k:"nasteroid",l:"準惑星名"},{k:"tilt",l:"地軸"},{k:"moon",l:"月"},{k:"labels",l:"ラベル"},{k:"planets",l:"惑星"},{k:"lagrange",l:"L点"},{k:"spacecraft",l:"探査機"},{k:"cme",l:"CME"},{k:"distbar",l:"距離バー"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{x.l}</button>;})}</div>
+        <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>表示 ⠿</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){setDispColl(function(p){return!p;});}}>{dispColl?"▼":"▲"}</button></div><div style={{display:dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道"},{k:"trails",l:"軌跡"},{k:"belt",l:"小惑星帯"},{k:"nasteroid",l:"準惑星名"},{k:"tilt",l:"地軸"},{k:"moon",l:"月"},{k:"labels",l:"ラベル"},{k:"planets",l:"惑星"},{k:"lagrange",l:"L点"},{k:"spacecraft",l:"探査機"},{k:"cme",l:"CME"},{k:"distbar",l:"距離バー"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{x.l}</button>;})}</div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>実スケール</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>太陽{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>惑星{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>距離{!uni&&rDi?" ●":""}</button></div>
         <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>統一比率{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>比較{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}}}>{touring?"ツアー停止":"ツアー"}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?"計測中"+(measurePair.length===0?"(1つ目)":measurePair.length===1?"(2つ目)":""):"📐計測"}</button></div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>ツール</div>
@@ -370,6 +377,7 @@ export default function App(){
           <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>今日</button>
           <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>軌跡クリア</button>
           <button style={showEvents?bT("255,200,80"):bF} onClick={function(){if(!showEvents){eventsRef.current=scanEvents(S.current.t);}setShowEvents(function(p){return!p;});}}>📅 天文イベント</button>
+          <button style={searchOpen?bT("100,210,255"):bF} onClick={function(){setSearchOpen(function(p){return!p;});setSearchQ("");}}>🔍 検索</button>
         </div>
         {showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
@@ -381,6 +389,7 @@ export default function App(){
           <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("1969-07-20");}}>月面着陸</button>
           <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2006-01-19");}}>NHニューホライズンズ</button>
         </div>}
+      </div>
       </DragPanel>}
 
       {/* Zoom panel */}
@@ -402,6 +411,19 @@ export default function App(){
             </div>
             <button style={Object.assign({},bF,{padding:"2px 5px",fontSize:8,flexShrink:0})} onClick={function(){S.current.t=ev.t;setShowEvents(false);}}>→移動</button>
           </div>;})}
+        </div>
+      </DragPanel>}
+
+      {/* Search panel */}
+      {cleanView===0&&!landing&&searchOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:10,width:220,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(100,210,255,0.95)"}}>🔍 天体検索</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setSearchOpen(false);}}>✕</button>
+        </div>
+        <input autoFocus type="text" placeholder="惑星名・彗星名..." value={searchQ} onChange={function(e){setSearchQ(e.target.value);}}
+          style={{width:"100%",boxSizing:"border-box",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"4px 6px",fontFamily:"system-ui",outline:"none",marginBottom:6}}/>
+        <div style={{maxHeight:160,overflowY:"auto"}}>
+          {(function(){var q=searchQ.toLowerCase();var results=[];FL.forEach(function(f){var nm=(f.l||"")+(f.e?(" "+f.e):"");if(!q||nm.toLowerCase().indexOf(q)>=0)results.push({k:f.k,label:lang==="en"?(f.e||f.l):f.l});});return results.map(function(r){return <button key={r.k} style={Object.assign({},bF,{width:"100%",textAlign:"left",marginBottom:3,padding:"4px 7px"})} onClick={function(){focusOn(r.k);setSearchOpen(false);}}>{r.label}</button>;});}())}
         </div>
       </DragPanel>}
 
@@ -456,7 +478,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.5.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.6.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
