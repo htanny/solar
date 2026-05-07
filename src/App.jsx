@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, SUNINFO, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000 } from "./data/solarData.js";
+import { PL, SUNINFO, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
-import { dOb, dRi, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights } from "./render/drawBodies.js";
+import { dOb, dRi, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
@@ -35,6 +35,7 @@ export default function App(){
   var[searchOpen,setSearchOpen]=useState(false);
   var[searchQ,setSearchQ]=useState("");
   var[dispColl,setDispColl]=useState(false);
+  var[exoOpen,setExoOpen]=useState(false);
   var landR=useRef(null);
   var[showConst,setShowConst,showConstR]=useRefSync(true);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
@@ -279,7 +280,7 @@ export default function App(){
           dSh(ctx,ppp.x,ppp.y,rr,pdt.wx,pdt.wz,cam);
           if(pdt.pl.n==="Earth"&&rr>8)drawEarthCityLights(ctx,ppp.x,ppp.y,rr,pdt.rotAng,sunPj.x-ppp.x,sunPj.y-ppp.y);
           if(show.tilt)dAx(ctx,ppp.x,ppp.y,rr,pdt.pl.t);
-          if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz+Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);var moScrR=moV*cam.zm;if(moScrR>3){var moN=Math.min(120,Math.max(40,Math.floor(moScrR*0.5)));ctx.strokeStyle="rgba(200,200,200,0.25)";ctx.lineWidth=0.7;ctx.setLineDash([2,4]);ctx.beginPath();for(var moi=0;moi<=moN;moi++){var moa=(moi/moN)*TAU,mopp=pj(pdt.wx+Math.cos(moa)*moV,0,pdt.wz+Math.sin(moa)*moV,cam);if(moi===0)ctx.moveTo(mopp.x,mopp.y);else ctx.lineTo(mopp.x,mopp.y);}ctx.stroke();ctx.setLineDash([]);}dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
+          if(pdt.pl.n==="Earth"&&show.moon){var moV=mOf(_rd,_un),mAng=(t/MD.p)*TAU,mx=pdt.wx+Math.cos(mAng)*moV,mz=pdt.wz+Math.sin(mAng)*moV,mp=pj(mx,0,mz,cam),mrV=Math.max(mRf(_rp,_un)*cam.zm,0.3);var moScrR=moV*cam.zm;if(moScrR>3){var moN=Math.min(120,Math.max(40,Math.floor(moScrR*0.5)));ctx.strokeStyle="rgba(200,200,200,0.25)";ctx.lineWidth=0.7;ctx.setLineDash([2,4]);ctx.beginPath();for(var moi=0;moi<=moN;moi++){var moa=(moi/moN)*TAU,mopp=pj(pdt.wx+Math.cos(moa)*moV,0,pdt.wz+Math.sin(moa)*moV,cam);if(moi===0)ctx.moveTo(mopp.x,mopp.y);else ctx.lineTo(mopp.x,mopp.y);}ctx.stroke();ctx.setLineDash([]);}dC(ctx,mp.x,mp.y,mrV,"rgba(200,200,200,1)");if(mrV>2)drawMoonDetail(ctx,mp.x,mp.y,mrV,mAng);if(mrV>3)sphereShade(ctx,mp.x,mp.y,mrV);dSh(ctx,mp.x,mp.y,mrV,mx,mz,cam);if(show.labels){ctx.fillStyle="rgba(200,200,200,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("月",mp.x,mp.y-mrV-4);}}
           if(pdt.pl.n==="Earth"){var issOrb=_un?(6771/1e6)*DK:(_rd?(6771*0.001)*DK:pdt.vr*1.12);var issAng=(t/0.0683)*TAU,issWx=pdt.wx+Math.cos(issAng)*issOrb,issWz=pdt.wz+Math.sin(issAng)*issOrb,issPj2=pj(issWx,0,issWz,cam),issScr=issOrb*cam.zm;if(issScr>3){if(issScr>8){ctx.strokeStyle="rgba(120,200,255,0.25)";ctx.lineWidth=0.6;ctx.setLineDash([1,3]);ctx.beginPath();var issNN=Math.max(20,Math.min(80,Math.floor(issScr*0.4)));for(var iiSS=0;iiSS<=issNN;iiSS++){var iaSS=iiSS/issNN*TAU,ipSS=pj(pdt.wx+Math.cos(iaSS)*issOrb,0,pdt.wz+Math.sin(iaSS)*issOrb,cam);if(iiSS===0)ctx.moveTo(ipSS.x,ipSS.y);else ctx.lineTo(ipSS.x,ipSS.y);}ctx.stroke();ctx.setLineDash([]);}ctx.fillStyle="rgba(200,240,255,0.95)";ctx.fillRect(issPj2.x-1,issPj2.y-1,2,2);hits.push({n:"iss",x:issPj2.x,y:issPj2.y,r:12});if(show.labels&&issScr>16){ctx.fillStyle="rgba(180,230,255,0.8)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("ISS",issPj2.x,issPj2.y-5);}}}
           if(pdt.pl.n==="Jupiter"&&show.moon){for(var gmi=0;gmi<GMOONS.length;gmi++){var gm=GMOONS[gmi],gmOrb=_un?(gm.orbR/1e6)*DK:(_rd?(gm.orbR*0.001)*DK:(12+gmi*5)),gmAng=(t/gm.p)*TAU,gmWx=pdt.wx+Math.cos(gmAng)*gmOrb,gmWz=pdt.wz+Math.sin(gmAng)*gmOrb,gmPj=pj(gmWx,0,gmWz,cam),gmR=Math.max(_un?(gm.r/1e6)*DK*cam.zm:(_rp?gm.r*SK*0.01*cam.zm:(1.2+gmi*0.3)*cam.zm*0.3),0.4);dC(ctx,gmPj.x,gmPj.y,gmR,gm.col);if(gmR>1.5)sphereShade(ctx,gmPj.x,gmPj.y,gmR);dSh(ctx,gmPj.x,gmPj.y,gmR,gmWx,gmWz,cam);if(show.labels&&gmR>0.8){ctx.fillStyle="rgba(200,200,180,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(gm.name,gmPj.x,gmPj.y-gmR-3);}}}
           if(EXTRA_MOONS[pdt.pl.n]&&show.moon){var emArr=EXTRA_MOONS[pdt.pl.n];for(var emi=0;emi<emArr.length;emi++){var em=emArr[emi],emOrb=_un?(em.orbR/1e6)*DK:(_rd?(em.orbR*0.001)*DK:(pdt.vr+2+emi*1.4)),emAng=(t/em.p)*TAU,emWx=pdt.wx+Math.cos(emAng)*emOrb,emWz=pdt.wz+Math.sin(emAng)*emOrb,emPj=pj(emWx,0,emWz,cam),emR=Math.max(_un?(em.r/1e6)*DK*cam.zm:(_rp?em.r*SK*0.01*cam.zm:em.sz*Math.min(cam.zm*0.5,2.5)),0.4);dC(ctx,emPj.x,emPj.y,emR,em.col);if(emR>1.5)sphereShade(ctx,emPj.x,emPj.y,emR);dSh(ctx,emPj.x,emPj.y,emR,emWx,emWz,cam);if(show.labels&&emR>0.7){ctx.fillStyle="rgba(200,200,180,0.55)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(em.name,emPj.x,emPj.y-emR-3);}}}
@@ -378,6 +379,7 @@ export default function App(){
           <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>軌跡クリア</button>
           <button style={showEvents?bT("255,200,80"):bF} onClick={function(){if(!showEvents){eventsRef.current=scanEvents(S.current.t);}setShowEvents(function(p){return!p;});}}>📅 天文イベント</button>
           <button style={searchOpen?bT("100,210,255"):bF} onClick={function(){setSearchOpen(function(p){return!p;});setSearchQ("");}}>🔍 検索</button>
+          <button style={exoOpen?bT("255,150,90"):bF} onClick={function(){setExoOpen(function(p){return!p;});}}>🪐 系外惑星</button>
         </div>
         {showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
@@ -412,6 +414,20 @@ export default function App(){
             <button style={Object.assign({},bF,{padding:"2px 5px",fontSize:8,flexShrink:0})} onClick={function(){S.current.t=ev.t;setShowEvents(false);}}>→移動</button>
           </div>;})}
         </div>
+      </DragPanel>}
+
+      {/* Exoplanet panel */}
+      {cleanView===0&&!landing&&exoOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,180,120,0.95)"}}>🪐 系外惑星 → 着陸</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setExoOpen(false);}}>✕</button>
+        </div>
+        <div style={{fontSize:9,color:"rgba(255,210,170,0.6)",marginBottom:6}}>近隣の系外惑星地表へ瞬間移動</div>
+        {EXOPLANETS.map(function(ex){return <button key={ex.n} style={Object.assign({},bF,{width:"100%",textAlign:"left",marginBottom:4,padding:"5px 8px",lineHeight:1.4})} onClick={function(){doLanding(ex.n);setExoOpen(false);}}>
+          <div style={{color:"rgba(255,200,160,0.95)",fontWeight:"bold"}}>{ex.j}</div>
+          <div style={{fontSize:8,color:"rgba(220,200,180,0.65)"}}>{ex.e}</div>
+          <div style={{fontSize:8,color:"rgba(200,180,160,0.55)"}}>{ex.starInfo} · {ex.temp}</div>
+        </button>;})}
       </DragPanel>}
 
       {/* Search panel */}
@@ -478,7 +494,7 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.6.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.7.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>

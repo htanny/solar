@@ -1,4 +1,4 @@
-import { TAU, SURF, PL_MAP, DWARF_MAP, NAMED_STARS, CONST_LINES, MSHW, MAP_CTNS, GMOONS } from "../data/solarData.js";
+import { TAU, SURF, PL_MAP, DWARF_MAP, NAMED_STARS, CONST_LINES, MSHW, MAP_CTNS, GMOONS, EXO_SURF } from "../data/solarData.js";
 import { fillCirc, seedR, lerpColor } from "./utils.js";
 
 
@@ -37,7 +37,7 @@ function getEarthBiome(lat,lng){
 }
 
 function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
-  var sf=SURF[plName];if(!sf)return;
+  var sf=SURF[plName]||EXO_SURF[plName];if(!sf)return;
   var pl=PL_MAP[plName]||DWARF_MAP[plName];if(!pl)return;
   /* Earth biome config */
   var biome=plName==="Earth"?getEarthBiome(lat||0,lngDeg||0):'';
@@ -202,11 +202,13 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var sunY=hrzY-sunAlt*hrzY*0.75;
   if(sunAlt>-0.2&&sunY<hrzY+30&&Math.abs(aDiffSun)<TAU*0.32){
     var sunR=Math.max(2,14*Math.sqrt(sf.sunSz)/fov);
+    var sunCol=sf.starTint?"rgba("+sf.starTint+",1)":"rgba(255,245,220,1)";
     var glR=sunR*10;var sg=ctx.createRadialGradient(sunScreenX,sunY,sunR,sunScreenX,sunY,glR);
-    sg.addColorStop(0,"rgba(255,240,200,0.25)");sg.addColorStop(0.3,"rgba(255,200,100,0.06)");sg.addColorStop(1,"rgba(255,180,80,0)");
+    if(sf.starTint){sg.addColorStop(0,"rgba("+sf.starTint+",0.3)");sg.addColorStop(0.3,"rgba("+sf.starTint+",0.07)");sg.addColorStop(1,"rgba("+sf.starTint+",0)");}
+    else{sg.addColorStop(0,"rgba(255,240,200,0.25)");sg.addColorStop(0.3,"rgba(255,200,100,0.06)");sg.addColorStop(1,"rgba(255,180,80,0)");}
     ctx.fillStyle=sg;ctx.fillRect(sunScreenX-glR,sunY-glR,glR*2,glR*2);
     ctx.globalAlpha=plName==="Venus"?0.25:1;
-    fillCirc(ctx,sunScreenX,sunY,sunR,"rgba(255,245,220,1)");ctx.globalAlpha=1;
+    fillCirc(ctx,sunScreenX,sunY,sunR,sunCol);ctx.globalAlpha=1;
     /* Solar eclipse overlay */
     if(eclLand==='solar'&&moonSinAlt>-0.1){
       var eStr=eclStrength;
@@ -320,23 +322,45 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     ctx.globalAlpha=0.6;fillCirc(ctx,tiX,tiY,2.5/fov,"rgba(200,180,120,1)");ctx.globalAlpha=1;
   }
 
-  /* ======== AURORA (Earth lat>55°, Jupiter lat>45°) ======== */
+  /* ======== AURORA (Earth lat>55°, Jupiter lat>45°) - dynamic curtain ======== */
   var absLat=Math.abs(lat||0);
   if((plName==="Earth"&&absLat>55)||(plName==="Jupiter"&&absLat>40)){
     var auroraStr=(plName==="Jupiter"?1.5:1)*Math.max(0,(absLat-(plName==="Jupiter"?40:55))/35);
     auroraStr=Math.min(1,auroraStr)*nightAlpha;
     if(auroraStr>0.02){
-      for(var ai=0;ai<8;ai++){
-        var ax=(ai/8)*W,aw=W*0.15,aH=hrzY*0.3;
-        var ay=hrzY*0.05+Math.sin(ai*1.3+t*0.7)*hrzY*0.08;
-        var wave=Math.sin(ai*2.1+t*1.2)*10;
-        var aG=ctx.createLinearGradient(ax+wave,ay,ax+wave,ay+aH);
-        if(plName==="Jupiter"){
-          aG.addColorStop(0,"rgba(100,50,200,0)");aG.addColorStop(0.3,"rgba(120,60,220,"+(auroraStr*0.12).toFixed(2)+")");aG.addColorStop(0.7,"rgba(80,40,180,"+(auroraStr*0.08).toFixed(2)+")");aG.addColorStop(1,"rgba(60,30,150,0)");
+      var isJup=plName==="Jupiter";
+      /* Horizon glow */
+      var auGl=ctx.createLinearGradient(0,hrzY*0.05,0,hrzY*0.4);
+      auGl.addColorStop(0,isJup?"rgba(140,80,220,0)":"rgba(50,220,150,0)");
+      auGl.addColorStop(0.5,isJup?"rgba(110,60,200,"+(auroraStr*0.06).toFixed(2)+")":"rgba(70,255,140,"+(auroraStr*0.05).toFixed(2)+")");
+      auGl.addColorStop(1,isJup?"rgba(60,30,150,0)":"rgba(40,180,200,0)");
+      ctx.fillStyle=auGl;ctx.fillRect(0,hrzY*0.05,W,hrzY*0.4);
+      /* Curtain rays - 24 narrow bands */
+      for(var ai=0;ai<24;ai++){
+        var arSh=Math.sin(ai*1.7+t*1.5)*0.5+0.5;
+        var ax=(ai/24)*W+Math.sin(ai*0.7+t*0.5)*W*0.03;
+        var aH=hrzY*0.25*(0.65+arSh*0.5),ay=hrzY*0.05+Math.sin(ai*0.9+t*0.4)*hrzY*0.06;
+        var aw=W*0.045+arSh*W*0.015;
+        var aG=ctx.createLinearGradient(ax,ay,ax,ay+aH);
+        if(isJup){
+          aG.addColorStop(0,"rgba(140,80,230,0)");aG.addColorStop(0.4,"rgba("+Math.floor(110+arSh*30)+",60,210,"+(auroraStr*0.18*arSh).toFixed(2)+")");aG.addColorStop(0.8,"rgba(80,40,180,"+(auroraStr*0.10*arSh).toFixed(2)+")");aG.addColorStop(1,"rgba(50,20,120,0)");
         }else{
-          aG.addColorStop(0,"rgba(50,200,100,0)");aG.addColorStop(0.3,"rgba(80,255,120,"+(auroraStr*0.1).toFixed(2)+")");aG.addColorStop(0.6,"rgba(60,180,200,"+(auroraStr*0.06).toFixed(2)+")");aG.addColorStop(1,"rgba(100,50,200,0)");
+          var auGB=Math.floor(140+arSh*100);
+          aG.addColorStop(0,"rgba(60,255,"+auGB+",0)");aG.addColorStop(0.35,"rgba("+Math.floor(40+arSh*40)+",255,"+auGB+","+(auroraStr*0.14*arSh).toFixed(2)+")");aG.addColorStop(0.7,"rgba(60,180,200,"+(auroraStr*0.08*arSh).toFixed(2)+")");aG.addColorStop(1,"rgba(120,60,210,0)");
         }
-        ctx.fillStyle=aG;ctx.fillRect(ax+wave-aw*0.5,ay,aw,aH);
+        ctx.fillStyle=aG;ctx.fillRect(ax-aw*0.5,ay,aw,aH);
+      }
+      /* Bright vertical sparkle rays */
+      if(absLat>60||isJup){
+        ctx.globalAlpha=auroraStr*0.4;ctx.lineWidth=1.2;
+        ctx.strokeStyle=isJup?"rgba(200,140,255,0.55)":"rgba(180,255,200,0.6)";
+        for(var rri=0;rri<10;rri++){
+          var rrx=W*((rri*0.137+t*0.005)%1)+Math.sin(rri*1.3+t*0.7)*30;
+          var rrY1=hrzY*0.06+Math.sin(rri*0.5+t)*hrzY*0.02;
+          var rrY2=rrY1+hrzY*0.22*(0.6+Math.sin(rri*1.7+t*0.5)*0.4);
+          ctx.beginPath();ctx.moveTo(rrx,rrY1);ctx.lineTo(rrx,rrY2);ctx.stroke();
+        }
+        ctx.globalAlpha=1;
       }
     }
   }

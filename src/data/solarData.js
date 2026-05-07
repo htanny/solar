@@ -159,5 +159,21 @@ export var SURF={
   Eris:{atm:0,sunSz:0.0007,g:"rgba(155,155,158,1)",skyTop:"0,0,0",skyBot:"1,1,3"},
 };
 
+/* Exoplanets - rendered only in landing mode (not in solar view) */
+export var EXOPLANETS=[
+  {n:"ProximaB",j:"プロキシマb",e:"Proxima Centauri b",d:0,r:7.0,p:11.2,c:"rgba(165,90,55,1)",t:0,rot:11.2,type:"rock",mass:"≈1.07 地球",grav:"≈11 m/s²",moons:0,day:"潮汐固定",year:"11.2日",atm:"未確認",temp:"−39℃ (推定)",starInfo:"M型赤色矮星 (4.24 ly)"},
+  {n:"Trappist1e",j:"トラピスト1e",e:"TRAPPIST-1e",d:0,r:5.8,p:6.1,c:"rgba(125,80,65,1)",t:0,rot:6.1,type:"rock",mass:"0.69 地球",grav:"≈9.1 m/s²",moons:0,day:"潮汐固定",year:"6.1日",atm:"水検出可能性",temp:"−21℃ (推定)",starInfo:"M型超低温矮星 (40 ly)"},
+  {n:"Kepler22b",j:"ケプラー22b",e:"Kepler-22b",d:0,r:15.4,p:289.9,c:"rgba(60,110,140,1)",t:0,rot:24,type:"rock",mass:"≈9 地球",grav:"未確認",moons:0,day:"未確認",year:"289.9日",atm:"未確認",temp:"22℃ (推定)",starInfo:"G型恒星 (600 ly)"},
+  {n:"HD189733b",j:"HD189733b",e:"HD 189733 b",d:0,r:80.5,p:2.2,c:"rgba(50,40,110,1)",t:0,rot:2.2,type:"hotgas",mass:"1.13 木星",grav:"≈22 m/s²",moons:0,day:"潮汐固定",year:"2.2日",atm:"H₂・シリケート粒子（ガラスの雨）",temp:"930℃",starInfo:"K型 (64.5 ly)"},
+];
+export var EXO_MAP={};EXOPLANETS.forEach(function(p){EXO_MAP[p.n]=p;PL_MAP[p.n]=p;});
+/* Exoplanet surface data - merged into SURF for landing render */
+export var EXO_SURF={
+  ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},
+  Trappist1e:{atm:0.7,sunSz:1.5,g:"rgba(105,80,75,1)",skyTop:"50,22,42",skyBot:"130,65,65",skyNT:"5,3,10",skyNB:"20,10,25",exo:true,starTint:"255,140,80",companions:true},
+  Kepler22b:{atm:1,sunSz:0.8,g:"rgba(40,90,110,1)",skyTop:"60,130,180",skyBot:"140,180,210",skyNT:"3,8,18",skyNB:"10,20,40",exo:true,starTint:"255,230,180",ocean:true},
+  HD189733b:{atm:3,sunSz:5,g:"rgba(40,30,80,1)",skyTop:"30,10,80",skyBot:"80,30,150",exo:true,starTint:"255,200,140",glassRain:true},
+};
+
 /* Meteor showers - d = day-of-year peak, raD/decD = radiant equatorial coords (deg), rate = ZHR/h */
 export var MSHW=[{d:3,n:"しぶんぎ座",raD:230,decD:50,rate:120},{d:112,n:"こと座",raD:271,decD:34,rate:18},{d:125,n:"みずがめ座η",raD:338,decD:-1,rate:60},{d:223,n:"ペルセウス座",raD:48,decD:58,rate:100},{d:294,n:"オリオン座",raD:95,decD:16,rate:25},{d:321,n:"しし座",raD:152,decD:22,rate:15},{d:347,n:"ふたご座",raD:113,decD:33,rate:120}];
