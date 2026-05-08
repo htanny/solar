@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
 import { PL, SUNINFO, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
-import { dOb, dRi, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
@@ -12,6 +12,11 @@ import { DragPanel } from "./components/DragPanel.jsx";
 function initNBody(t){var GM=2.959e-4;return PL.map(function(pl){var r=pl.d/150,ang=(t/pl.p)*TAU,v=Math.sqrt(GM/r);return{pl:pl,x:Math.cos(ang)*r,z:Math.sin(ang)*r,vx:-Math.sin(ang)*v,vz:Math.cos(ang)*v,m:{Mercury:1.65e-7,Venus:2.45e-6,Earth:3.00e-6,Mars:3.23e-7,Jupiter:9.55e-4,Saturn:2.86e-4,Uranus:4.37e-5,Neptune:5.15e-5}[pl.n]||1e-7};})}
 /* Tonight's sky: compute planet visibility from observer position */
 function computeNightSky(t,lat,lng){var lstD=((280.46+360.98565*t+(lng||0))%360+360)%360,latR=(lat||35)*TAU/360;var ea=(t/365.25)*TAU,ex=Math.cos(ea)*150,ez=Math.sin(ea)*150;var sunEclLng=(ea*180/Math.PI+360)%360,sunHr=(lstD-sunEclLng)*TAU/360,sunSA=Math.cos(latR)*Math.cos(sunHr),sunAlt=Math.round(Math.asin(Math.max(-1,Math.min(1,sunSA)))*180/Math.PI);var isNight=sunAlt<-6;var items=PL.map(function(pl){var ang=(t/pl.p)*TAU,px=Math.cos(ang)*pl.d,pz=Math.sin(ang)*pl.d,dx=px-ex,dz=pz-ez;var eclLng=(Math.atan2(dz,dx)*180/Math.PI+360)%360;var hr=(lstD-eclLng)*TAU/360,sinAlt=Math.cos(latR)*Math.cos(hr),alt=Math.round(Math.asin(Math.max(-1,Math.min(1,sinAlt)))*180/Math.PI);var baseMag={Mercury:0.0,Venus:-4.4,Earth:99,Mars:-0.5,Jupiter:-2.7,Saturn:0.5,Uranus:5.7,Neptune:7.9}[pl.n]||5;return{name:pl.j,alt:alt,vis:alt>5&&pl.n!=="Earth",mag:baseMag.toFixed(1)};});return{items:items,isNight:isNight,sunAlt:sunAlt};}
+
+/* Moon phase calendar: generate phases for ~2 months around current time t */
+function computeMoonPhases(t){var syn=29.53059,t0=-5.7;var curAge=((t-t0)%syn+syn)%syn;var lastNew=t-curAge;var phases=[];for(var i=-1;i<4;i++){var base=lastNew+i*syn;phases.push({t:base,age:0,name:"🌑 新月"});phases.push({t:base+syn*0.25,age:syn*0.25,name:"🌓 上弦"});phases.push({t:base+syn*0.5,age:syn*0.5,name:"🌕 満月"});phases.push({t:base+syn*0.75,age:syn*0.75,name:"🌗 下弦"});}phases.sort(function(a,b){return a.t-b.t;});return phases;}
+/* Orbital elements for a planet at time t */
+function computeOrbElem(pl,t){var eMap={Mercury:0.206,Venus:0.007,Earth:0.017,Mars:0.093,Jupiter:0.049,Saturn:0.057,Uranus:0.046,Neptune:0.010};var iMap={Mercury:7.0,Venus:3.4,Earth:0,Mars:1.8,Jupiter:1.3,Saturn:2.5,Uranus:0.8,Neptune:1.8};var e=eMap[pl.n]||0.01,inc=iMap[pl.n]||0;var a=pl.d/150;var M_=((t/pl.p)*TAU%TAU+TAU)%TAU;var E_=M_;for(var ki=0;ki<8;ki++)E_=M_+e*Math.sin(E_);var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E_/2),Math.sqrt(1-e)*Math.cos(E_/2));var r_=a*(1-e*Math.cos(E_));var GM_au=2.959e-4;var v_auday=Math.sqrt(GM_au*(2/r_-1/a));var v_kms=v_auday*1.731e6/86400;return{a:a,e:e,i:inc,T:pl.p,M:M_*180/Math.PI,nu:nu*180/Math.PI,r:r_,v:v_kms};}
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -55,6 +60,12 @@ export default function App(){
   var[onboardStep,setOnboardStep]=useState(function(){return localStorage.getItem("solar_ob")?-1:0;});
   var landR=useRef(null);
   var[showConst,setShowConst,showConstR]=useRefSync(true);
+  var[hillSphere,setHillSphere,hillR]=useRefSync(false);
+  var[shadowCone,setShadowCone,shadowR]=useRefSync(false);
+  var[tidalForce,setTidalForce,tidalR]=useRefSync(false);
+  var[telescopeMode,setTelescopeMode,teleR]=useRefSync(false);
+  var[moonCal,setMoonCal]=useState(false);
+  var[orbElemOpen,setOrbElemOpen]=useState(false);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){if(!bgm)return;var ctx2;try{ctx2=new(window.AudioContext||window.webkitAudioContext)();var m=ctx2.createGain();m.gain.value=0;m.connect(ctx2.destination);m.gain.linearRampToValueAtTime(0.22,ctx2.currentTime+2);var b=ctx2.createOscillator();b.type="sine";b.frequency.value=55;var bg=ctx2.createGain();bg.gain.value=0.18;b.connect(bg);bg.connect(m);b.start();var p1=ctx2.createOscillator();p1.type="sine";p1.frequency.value=110;var pg=ctx2.createGain();pg.gain.value=0.06;p1.connect(pg);pg.connect(m);p1.start();var p2=ctx2.createOscillator();p2.type="sine";p2.frequency.value=164.81;var p2g=ctx2.createGain();p2g.gain.value=0.04;p2.connect(p2g);p2g.connect(m);p2.start();var p3=ctx2.createOscillator();p3.type="sine";p3.frequency.value=329.63;var p3g=ctx2.createGain();p3g.gain.value=0.02;p3.connect(p3g);p3g.connect(m);p3.start();var notes=[523.25,659.25,783.99,1046.5,1318.5,1567.98];var si2=setInterval(function(){if(ctx2.state==="closed")return;var o=ctx2.createOscillator();o.type="sine";o.frequency.value=notes[Math.floor(Math.random()*notes.length)];var g2=ctx2.createGain();g2.gain.value=0.02+Math.random()*0.02;o.connect(g2);g2.connect(m);o.start();g2.gain.exponentialRampToValueAtTime(0.001,ctx2.currentTime+3);o.stop(ctx2.currentTime+4);},2500+Math.random()*3000);audioRef.current={ctx:ctx2,master:m,si:si2};}catch(e){}return function(){if(audioRef.current){clearInterval(audioRef.current.si);try{audioRef.current.master.gain.linearRampToValueAtTime(0,audioRef.current.ctx.currentTime+0.5);setTimeout(function(){try{audioRef.current.ctx.close();}catch(e2){}audioRef.current=null;},600);}catch(e3){}};};},[bgm]);
 
@@ -211,7 +222,7 @@ export default function App(){
         for(var gai=0;gai<GAL.arms.length;gai++){var ga2=GAL.arms[gai];var gap2=galPj(ga2.x,0,ga2.y);if(Math.abs(gap2.x)>W||Math.abs(gap2.y)>H)continue;ctx.fillStyle="rgba("+GAL_COLS[ga2.ci]+","+(ga2.b*galFade).toFixed(2)+")";var gsz=ga2.s*(galScale>5?1.5:1);ctx.fillRect(gap2.x-gsz*0.5,gap2.y-gsz*0.5,gsz,gsz);}
         /* Nearby named stars */
         if(galScale>20){
-          for(var nsi=0;nsi<NEAR_STARS.length;nsi++){var ns2=NEAR_STARS[nsi];var nsp2=galPj(ns2.x,0,ns2.y);if(Math.abs(nsp2.x)>W||Math.abs(nsp2.y)>H)continue;ctx.globalAlpha=galFade*ns2.b;ctx.fillStyle="rgba(255,255,255,1)";ctx.fillRect(nsp2.x-1,nsp2.y-1,2,2);if(ns2.name&&galScale>80){ctx.fillStyle="rgba(200,220,255,"+(galFade*0.6).toFixed(2)+")";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(ns2.name,nsp2.x,nsp2.y-5);}}}
+          for(var nsi=0;nsi<NEAR_STARS.length;nsi++){var ns2=NEAR_STARS[nsi];var nsp2=galPj(ns2.x,0,ns2.y);if(Math.abs(nsp2.x)>W||Math.abs(nsp2.y)>H)continue;ctx.globalAlpha=galFade*ns2.b;var nsc2=ns2.sc?"rgba("+ns2.sc+",1)":"rgba(255,255,255,1)";ctx.fillStyle=nsc2;var ndot=ns2.name?1.5:1;ctx.fillRect(nsp2.x-ndot,nsp2.y-ndot,ndot*2,ndot*2);if(ns2.name&&galScale>60){ctx.fillStyle="rgba(200,220,255,"+(galFade*0.65).toFixed(2)+")";ctx.font=(galScale>100?"9px":"7px")+" sans-serif";ctx.textAlign="center";ctx.fillText(ns2.name,nsp2.x,nsp2.y-6);if(ns2.sp&&galScale>100){ctx.fillStyle="rgba("+ns2.sc+","+(galFade*0.4).toFixed(2)+")";ctx.font="7px sans-serif";ctx.fillText(ns2.sp,nsp2.x,nsp2.y-14);}}}}
         /* Sun marker at origin (camera centered on Sun) */
         ctx.globalAlpha=galFade;
         var smR=Math.max(2,Math.min(6,galScale*0.3));
@@ -308,6 +319,7 @@ export default function App(){
           var idx=it.i,pdt=pd[idx],ppp=pjArr[idx],rr=Math.max(pdt.vr*cam.zm,0.4);
           hits.push({n:pdt.pl.n,x:ppp.x,y:ppp.y,r:Math.max(rr,10)});
           if(pdt.pl.n==="Saturn")dRi(ctx,pdt.wx,pdt.wy,pdt.wz,pdt.vr,cam,pdt.pl.t);
+          if(pdt.pl.n==="Uranus")dRiUranus(ctx,pdt.wx,pdt.wy,pdt.wz,pdt.vr,cam);
           drawPlanetBody(ctx,ppp.x,ppp.y,rr,pdt.pl,pdt.rotAng);
           dSh(ctx,ppp.x,ppp.y,rr,pdt.wx,pdt.wz,cam);
           if(pdt.pl.n==="Earth"&&rr>8)drawEarthCityLights(ctx,ppp.x,ppp.y,rr,pdt.rotAng,sunPj.x-ppp.x,sunPj.y-ppp.y);
@@ -361,6 +373,18 @@ export default function App(){
       if(fc!=="all"){var mmSz=90,mmX=W-mmSz-55,mmY=H-mmSz-55;ctx.fillStyle="rgba(5,5,15,0.75)";ctx.fillRect(mmX-2,mmY-2,mmSz+4,mmSz+4);ctx.strokeStyle="rgba(255,255,255,0.15)";ctx.lineWidth=1;ctx.strokeRect(mmX-2,mmY-2,mmSz+4,mmSz+4);var mmCx=mmX+mmSz/2,mmCy=mmY+mmSz/2,mmScale=(mmSz*0.45)/oR(PL[7],false,false);ctx.fillStyle="rgba(255,200,50,0.8)";ctx.fillRect(mmCx-1.5,mmCy-1.5,3,3);for(var mmi=0;mmi<pd.length;mmi++){var mmOr=oR(pd[mmi].pl,false,false),mmAng2=(t/pd[mmi].pl.p)*TAU,mmPx=mmCx+Math.cos(mmAng2)*mmOr*mmScale,mmPy=mmCy+Math.sin(mmAng2)*mmOr*mmScale;ctx.fillStyle=pd[mmi].pl.c;var mmDot=pd[mmi].pl.n===fc?2.5:1.2;ctx.fillRect(mmPx-mmDot,mmPy-mmDot,mmDot*2,mmDot*2);if(pd[mmi].pl.n===fc){ctx.strokeStyle="rgba(255,255,255,0.6)";ctx.lineWidth=0.8;ctx.beginPath();ctx.moveTo(mmPx-4,mmPy);ctx.lineTo(mmPx+4,mmPy);ctx.moveTo(mmPx,mmPy-4);ctx.lineTo(mmPx,mmPy+4);ctx.stroke();}}}
 
       var tr2=tourRef.current;if(tr2.active){var tBarW=180,tBarX=(W-tBarW)/2,tBarY=H-28;if(tr2.trans){tr2.transT=Math.min(1,(tr2.transT||0)+dt/(tr2.transDur||1.8));var ease=tr2.transT<1?tr2.transT*tr2.transT*(3-2*tr2.transT):1;cam.fx=tr2.fromFx+(tr2.toFx-tr2.fromFx)*ease;cam.fz=tr2.fromFz+(tr2.toFz-tr2.fromFz)*ease;var tdx=tr2.toFx-tr2.fromFx,tdz=tr2.toFz-tr2.fromFz,tdist=Math.sqrt(tdx*tdx+tdz*tdz);var midZm=tdist>0.5?Math.min(W,H)*0.35/tdist:Math.max(1,Math.min(tr2.fromZm,tr2.toZm)*0.5);midZm=Math.max(1,midZm);if(ease<0.5){cam.zm=tr2.fromZm+(midZm-tr2.fromZm)*(ease*2);}else{cam.zm=midZm+(tr2.toZm-midZm)*((ease-0.5)*2);}if(tr2.transT>=1){tr2.trans=false;cam.fx=tr2.toFx;cam.fz=tr2.toFz;cam.zm=tr2.toZm;}var tPanProg=ease;ctx.fillStyle="rgba(8,10,20,0.7)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,24);ctx.fillStyle="rgba(255,255,255,0.15)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(255,160,50,0.85)";ctx.fillRect(tBarX,tBarY,tBarW*tPanProg,4);ctx.fillStyle="rgba(255,200,100,0.7)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText("→ "+TOUR_NAMES[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-3);}else{tr2.timer+=dt;if(tr2.timer>=TOUR_HOLD){tr2.timer=0;var nextIdx=(tr2.idx+1)%TOUR_SEQ.length;if(nextIdx===0){tr2.active=false;setTouring(false);setFoc("all");setInfo(null);}else{tr2.fromFx=cam.fx;tr2.fromFz=cam.fz;tr2.fromZm=cam.zm;var tk2=TOUR_SEQ[nextIdx];var toTarget=null;for(var tfi=0;tfi<pd.length;tfi++){if(pd[tfi].pl.n===tk2){toTarget=pd[tfi];break;}}if(!toTarget){for(var tci=0;tci<cd.length;tci++){if(cd[tci].cm.key===tk2){toTarget=cd[tci];break;}}}tr2.toFx=toTarget?toTarget.wx:0;tr2.toFz=toTarget?toTarget.wz:0;tr2.toZm=cam.zm;tr2.idx=nextIdx;tr2.transT=0;tr2.transDur=1.8;tr2.trans=true;setFoc(tk2);setInfo(findInfo(tk2));}}var tProg=tr2.timer/TOUR_HOLD;ctx.fillStyle="rgba(8,10,20,0.7)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,24);ctx.fillStyle="rgba(255,255,255,0.15)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(100,180,255,0.7)";ctx.fillRect(tBarX,tBarY,tBarW*tProg,4);ctx.fillStyle="rgba(255,255,255,0.6)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText("ツアー: "+TOUR_NAMES[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-3);}}
+
+      /* ======== HILL SPHERES ======== */
+      if(hillR.current&&!cmpR.current&&cam.zm>0.02&&cam.zm<200){var hillMass={Mercury:1.65e-7,Venus:2.45e-6,Earth:3.00e-6,Mars:3.23e-7,Jupiter:9.55e-4,Saturn:2.86e-4,Uranus:4.37e-5,Neptune:5.15e-5};for(var hpi=0;hpi<pd.length;hpi++){var hpl=pd[hpi];var hm=hillMass[hpl.pl.n];if(!hm)continue;var hR_au=hpl.oR/150*Math.pow(hm/3,1/3);var hR_sim=hR_au*150;var hR_scr=hR_sim*cam.zm;if(hR_scr<4||hR_scr>Math.max(W,H)*3)continue;var hN=Math.max(32,Math.min(120,Math.floor(hR_scr*0.4)));ctx.strokeStyle="rgba(255,180,100,0.25)";ctx.lineWidth=0.8;ctx.setLineDash([4,6]);ctx.beginPath();for(var hj=0;hj<=hN;hj++){var ha2=hj/hN*TAU,hp2=pj(hpl.wx+Math.cos(ha2)*hR_sim,0,hpl.wz+Math.sin(ha2)*hR_sim,cam);if(hj===0)ctx.moveTo(hp2.x,hp2.y);else ctx.lineTo(hp2.x,hp2.y);}ctx.stroke();ctx.setLineDash([]);if(hR_scr>30){var hlp=pj(hpl.wx,0,hpl.wz+hR_sim,cam);ctx.fillStyle="rgba(255,180,100,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("ヒル球 "+(hR_au*150).toFixed(1)+"Mkm",hlp.x,hlp.y-4);}}}
+
+      /* ======== ECLIPSE SHADOW CONE ======== */
+      if(shadowR.current&&!cmpR.current&&eclipseType==="solar"&&eclipseEarPj){var earthPdSh=null;for(var shi=0;shi<pd.length;shi++){if(pd[shi].pl.n==="Earth"){earthPdSh=pd[shi];break;}}if(earthPdSh){var moVsh=mOf(_rd,_un),mAngsh=(t/MD.p)*TAU,mxsh=earthPdSh.wx+Math.cos(mAngsh)*moVsh,mzsh=earthPdSh.wz+Math.sin(mAngsh)*moVsh,mpsh=pj(mxsh,0,mzsh,cam);var sdx=earthPdSh.wx,sdz=earthPdSh.wz,sl2=Math.sqrt(sdx*sdx+sdz*sdz);var sunDir2={x:-sdx/sl2,z:-sdz/sl2};var umbrLen=eclipseEarRr*8,penLen=eclipseEarRr*20,umbrW=0.004,penW=0.012;ctx.save();ctx.globalAlpha=0.45;ctx.fillStyle="rgba(10,5,30,0.7)";ctx.beginPath();ctx.moveTo(mpsh.x,mpsh.y);ctx.lineTo(mpsh.x+sunDir2.x*umbrLen-sunDir2.z*umbrW*umbrLen,mpsh.y+sunDir2.z*umbrLen+sunDir2.x*umbrW*umbrLen);ctx.lineTo(mpsh.x+sunDir2.x*umbrLen+sunDir2.z*umbrW*umbrLen,mpsh.y+sunDir2.z*umbrLen-sunDir2.x*umbrW*umbrLen);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(40,20,80,0.25)";ctx.beginPath();ctx.moveTo(mpsh.x,mpsh.y);ctx.lineTo(mpsh.x+sunDir2.x*penLen-sunDir2.z*penW*penLen,mpsh.y+sunDir2.z*penLen+sunDir2.x*penW*penLen);ctx.lineTo(mpsh.x+sunDir2.x*penLen+sunDir2.z*penW*penLen,mpsh.y+sunDir2.z*penLen-sunDir2.x*penW*penLen);ctx.closePath();ctx.fill();ctx.globalAlpha=0.5;ctx.strokeStyle="rgba(120,80,200,0.6)";ctx.lineWidth=0.8;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(mpsh.x,mpsh.y);ctx.lineTo(mpsh.x+sunDir2.x*penLen,mpsh.y+sunDir2.z*penLen);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="rgba(180,140,255,0.7)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("影錐 (日食)",mpsh.x+sunDir2.x*penLen*0.55,mpsh.y+sunDir2.z*penLen*0.55-7);ctx.restore();}}
+
+      /* ======== TIDAL FORCE VECTORS ======== */
+      if(tidalR.current&&!cmpR.current){var earthPdTd=null,earthIdxTd=-1;for(var tdi=0;tdi<pd.length;tdi++){if(pd[tdi].pl.n==="Earth"){earthPdTd=pd[tdi];earthIdxTd=tdi;break;}}if(earthPdTd&&earthIdxTd>=0){var moVtd=mOf(_rd,_un),mAngtd=(t/MD.p)*TAU,mxtd=earthPdTd.wx+Math.cos(mAngtd)*moVtd,mztd=earthPdTd.wz+Math.sin(mAngtd)*moVtd;var tdx2=mxtd-earthPdTd.wx,tdz2=mztd-earthPdTd.wz,tddist2=Math.sqrt(tdx2*tdx2+tdz2*tdz2)||1;var tdnx=tdx2/tddist2,tdnz=tdz2/tddist2;var epj2=pjArr[earthIdxTd];var errr=Math.max(earthPdTd.vr*cam.zm,0.4);var aSz=Math.max(8,errr*2.2);ctx.save();ctx.strokeStyle="rgba(255,160,60,0.7)";ctx.fillStyle="rgba(255,160,60,0.7)";ctx.lineWidth=1.5;var arrowDirs=[{nx:tdnx,nz:tdnz,len:2.5},{nx:-tdnx,nz:-tdnz,len:2.5},{nx:tdnz,nz:-tdnx,len:1.7},{nx:-tdnz,nz:tdnx,len:1.7}];for(var ti2=0;ti2<arrowDirs.length;ti2++){var ad=arrowDirs[ti2],apx=epj2.x+ad.nx*aSz*ad.len,apy=epj2.y+ad.nz*aSz*ad.len;ctx.beginPath();ctx.moveTo(epj2.x,epj2.y);ctx.lineTo(apx,apy);ctx.stroke();var aAngle=Math.atan2(apy-epj2.y,apx-epj2.x);ctx.beginPath();ctx.moveTo(apx,apy);ctx.lineTo(apx-Math.cos(aAngle-0.4)*5,apy-Math.sin(aAngle-0.4)*5);ctx.lineTo(apx-Math.cos(aAngle+0.4)*5,apy-Math.sin(aAngle+0.4)*5);ctx.closePath();ctx.fill();}ctx.fillStyle="rgba(255,160,60,0.6)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("潮汐力",epj2.x,epj2.y-aSz*2.8-5);ctx.restore();}}
+
+      /* ======== TELESCOPE MODE ======== */
+      if(teleR.current&&!cmpR.current&&fc!=="all"){var focPj2=null,focRr2=0;if(fc==="sun"){focPj2=sunPj;focRr2=srScr;}else{for(var tei=0;tei<pd.length;tei++){if(pd[tei].pl.n===fc){focPj2=pjArr[tei];focRr2=Math.max(pd[tei].vr*cam.zm,0.4);break;}}}if(focPj2){var telR2=Math.min(W,H)*0.42,telCX=W/2,telCY=H/2;ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.arc(telCX,telCY,telR2,0,TAU,true);ctx.fillStyle="rgba(0,0,0,0.85)";ctx.fill();ctx.strokeStyle="rgba(100,150,100,0.7)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(telCX,telCY,telR2,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(100,200,100,0.5)";ctx.lineWidth=0.8;ctx.setLineDash([4,8]);ctx.beginPath();ctx.moveTo(telCX-telR2,telCY);ctx.lineTo(telCX+telR2,telCY);ctx.moveTo(telCX,telCY-telR2);ctx.lineTo(telCX,telCY+telR2);ctx.stroke();ctx.setLineDash([]);[0.25,0.5,0.75].forEach(function(rf){ctx.strokeStyle="rgba(100,200,100,0.18)";ctx.beginPath();ctx.arc(telCX,telCY,telR2*rf,0,TAU);ctx.stroke();});if(focRr2>2){var bsz=Math.max(focRr2*1.8,20),bx2=focPj2.x-bsz,by2=focPj2.y-bsz,bw2=bsz*2,seg2=bsz*0.35;ctx.strokeStyle="rgba(150,255,150,0.7)";ctx.lineWidth=1.2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(bx2,by2+seg2);ctx.lineTo(bx2,by2);ctx.lineTo(bx2+seg2,by2);ctx.moveTo(bx2+bw2-seg2,by2);ctx.lineTo(bx2+bw2,by2);ctx.lineTo(bx2+bw2,by2+seg2);ctx.moveTo(bx2+bw2,by2+bw2-seg2);ctx.lineTo(bx2+bw2,by2+bw2);ctx.lineTo(bx2+bw2-seg2,by2+bw2);ctx.moveTo(bx2+seg2,by2+bw2);ctx.lineTo(bx2,by2+bw2);ctx.lineTo(bx2,by2+bw2-seg2);ctx.stroke();}ctx.fillStyle="rgba(100,220,100,0.7)";ctx.font="9px monospace";ctx.textAlign="left";ctx.fillText("× "+zmStr,telCX-telR2+8,telCY+telR2-22);ctx.fillText("FOC: "+(fc==="sun"?"SUN":fc.toUpperCase().slice(0,8)),telCX-telR2+8,telCY+telR2-10);ctx.restore();}}
 
       if(cmpR.current){var cmpSt=cmpStateRef.current;ctx.fillStyle="rgba(3,3,12,0.92)";ctx.fillRect(0,0,W,H);ctx.fillStyle="rgba(255,255,255,0.5)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText("サイズ比較モード（実比率）",W/2,30);var cmpY=H*0.52;var cmpBaseScale=(H*0.015)/PL[2].r;var cmpScale=cmpBaseScale*cmpSt.zm;var sunPx=SRR*cmpScale,sunCX=-sunPx+50;ctx.save();ctx.beginPath();ctx.rect(0,50,W,H-50);ctx.clip();clipCirc(ctx,sunCX,cmpY,sunPx);ctx.fillStyle="rgba(255,200,50,1)";ctx.fill();ctx.fillStyle="rgba(255,220,100,0.7)";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("太陽 ☀",Math.max(4,sunCX+sunPx+4),cmpY-sunPx*0.1-4);var allCmp=PL.concat(DWARFS);var cmpXs=[],cx=W*0.1+cmpSt.offX;for(var ci=0;ci<allCmp.length;ci++){cmpXs[ci]=cx;var rC=Math.max(allCmp[ci].r*cmpScale,2);var rN=ci<allCmp.length-1?Math.max(allCmp[ci+1].r*cmpScale,2):0;cx+=Math.max(rC+rN+18*cmpSt.zm,44*cmpSt.zm);}for(var cpi=0;cpi<allCmp.length;cpi++){var cpx=cmpXs[cpi],cpr=Math.max(allCmp[cpi].r*cmpScale,1.5);if(cpx+cpr<0||cpx-cpr>W)continue;drawPlanetBody(ctx,cpx,cmpY,cpr,allCmp[cpi],t/Math.abs(allCmp[cpi].rot)*TAU);if(allCmp[cpi].n==="Saturn")dRi(ctx,cpx,cmpY,0,cpr,{fx:0,fy:0,fz:0,rx:0,ry:0,zm:1},allCmp[cpi].t);ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText(allCmp[cpi].j,cpx,cmpY+cpr+16);ctx.fillStyle="rgba(255,255,255,0.45)";ctx.font="9px sans-serif";ctx.fillText("地球の"+(allCmp[cpi].r/6.4).toFixed(1)+"倍",cpx,cmpY+cpr+29);}ctx.restore();ctx.fillStyle="rgba(255,255,255,0.25)";ctx.font="11px sans-serif";ctx.textAlign="center";ctx.fillText("← ドラッグでスクロール　ピンチ/ホイールでズーム →",W/2,H-12);}
 
@@ -423,6 +447,12 @@ export default function App(){
           <button style={helio?bN:bF} onClick={function(){setHelio(function(p){return!p;});}} title="ヘリオスフィア境界">☀ ヘリオ圏</button>
           <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">🌐 磁気圏</button>
           <button style={nBody?bU:bF} onClick={toggleNBody} title="N体重力シミュレーション (統一比率強制)">⚛ N体</button>
+          <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">⭕ ヒル球</button>
+          <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">🌑 影錐</button>
+          <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">🌊 潮汐力</button>
+          <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">🔭 望遠鏡</button>
+          <button style={moonCal?bT("200,180,255"):bF} onClick={function(){setMoonCal(function(p){return!p;});}} title="月相カレンダー">🌙 月相</button>
+          <button style={orbElemOpen?bT("180,220,255"):bF} onClick={function(){setOrbElemOpen(function(p){return!p;});}} title="軌道要素（惑星選択時）">📊 軌道</button>
         </div>
         {showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
@@ -578,7 +608,44 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.8.0</div>
+      {/* Moon Phase Calendar panel */}
+      {cleanView===0&&!landing&&moonCal&&<DragPanel style={Object.assign({},pn,{top:80,right:200,width:200,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(200,180,255,0.95)"}}>🌙 月相カレンダー</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setMoonCal(false);}}>✕</button>
+        </div>
+        <div style={{maxHeight:240,overflowY:"auto"}}>
+          {(function(){var phases=computeMoonPhases(S.current.t),now=S.current.t;return phases.filter(function(ph){return ph.t>=now-5&&ph.t<=now+65;}).map(function(ph,pi){var daysFromNow=ph.t-now;var isFut=daysFromNow>=0;return <div key={pi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.06)",opacity:isFut?1:0.45}}>
+            <span style={{fontSize:13}}>{ph.name.slice(0,2)}</span>
+            <div style={{flex:1,marginLeft:6}}>
+              <div style={{fontSize:9,color:"rgba(255,255,255,0.85)"}}>{ph.name.slice(3)}</div>
+              <div style={{fontSize:8,color:"rgba(180,200,255,0.55)"}}>{simDaysToDate(ph.t)}</div>
+            </div>
+            <span style={{fontSize:8,color:isFut?"rgba(200,220,255,0.7)":"rgba(255,255,255,0.3)"}}>{isFut?"+"+Math.round(daysFromNow)+"d":Math.round(daysFromNow)+"d"}</span>
+          </div>;})}())}
+        </div>
+      </DragPanel>}
+
+      {/* Orbital Elements panel */}
+      {cleanView===0&&!landing&&orbElemOpen&&info&&info.type==="planet"&&<DragPanel style={Object.assign({},pn,{top:80,right:200,width:185,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,220,255,0.95)"}}>📊 軌道要素</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setOrbElemOpen(false);}}>✕</button>
+        </div>
+        {(function(){var oe=computeOrbElem(info.pl,S.current.t);return <div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.75)"}}>
+          <div style={{color:"rgba(200,220,255,0.6)",marginBottom:3,fontSize:8}}>{lang==="en"?info.pl.n:info.pl.j}</div>
+          <div>a (長半径): {oe.a.toFixed(3)} AU</div>
+          <div>e (離心率): {oe.e.toFixed(4)}</div>
+          <div>i (軌道傾斜): {oe.i.toFixed(1)}°</div>
+          <div>T (公転周期): {oe.T.toFixed(2)} 日</div>
+          <div>M (平均近点角): {oe.M.toFixed(1)}°</div>
+          <div>ν (真近点角): {oe.nu.toFixed(1)}°</div>
+          <div>r (太陽距離): {oe.r.toFixed(4)} AU</div>
+          <div>v (速度): {oe.v.toFixed(2)} km/s</div>
+        </div>;}())}
+      </DragPanel>}
+
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.9.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>

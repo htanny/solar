@@ -224,6 +224,24 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     if(sunAlt>-0.1&&sunAlt<0.35){var ga=Math.max(0,(0.35-Math.abs(sunAlt-0.1))*1.5);var hg=ctx.createLinearGradient(0,hrzY-80,0,hrzY);hg.addColorStop(0,"rgba(255,130,40,0)");hg.addColorStop(1,"rgba(255,100,30,"+(ga*0.25).toFixed(2)+")");ctx.fillStyle=hg;ctx.fillRect(0,hrzY-80,W,80);}
   }
 
+  /* ======== SATURN NORTH POLAR HEXAGON STORM ======== */
+  if(plName==="Saturn"&&(lat||0)>60){
+    var hexStr=Math.min(1,((lat||0)-60)/20);var hexY=hrzY*0.28;var hexR=Math.min(W*0.38,H*0.45);
+    ctx.save();ctx.globalAlpha=hexStr*0.65*(0.3+dayF*0.7);
+    var hexBgG=ctx.createRadialGradient(W/2,hexY,hexR*0.2,W/2,hexY,hexR*1.2);
+    hexBgG.addColorStop(0,"rgba(160,90,40,0.18)");hexBgG.addColorStop(0.7,"rgba(140,80,30,0.08)");hexBgG.addColorStop(1,"rgba(140,80,30,0)");
+    ctx.fillStyle=hexBgG;ctx.fillRect(0,0,W,hrzY);
+    ctx.strokeStyle="rgba(200,130,60,0.85)";ctx.lineWidth=Math.max(2,hexR*0.018);
+    ctx.beginPath();for(var hi=0;hi<6;hi++){var ha=hi/6*TAU-Math.PI/6;var hx=W/2+Math.cos(ha)*hexR,hy=hexY+Math.sin(ha)*hexR*0.38;if(hi===0)ctx.moveTo(hx,hy);else ctx.lineTo(hx,hy);}ctx.closePath();ctx.stroke();
+    ctx.strokeStyle="rgba(180,110,50,0.6)";ctx.lineWidth=Math.max(1,hexR*0.012);
+    ctx.beginPath();ctx.arc(W/2,hexY,hexR*0.18,0,TAU);ctx.stroke();
+    ctx.lineWidth=Math.max(0.8,hexR*0.008);ctx.strokeStyle="rgba(220,150,70,0.4)";
+    for(var sa2=0;sa2<3;sa2++){ctx.beginPath();for(var sp2=0;sp2<=16;sp2++){var st2=sp2/16,sr3=hexR*(0.04+st2*0.15),sa3=sa2*TAU/3+st2*TAU*0.7+t*0.1;ctx.lineTo(W/2+Math.cos(sa3)*sr3,hexY+Math.sin(sa3)*sr3*0.38);}ctx.stroke();}
+    ctx.globalAlpha=hexStr*0.8;ctx.fillStyle="rgba(230,160,80,0.9)";ctx.font="10px system-ui,sans-serif";ctx.textAlign="center";
+    ctx.fillText("🌩 北極六角形嵐",W/2,hrzY*0.06);
+    ctx.restore();
+  }
+
   /* ======== ZODIACAL LIGHT (Earth only, twilight) ======== */
   if(plName==="Earth"&&sunAlt<-0.05&&sunAlt>-0.38){
     var zlStr=Math.max(0,(0.35-Math.abs(sunAlt+0.1))/0.35)*(1-dayF)*0.55;
