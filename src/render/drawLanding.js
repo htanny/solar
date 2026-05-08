@@ -224,6 +224,40 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     if(sunAlt>-0.1&&sunAlt<0.35){var ga=Math.max(0,(0.35-Math.abs(sunAlt-0.1))*1.5);var hg=ctx.createLinearGradient(0,hrzY-80,0,hrzY);hg.addColorStop(0,"rgba(255,130,40,0)");hg.addColorStop(1,"rgba(255,100,30,"+(ga*0.25).toFixed(2)+")");ctx.fillStyle=hg;ctx.fillRect(0,hrzY-80,W,80);}
   }
 
+  /* ======== ZODIACAL LIGHT (Earth only, twilight) ======== */
+  if(plName==="Earth"&&sunAlt<-0.05&&sunAlt>-0.38){
+    var zlStr=Math.max(0,(0.35-Math.abs(sunAlt+0.1))/0.35)*(1-dayF)*0.55;
+    if(zlStr>0.01&&Math.abs(aDiffSun)<TAU*0.32){
+      ctx.save();
+      var zlSY=hrzY,zlW=W*0.14+W*0.06*(1-Math.abs(aDiffSun)/(TAU*0.32));
+      var zlGr=ctx.createLinearGradient(sunScreenX,zlSY,sunScreenX,0);
+      zlGr.addColorStop(0,"rgba(255,240,200,"+(zlStr*0.55).toFixed(2)+")");
+      zlGr.addColorStop(0.25,"rgba(255,220,160,"+(zlStr*0.22).toFixed(2)+")");
+      zlGr.addColorStop(0.6,"rgba(255,210,130,"+(zlStr*0.07).toFixed(2)+")");
+      zlGr.addColorStop(1,"rgba(255,200,100,0)");
+      ctx.beginPath();ctx.moveTo(sunScreenX,zlSY);ctx.lineTo(sunScreenX-zlW,0);ctx.lineTo(sunScreenX+zlW,0);ctx.closePath();
+      ctx.fillStyle=zlGr;ctx.fill();
+      ctx.restore();
+    }
+  }
+  /* ======== GEGENSCHEIN (Earth only, deep night, antisun direction) ======== */
+  if(plName==="Earth"&&isNight&&sunAlt<-0.28&&starA>0.3){
+    var gsStr=Math.max(0,(-0.28-sunAlt)*0.7)*starA*0.3;
+    if(gsStr>0.01){
+      var antiAz_=(sunAz+Math.PI)%TAU;
+      var antiDiff_=((antiAz_-yaw)%TAU+TAU)%TAU;if(antiDiff_>Math.PI)antiDiff_-=TAU;
+      if(Math.abs(antiDiff_)<TAU*0.32){
+        var gX_=W/2+antiDiff_*W*0.8/TAU,gY_=hrzY*0.38;
+        var gsGr=ctx.createRadialGradient(gX_,gY_,0,gX_,gY_,W*0.09);
+        gsGr.addColorStop(0,"rgba(255,255,220,"+gsStr.toFixed(2)+")");
+        gsGr.addColorStop(0.5,"rgba(255,255,200,"+(gsStr*0.4).toFixed(2)+")");
+        gsGr.addColorStop(1,"rgba(255,255,180,0)");
+        ctx.fillStyle=gsGr;ctx.fillRect(gX_-W*0.09,gY_-W*0.09,W*0.18,W*0.18);
+        ctx.fillStyle="rgba(220,230,255,"+(gsStr*0.5).toFixed(2)+")";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("対日照",gX_,gY_-W*0.06);
+      }
+    }
+  }
+
   /* ======== OTHER CELESTIAL BODIES IN SKY ======== */
   var nightAlpha=Math.max(0.2,1-dayF);
   if(plName==="Earth"){
