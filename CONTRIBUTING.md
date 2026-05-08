@@ -26,22 +26,35 @@ npm run preview
 ```
 solar/
 ├── src/
-│   ├── App.jsx          # メインコンポーネント（全機能）
-│   └── main.jsx         # Reactエントリーポイント
+│   ├── App.jsx                  # メインコンポーネント（状態管理・アニメーションループ）
+│   ├── main.jsx                 # Reactエントリーポイント
+│   ├── data/
+│   │   └── solarData.js         # 全天体データ（惑星・衛星・彗星・探査機等）
+│   ├── render/
+│   │   ├── utils.js             # 3D数学・描画ユーティリティ（pj・RX/RY・fillCirc等）
+│   │   ├── drawBodies.js        # 太陽系描画（惑星・軌道・銀河・小惑星帯）
+│   │   └── drawLanding.js       # 着陸モード描画（地表・空・HUD）
+│   ├── audio/
+│   │   └── landAudio.js         # 惑星別環境音（Web Audio API）
+│   ├── hooks/
+│   │   └── useRefSync.js        # useState + useRef 同期カスタムフック
+│   ├── utils/
+│   │   └── timeUtils.js         # 日付⇔シミュレーション日数変換・天文イベント計算
+│   └── components/
+│       └── DragPanel.jsx         # ドラッグ可能UIパネルコンポーネント
 ├── public/
-│   └── favicon.svg      # ファビコン
+│   └── favicon.svg
 ├── .github/workflows/
-│   └── deploy.yml       # GitHub Pages自動デプロイ
-├── index.html           # HTMLエントリー
-├── vite.config.js       # Viteビルド設定
+│   └── deploy.yml               # GitHub Pages自動デプロイ
+├── index.html
+├── vite.config.js
 ├── package.json
-├── LICENSE              # MITライセンス
 └── README.md
 ```
 
 ## コーディング規約
 
-- **単一ファイル設計**: `src/App.jsx` に全機能を集約。モジュール分割は行わない（現状のアーキテクチャを維持）
+- **8モジュール構成**: `App.jsx`（状態・ループ）、`solarData.js`（データ）、`drawBodies.js`（描画）、`drawLanding.js`（着陸）、`utils.js`（数学）、`landAudio.js`（音）、`useRefSync.js`（フック）、`timeUtils.js`（時刻）
 - **var を使用**: `let`/`const`ではなく`var`に統一されている（既存のスタイル踏襲）
 - **コメント**: 機能の区切りは `/* ===== SECTION ===== */` 形式
 - **命名**: 関数はcamelCase、定数はUPPER_CASE
