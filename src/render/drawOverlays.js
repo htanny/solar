@@ -1,7 +1,8 @@
 /* ===== VISUALIZATION OVERLAYS ===== */
 /* Hill spheres, eclipse shadow cone, tidal vectors, telescope mode */
-import { pj, mOf } from "./utils.js";
-import { MD, TAU } from "../data/solarData.js";
+import { pj, mOf, clipCirc } from "./utils.js";
+import { drawPlanetBody, dRi } from "./drawBodies.js";
+import { PL, DWARFS, SRR, MD, TAU } from "../data/solarData.js";
 
 var HILL_MASS={Mercury:1.65e-7,Venus:2.45e-6,Earth:3.00e-6,Mars:3.23e-7,Jupiter:9.55e-4,Saturn:2.86e-4,Uranus:4.37e-5,Neptune:5.15e-5};
 
@@ -91,6 +92,33 @@ function drawTelescope(ctx,pd,pjArr,cam,W,H,fc,zmStr,srScr,sunPj){
   ctx.fillText("× "+zmStr,cx-tR+8,cy+tR-22);
   ctx.fillText("FOC: "+(fc==="sun"?"SUN":fc.toUpperCase().slice(0,8)),cx-tR+8,cy+tR-10);
   ctx.restore();
+}
+
+export function drawCompareMode(ctx,cmpSt,W,H,t){
+  ctx.fillStyle="rgba(3,3,12,0.92)";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(255,255,255,0.5)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";
+  ctx.fillText("サイズ比較モード（実比率）",W/2,30);
+  var cmpY=H*0.52,cmpBaseScale=(H*0.015)/PL[2].r,cmpScale=cmpBaseScale*cmpSt.zm;
+  var sunPx=SRR*cmpScale,sunCX=-sunPx+50;
+  ctx.save();ctx.beginPath();ctx.rect(0,50,W,H-50);ctx.clip();
+  clipCirc(ctx,sunCX,cmpY,sunPx);ctx.fillStyle="rgba(255,200,50,1)";ctx.fill();
+  ctx.fillStyle="rgba(255,220,100,0.7)";ctx.font="11px sans-serif";ctx.textAlign="left";
+  ctx.fillText("太陽 ☀",Math.max(4,sunCX+sunPx+4),cmpY-sunPx*0.1-4);
+  var allCmp=PL.concat(DWARFS);var cmpXs=[],cx=W*0.1+cmpSt.offX;
+  for(var ci=0;ci<allCmp.length;ci++){cmpXs[ci]=cx;var rC=Math.max(allCmp[ci].r*cmpScale,2);var rN=ci<allCmp.length-1?Math.max(allCmp[ci+1].r*cmpScale,2):0;cx+=Math.max(rC+rN+18*cmpSt.zm,44*cmpSt.zm);}
+  for(var cpi=0;cpi<allCmp.length;cpi++){
+    var cpx=cmpXs[cpi],cpr=Math.max(allCmp[cpi].r*cmpScale,1.5);
+    if(cpx+cpr<0||cpx-cpr>W)continue;
+    drawPlanetBody(ctx,cpx,cmpY,cpr,allCmp[cpi],t/Math.abs(allCmp[cpi].rot)*TAU);
+    if(allCmp[cpi].n==="Saturn")dRi(ctx,cpx,cmpY,0,cpr,{fx:0,fy:0,fz:0,rx:0,ry:0,zm:1},allCmp[cpi].t);
+    ctx.fillStyle="rgba(255,255,255,0.85)";ctx.font="11px sans-serif";ctx.textAlign="center";
+    ctx.fillText(allCmp[cpi].j,cpx,cmpY+cpr+16);
+    ctx.fillStyle="rgba(255,255,255,0.45)";ctx.font="9px sans-serif";
+    ctx.fillText("地球の"+(allCmp[cpi].r/6.4).toFixed(1)+"倍",cpx,cmpY+cpr+29);
+  }
+  ctx.restore();
+  ctx.fillStyle="rgba(255,255,255,0.25)";ctx.font="11px sans-serif";ctx.textAlign="center";
+  ctx.fillText("← ドラッグでスクロール　ピンチ/ホイールでズーム →",W/2,H-12);
 }
 
 export function drawOverlays(ctx,opts){
