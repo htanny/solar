@@ -372,6 +372,94 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
     /* Titan - visible as bright dot */
     var tiAng=(t/15.945)*TAU,tiX=(W*0.4+Math.cos(tiAng+yaw)*W*0.2),tiY=hrzY*0.35;
     ctx.globalAlpha=0.6;fillCirc(ctx,tiX,tiY,2.5/fov,"rgba(200,180,120,1)");ctx.globalAlpha=1;
+  }else if(plName==="Moon"){
+    /* Earth in lunar sky — tidally locked: sub-Earth point at lat=0, lng=0 */
+    var lngRadE=((lngDeg||0)+540)%360-180;lngRadE*=0.01745;
+    var subEarthCos=Math.cos(latRad)*Math.cos(lngRadE);
+    if(subEarthCos>0.02){
+      var earthAlt=Math.asin(Math.max(-1,Math.min(1,subEarthCos)));
+      var earthAz=Math.atan2(Math.sin(lngRadE),-Math.sin(latRad)*Math.cos(lngRadE));
+      var earthADiff=((earthAz-yaw)%TAU+TAU)%TAU;if(earthADiff>Math.PI)earthADiff-=TAU;
+      if(Math.abs(earthADiff)<TAU*0.32){
+        var earthX=W/2+earthADiff*W*0.8/TAU;
+        var earthY=hrzY-(earthAlt/(Math.PI*0.5))*hrzY*0.85;
+        var earthRad=Math.max(10,22/fov);/* Earth appears ~4x larger than Moon from Earth */
+        var sunLngM=(280.46+0.9856*t+36000)%360;
+        var moonLngM=(218.316+13.176396*t+360000)%360;
+        var moonPhFromE=((moonLngM-sunLngM)/360+100)%1;
+        var earthPh=(moonPhFromE+0.5)%1;/* Earth phase = opposite of Moon-from-Earth */
+        var dxSunE=sunScreenX-earthX,dySunE=sunY-earthY;
+        var toSunE=Math.atan2(dxSunE,-dySunE);
+        var earthTilt=earthPh<0.5?toSunE-Math.PI/2:toSunE+Math.PI/2;
+        ctx.save();
+        /* Earthshine glow / blue limb */
+        var egGlow=ctx.createRadialGradient(earthX,earthY,earthRad*0.95,earthX,earthY,earthRad*2.4);
+        egGlow.addColorStop(0,"rgba(140,200,255,0.25)");egGlow.addColorStop(1,"rgba(120,180,255,0)");
+        ctx.fillStyle=egGlow;ctx.fillRect(earthX-earthRad*3,earthY-earthRad*3,earthRad*6,earthRad*6);
+        ctx.translate(earthX,earthY);ctx.rotate(earthTilt);
+        ctx.beginPath();ctx.arc(0,0,earthRad,0,TAU);ctx.clip();
+        /* Dark side (night Earth with faint city lights tint) */
+        ctx.fillStyle="rgba(8,12,28,1)";ctx.fillRect(-earthRad,-earthRad,earthRad*2,earthRad*2);
+        /* Lit hemisphere */
+        if(earthPh>0.02&&earthPh<0.98){
+          var ekx=earthRad*Math.cos(earthPh*TAU);
+          ctx.fillStyle="rgba(55,100,180,1)";/* ocean blue base */
+          ctx.beginPath();
+          if(earthPh<0.5){
+            ctx.arc(0,0,earthRad,-Math.PI/2,Math.PI/2,false);
+            ctx.bezierCurveTo(ekx,earthRad,ekx,-earthRad,0,-earthRad);
+          }else{
+            ctx.arc(0,0,earthRad,-Math.PI/2,Math.PI/2,true);
+            ctx.bezierCurveTo(-ekx,earthRad,-ekx,-earthRad,0,-earthRad);
+          }
+          ctx.fill();
+          /* Continents (rough Africa/Eurasia/Americas hint) — only on lit side */
+          ctx.globalAlpha=0.85;ctx.fillStyle="rgba(95,135,60,1)";
+          var contShift=earthPh<0.5?earthRad*0.15:-earthRad*0.15;
+          ctx.beginPath();ctx.ellipse(contShift,-earthRad*0.05,earthRad*0.38,earthRad*0.48,0.2,0,TAU);ctx.fill();
+          ctx.fillStyle="rgba(180,150,90,1)";
+          ctx.beginPath();ctx.ellipse(contShift-earthRad*0.1,earthRad*0.25,earthRad*0.22,earthRad*0.18,0.3,0,TAU);ctx.fill();
+          /* Cloud bands */
+          ctx.globalAlpha=0.55;ctx.fillStyle="rgba(255,255,255,1)";
+          ctx.beginPath();ctx.ellipse(contShift+earthRad*0.2,-earthRad*0.45,earthRad*0.45,earthRad*0.14,0.15,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.ellipse(contShift-earthRad*0.05,earthRad*0.4,earthRad*0.4,earthRad*0.12,-0.1,0,TAU);ctx.fill();
+          /* Polar ice caps */
+          ctx.globalAlpha=0.7;ctx.fillStyle="rgba(245,250,255,1)";
+          ctx.beginPath();ctx.ellipse(0,-earthRad*0.88,earthRad*0.55,earthRad*0.15,0,0,TAU);ctx.fill();
+          ctx.beginPath();ctx.ellipse(0,earthRad*0.88,earthRad*0.45,earthRad*0.13,0,0,TAU);ctx.fill();
+          /* Atmospheric limb (blue scattering on day side edge) */
+          ctx.globalAlpha=0.55;
+          var lgmEdge=ctx.createRadialGradient(0,0,earthRad*0.85,0,0,earthRad);
+          lgmEdge.addColorStop(0,"rgba(120,180,255,0)");lgmEdge.addColorStop(0.85,"rgba(140,200,255,0.3)");lgmEdge.addColorStop(1,"rgba(180,220,255,0.8)");
+          ctx.fillStyle=lgmEdge;ctx.fillRect(-earthRad,-earthRad,earthRad*2,earthRad*2);
+          ctx.globalAlpha=1;
+        }
+        /* Faint city lights on night side */
+        if(earthPh<0.85){
+          ctx.globalAlpha=0.5;ctx.fillStyle="rgba(255,220,140,1)";
+          for(var clI=0;clI<8;clI++){var cla=(clI*0.785+t*0.05)%TAU,clr=earthRad*(0.4+clI*0.05),clx2=Math.cos(cla)*clr,cly2=Math.sin(cla)*clr*0.7;
+            if((earthPh<0.5&&clx2>0)||(earthPh>0.5&&clx2<0))continue;/* only night side */
+            ctx.fillRect(clx2,cly2,0.8,0.8);}
+          ctx.globalAlpha=1;
+        }
+        ctx.restore();
+        /* Label */
+        ctx.fillStyle="rgba(180,210,255,0.85)";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+        var earthPhName;
+        if(earthPh<0.04||earthPh>0.96)earthPhName="新地球";
+        else if(earthPh<0.46)earthPhName="三日地球";
+        else if(earthPh<0.54)earthPhName="満地球 🌍";
+        else if(earthPh<0.96)earthPhName="半地球";
+        ctx.fillText(earthPhName,earthX,earthY+earthRad+14);
+        ctx.fillStyle="rgba(140,180,230,0.55)";ctx.font="8px sans-serif";
+        ctx.fillText("輝面比 "+(Math.round((1-Math.cos(earthPh*TAU))/2*100))+"%",earthX,earthY+earthRad+25);
+      }
+    }
+    /* Apollo landing sites label (when looking at appropriate region) */
+    if(Math.abs(latRad)<0.5&&((lngDeg||0)>-50&&(lngDeg||0)<50)){
+      ctx.fillStyle="rgba(255,200,100,0.4)";ctx.font="8px sans-serif";ctx.textAlign="left";
+      ctx.fillText("🏴 Apollo 着陸候補域",10,hrzY-6);
+    }
   }
 
   /* ======== AURORA (Earth lat>55°, Jupiter lat>45°) - dynamic curtain ======== */
@@ -453,24 +541,24 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
 
   /* ======== FAR MOUNTAINS (parallax layer 3 - slowest) ======== */
   var tSeed=plName.charCodeAt(0)*13+plName.length;
-  var farMh=plName==="Mercury"||plName==="Mars"?18:plName==="Venus"?6:plName==="Earth"?bConf.mhF:3;
+  var farMh=plName==="Mercury"||plName==="Mars"?18:plName==="Moon"?14:plName==="Venus"?6:plName==="Earth"?bConf.mhF:3;
   if(farMh>2){ctx.globalAlpha=0.15;
     ctx.beginPath();ctx.moveTo(0,hrzY);
     for(var fx=0;fx<=W;fx+=3){var fh=terrainH(fx+yaw*15,tSeed+100)*farMh;ctx.lineTo(fx,hrzY-fh-8);}
     ctx.lineTo(W,hrzY);ctx.closePath();
-    ctx.fillStyle=plName==="Mars"?"rgba(140,70,40,1)":plName==="Earth"?bConf.far:"rgba(80,75,70,1)";ctx.fill();ctx.globalAlpha=1;}
+    ctx.fillStyle=plName==="Mars"?"rgba(140,70,40,1)":plName==="Earth"?bConf.far:plName==="Moon"?"rgba(75,72,68,1)":"rgba(80,75,70,1)";ctx.fill();ctx.globalAlpha=1;}
 
   /* ======== MID MOUNTAINS (parallax layer 2) ======== */
-  var midMh=plName==="Mercury"||plName==="Mars"?30:plName==="Venus"?10:plName==="Earth"?bConf.mhM:4;
+  var midMh=plName==="Mercury"||plName==="Mars"?30:plName==="Moon"?22:plName==="Venus"?10:plName==="Earth"?bConf.mhM:4;
   if(midMh>2){ctx.globalAlpha=0.3;
     ctx.beginPath();ctx.moveTo(0,hrzY);
     for(var mx=0;mx<=W;mx+=2){var mh2=terrainH(mx+yaw*30,tSeed+50)*midMh;ctx.lineTo(mx,hrzY-mh2-3);}
     ctx.lineTo(W,hrzY);ctx.closePath();
-    ctx.fillStyle=plName==="Mars"?"rgba(155,80,45,1)":plName==="Earth"?bConf.mid:"rgba(90,85,78,1)";ctx.fill();ctx.globalAlpha=1;}
+    ctx.fillStyle=plName==="Mars"?"rgba(155,80,45,1)":plName==="Earth"?bConf.mid:plName==="Moon"?"rgba(95,92,86,1)":"rgba(90,85,78,1)";ctx.fill();ctx.globalAlpha=1;}
 
   /* ======== NEAR TERRAIN (parallax layer 1 - fastest) + ground ======== */
   ctx.beginPath();ctx.moveTo(0,hrzY);
-  var nearMh=plName==="Mercury"||plName==="Mars"?25:plName==="Venus"?8:plName==="Earth"?bConf.mhN:5;
+  var nearMh=plName==="Mercury"||plName==="Mars"?25:plName==="Moon"?16:plName==="Venus"?8:plName==="Earth"?bConf.mhN:5;
   for(var tx=0;tx<=W;tx+=2){var th2=terrainH(tx+yaw*50,tSeed)*nearMh;ctx.lineTo(tx,hrzY-th2);}
   ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
   var groundCol=plName==="Earth"?bConf.g:sf.g;
@@ -479,13 +567,31 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   gG.addColorStop(1,gDark);ctx.fillStyle=gG;ctx.fill();
 
   /* ======== FOREGROUND DETAIL (parallax fastest) ======== */
-  if(plName==="Mercury"||plName==="Mars"){
-    var cr=seedR(plName==="Mercury"?55:77);
-    for(var ci2=0;ci2<40;ci2++){var cx3=cr()*W,cy3=hrzY+12+cr()*(H-hrzY-25),dist=(cy3-hrzY)/(H-hrzY),sz=1+dist*14+cr()*8*dist;
+  if(plName==="Mercury"||plName==="Mars"||plName==="Moon"){
+    var cr=seedR(plName==="Mercury"?55:plName==="Moon"?91:77);
+    var craterRim=plName==="Mercury"?"rgba(80,75,70,1)":plName==="Moon"?"rgba(130,127,118,1)":"rgba(140,80,45,1)";
+    for(var ci2=0;ci2<(plName==="Moon"?60:40);ci2++){var cx3=cr()*W,cy3=hrzY+12+cr()*(H-hrzY-25),dist=(cy3-hrzY)/(H-hrzY),sz=1+dist*14+cr()*8*dist;
       ctx.globalAlpha=0.25*dist;ctx.fillStyle="rgba(0,0,0,1)";ctx.beginPath();ctx.arc(cx3+sz*0.15,cy3+sz*0.1,sz*0.9,0,TAU);ctx.fill();
-      ctx.globalAlpha=0.4*dist;ctx.fillStyle=plName==="Mercury"?"rgba(80,75,70,1)":"rgba(140,80,45,1)";ctx.beginPath();ctx.arc(cx3,cy3,sz*0.8,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.4*dist;ctx.fillStyle=craterRim;ctx.beginPath();ctx.arc(cx3,cy3,sz*0.8,0,TAU);ctx.fill();
       ctx.globalAlpha=0.12*dist;ctx.beginPath();ctx.arc(cx3-sz*0.2,cy3-sz*0.2,sz*0.35,0,TAU);ctx.fillStyle="rgba(255,255,255,1)";ctx.fill();}
     ctx.globalAlpha=1;
+    /* Moon: scattered regolith specks for granular texture */
+    if(plName==="Moon"){
+      var mrn=seedR(307);ctx.globalAlpha=0.4;
+      for(var rgi=0;rgi<120;rgi++){var rgx=mrn()*W,rgy=hrzY+6+mrn()*(H-hrzY-10),rgsz=0.5+mrn()*1.5;
+        ctx.fillStyle=mrn()<0.4?"rgba(190,185,175,1)":"rgba(70,68,62,1)";
+        ctx.fillRect(rgx,rgy,rgsz,rgsz);}
+      ctx.globalAlpha=1;
+      /* Lunar lander footprint silhouette (Apollo style) — small foreground prop */
+      if((lngDeg||0)>-10&&(lngDeg||0)<10&&Math.abs(lat||0)<10){
+        var fpY=H-32;ctx.globalAlpha=0.55;ctx.fillStyle="rgba(20,20,18,1)";
+        ctx.fillRect(W*0.78-12,fpY,24,8);
+        ctx.beginPath();ctx.moveTo(W*0.78-14,fpY+8);ctx.lineTo(W*0.78-8,fpY+18);ctx.lineTo(W*0.78-6,fpY+8);ctx.fill();
+        ctx.beginPath();ctx.moveTo(W*0.78+14,fpY+8);ctx.lineTo(W*0.78+8,fpY+18);ctx.lineTo(W*0.78+6,fpY+8);ctx.fill();
+        ctx.fillStyle="rgba(220,210,180,0.7)";ctx.fillRect(W*0.78-3,fpY-6,6,6);
+        ctx.globalAlpha=1;
+      }
+    }
     if(plName==="Mars"){ctx.globalAlpha=0.18;ctx.fillStyle="rgba(180,100,55,1)";for(var mi=0;mi<6;mi++){var mx2=((rng()*W*2+yaw*40)%(W*1.3))-W*0.15;ctx.beginPath();ctx.moveTo(mx2-45,hrzY);ctx.lineTo(mx2,hrzY-18-rng()*22);ctx.lineTo(mx2+45,hrzY);ctx.fill();}ctx.globalAlpha=1;}
   }else if(plName==="Earth"){
     if(biome==="polar"){
