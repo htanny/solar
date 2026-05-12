@@ -14,6 +14,8 @@ export var PL=[
 ];
 export var SUNINFO={j:"太陽",mass:"1.99×10³⁰ kg",r:"69.6万km",temp:"表面5,500℃ / 中心1,500万℃",type:"G型主系列星",age:"約46億年"};
 export var MD={oR:18,r:2.5,p:27.3,rd:0.384,rr:1.737};
+/* Moon as a landing target: d=150 (~1 AU), p=365.25 (yr), rot=27.32 (sidereal) → solar day ≈ 29.5d */
+export var MOON_INFO={n:"Moon",j:"月",e:"Moon",d:150,r:1.737,p:365.25,c:"rgba(200,200,200,1)",t:6.68,rot:27.32,type:"moon",mass:"7.34×10²² kg",grav:"1.62 m/s²",moons:0,day:"29.5日(太陽日)",year:"27.3日(公転)",atm:"なし(真空)",temp:"−173〜+127℃",distEarth:"38.44万km",synPeriod:"29.53日",discovery:"有史以前",landingsInfo:"アポロ11号(1969)〜17号(1972)"};
 export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
   {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
@@ -27,6 +29,8 @@ export var DWARFS=[
   {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃"},
 ];
 export var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
+/* Register Moon in PL_MAP so it works with focus/landing/info systems uniformly */
+PL_MAP["Moon"]=MOON_INFO;
 /* Pre-parse "rgba(R,G,B,A)" → "R,G,B" once at module load (used in render hot path) */
 PL.concat(DWARFS).forEach(function(p){var m=p.c.match(/(\d+),(\d+),(\d+)/);p.cRGB=m?m[1]+","+m[2]+","+m[3]:null;});
 
@@ -84,7 +88,7 @@ export var LAGRANGE=[
 ];
 
 
-export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
+export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Moon",l:"月",e:"Moon"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
 export var SP=[0.5,1,4,15,50,100];
 export var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,0.1,0.15,0.22,0.35,0.5,0.7,1,1.5,2.2,3.5,5,8,13,22,40,70,120,200,350,600,1100,2000,4000,8000,16000,35000,70000,150000];
 export var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
@@ -157,6 +161,7 @@ export var SURF={
   Ceres:{atm:0,sunSz:0.13,g:"rgba(100,95,88,1)",skyTop:"0,0,0",skyBot:"3,3,5"},
   Pluto:{atm:0,sunSz:0.0025,g:"rgba(165,145,125,1)",skyTop:"0,0,0",skyBot:"2,2,4"},
   Eris:{atm:0,sunSz:0.0007,g:"rgba(155,155,158,1)",skyTop:"0,0,0",skyBot:"1,1,3"},
+  Moon:{atm:0,sunSz:1,g:"rgba(135,130,122,1)",skyTop:"0,0,0",skyBot:"3,3,6",showEarth:true},
 };
 
 /* Exoplanets - rendered only in landing mode (not in solar view) */
