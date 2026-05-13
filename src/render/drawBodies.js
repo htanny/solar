@@ -42,7 +42,7 @@ function dSh(ctx,px,py,r,wx,wz,cam){if(r<0.8)return;
   var termW=ld[2];/* -1:full lit, 0:quarter, +1:full dark */
   if(termW<-0.97)return;/* fully lit, no shadow */
   ctx.save();ctx.beginPath();ctx.arc(px,py,r,0,TAU);ctx.clip();
-  ctx.translate(px,py);ctx.rotate(-scrAng);/* rotate so light=+x */
+  ctx.translate(px,py);ctx.rotate(scrAng);/* rotate so light=+x */
   /* Shadow region: left limb + terminator ellipse */
   var seg=Math.max(16,Math.floor(r*0.8));
   ctx.beginPath();
