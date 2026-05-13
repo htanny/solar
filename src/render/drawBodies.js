@@ -52,14 +52,15 @@ function dSh(ctx,px,py,r,wx,wz,cam){if(r<0.8)return;
   for(var k=0;k<=seg;k++){var a2=1.5708-(k/seg)*3.1416;ctx.lineTo(termW*r*Math.cos(a2),r*Math.sin(a2));}
   ctx.closePath();ctx.fillStyle="rgba(0,0,0,0.5)";ctx.fill();
   ctx.restore();}
-function dAx(ctx,px,py,r,td){if(r<2)return;var tr=td*0.01745,len=r+Math.min(14,r*0.8),dx=Math.sin(tr)*len,dy=Math.cos(tr)*len;ctx.beginPath();ctx.moveTo(px-dx,py+dy);ctx.lineTo(px+dx,py-dy);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);var ax=px+dx,ay=py-dy,ad=Math.atan2(-dy,dx);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad-0.4)*5,ay-Math.sin(ad-0.4)*5);ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad+0.4)*5,ay-Math.sin(ad+0.4)*5);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.stroke();}
+function dAx(ctx,px,py,r,td,cam){if(r<2)return;var tr=td*0.01745,len=r+Math.min(14,r*0.8);var ap=RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx);var dx=ap[0]*len,dy=ap[1]*len;ctx.beginPath();ctx.moveTo(px-dx,py+dy);ctx.lineTo(px+dx,py-dy);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);var ax=px+dx,ay=py-dy,ad=Math.atan2(-dy,dx);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad-0.4)*5,ay-Math.sin(ad-0.4)*5);ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad+0.4)*5,ay-Math.sin(ad+0.4)*5);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.stroke();}
 
 /* ===== PLANET TEXTURES WITH TILT ROTATION ===== */
-function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle){
+function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   if(r<1.5){fillCirc(ctx,cx,cy,Math.max(r,0.4),pl.c);return;}
   var tp=pl.type,phase=(((rotAngle%TAU)/TAU)%1+1)%1,hi=r>12,atm=null,R=r*1.5;
   ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
-  ctx.translate(cx,cy);ctx.rotate(pl.t*0.01745);ctx.translate(-cx,-cy);
+  var tr=pl.t*0.01745;var ap=cam?RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx):[Math.sin(tr),Math.cos(tr),0];var screenTilt=Math.atan2(ap[0],ap[1]);
+  ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.translate(-cx,-cy);
 
   if(tp==="rock"){
     var g=ctx.createRadialGradient(cx-r*0.15,cy-r*0.1,r*0.1,cx,cy,r);g.addColorStop(0,"rgba(170,168,160,1)");g.addColorStop(0.6,"rgba(140,138,130,1)");g.addColorStop(1,"rgba(100,98,92,1)");ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2);
