@@ -171,17 +171,31 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   }
   sphereShade(ctx,cx,cy,r);
   ctx.restore();/* inner: remove rotation, clip still active */
-  /* Polar overlay: gradient from projected pole tip position */
-  /* North pole screen pos = (cx+ap[0]*r, cy-ap[1]*r) matching dAx convention */
+  /* Polar view blend: solid fill + ice cap at opacity |ap[2]| covers equatorial texture */
   if(cam&&Math.abs(ap[2])>0.05){
     var npx=cx+ap[0]*r,npy=cy-ap[1]*r;
-    var opa=Math.min(0.88,Math.abs(ap[2]));
-    var pCol=tp==="earth"?"240,245,255":tp==="mars"?"235,238,245":tp==="ice1"?"190,238,242":tp==="ice2"?"200,220,255":"220,218,215";
-    var pg2=ctx.createRadialGradient(npx,npy,0,npx,npy,r*1.1);
-    pg2.addColorStop(0,"rgba("+pCol+","+opa.toFixed(2)+")");
-    pg2.addColorStop(Math.min(0.92,opa*0.75),"rgba("+pCol+","+(opa*0.08).toFixed(2)+")");
-    pg2.addColorStop(1,"rgba("+pCol+",0)");
-    ctx.fillStyle=pg2;ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    var pBlend=Math.min(1,Math.abs(ap[2]));
+    ctx.globalAlpha=pBlend;
+    /* 1. Solid polar background */
+    if(tp==="earth"){ctx.fillStyle="rgba(12,42,128,1)";}
+    else if(tp==="mars"){ctx.fillStyle="rgba(160,82,42,1)";}
+    else if(tp==="gas1"){ctx.fillStyle="rgba(195,168,120,1)";}
+    else if(tp==="gas2"){ctx.fillStyle="rgba(218,198,148,1)";}
+    else if(tp==="ice1"){ctx.fillStyle="rgba(130,215,222,1)";}
+    else if(tp==="ice2"){ctx.fillStyle="rgba(35,72,196,1)";}
+    else{ctx.fillStyle=pl.c;}
+    ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    /* 2. Ice / polar cap gradient from pole position */
+    var pIcCol=tp==="earth"?"238,245,255":tp==="mars"?"232,236,246":tp==="ice1"?"200,248,252":tp==="ice2"?"200,225,255":"228,225,220";
+    var icG=ctx.createRadialGradient(npx,npy,0,npx,npy,r*0.85);
+    icG.addColorStop(0,"rgba("+pIcCol+",1)");
+    icG.addColorStop(0.45,"rgba("+pIcCol+",0.65)");
+    icG.addColorStop(0.82,"rgba("+pIcCol+",0.08)");
+    icG.addColorStop(1,"rgba("+pIcCol+",0)");
+    ctx.fillStyle=icG;ctx.fillRect(cx-r,cy-r,r*2,r*2);
+    ctx.globalAlpha=1;
+    /* sphereShade over the polar view */
+    sphereShade(ctx,cx,cy,r);
   }
   ctx.restore();/* outer: remove clip */
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
