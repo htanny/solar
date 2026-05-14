@@ -58,15 +58,11 @@ function dAx(ctx,px,py,r,td,cam){if(r<2)return;var tr=td*0.01745,len=r+Math.min(
 function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   if(r<1.5){fillCirc(ctx,cx,cy,Math.max(r,0.4),pl.c);return;}
   var tp=pl.type,phase=(((rotAngle%TAU)/TAU)%1+1)%1,hi=r>12,atm=null,R=r*1.5;
-  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
-  /* Pre-fill: ensure disc has base color when texture gets squashed at oblique view */
-  ctx.fillStyle=pl.c;ctx.fillRect(cx-r,cy-r,r*2,r*2);
   var tr=pl.t*0.01745;var ap=cam?RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx):[Math.sin(tr),Math.cos(tr),0];
-  /* Project axis to screen: rotate texture so axis points along projection */
   var screenTilt=Math.atan2(ap[0],ap[1]);
-  /* Squash perpendicular to axis based on view angle: side-on=1, pole-on→0 */
-  var sFactor=Math.sqrt(Math.max(0.12,1-ap[2]*ap[2]));
-  ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.scale(1,sFactor);ctx.translate(-cx,-cy);
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
+  ctx.save();/* inner: rotation only */
+  ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.translate(-cx,-cy);
 
   if(tp==="rock"){
     var g=ctx.createRadialGradient(cx-r*0.15,cy-r*0.1,r*0.1,cx,cy,r);g.addColorStop(0,"rgba(170,168,160,1)");g.addColorStop(0.6,"rgba(140,138,130,1)");g.addColorStop(1,"rgba(100,98,92,1)");ctx.fillStyle=g;ctx.fillRect(cx-R,cy-R,R*2,R*2);
@@ -173,7 +169,21 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
     if(ndd>0.15){ctx.globalAlpha=0.55*ndd;fillCirc(ctx,cx+ndx*r*0.7,cy-r*0.15,r*0.12*ndd,"rgba(25,40,130,1)");ctx.globalAlpha=1;}
     limbDarken(ctx,cx,cy,r,0.3);atm="60,100,220";
   }
-  sphereShade(ctx,cx,cy,r);ctx.restore();
+  sphereShade(ctx,cx,cy,r);
+  ctx.restore();/* inner: remove rotation, clip still active */
+  /* Polar overlay: gradient from projected pole tip position */
+  /* North pole screen pos = (cx+ap[0]*r, cy-ap[1]*r) matching dAx convention */
+  if(cam&&Math.abs(ap[2])>0.05){
+    var npx=cx+ap[0]*r,npy=cy-ap[1]*r;
+    var opa=Math.min(0.88,Math.abs(ap[2]));
+    var pCol=tp==="earth"?"240,245,255":tp==="mars"?"235,238,245":tp==="ice1"?"190,238,242":tp==="ice2"?"200,220,255":"220,218,215";
+    var pg2=ctx.createRadialGradient(npx,npy,0,npx,npy,r*1.1);
+    pg2.addColorStop(0,"rgba("+pCol+","+opa.toFixed(2)+")");
+    pg2.addColorStop(Math.min(0.92,opa*0.75),"rgba("+pCol+","+(opa*0.08).toFixed(2)+")");
+    pg2.addColorStop(1,"rgba("+pCol+",0)");
+    ctx.fillStyle=pg2;ctx.fillRect(cx-r,cy-r,r*2,r*2);
+  }
+  ctx.restore();/* outer: remove clip */
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
 }
 
