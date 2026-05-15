@@ -3,19 +3,19 @@ export var SRR=695,DK=0.08,SK=0.18,TRAIL_LEN=200;
 export var J2000=946728000000;/* ms */
 
 export var PL=[
-  {n:"Mercury",j:"水星",d:58,r:2.4,p:88,c:"rgba(180,180,180,1)",t:0.03,rot:58.6,type:"rock",mass:"3.30×10²³ kg",grav:"3.7 m/s²",moons:0,day:"58.6日",year:"88日",atm:"ほぼ無し",temp:"−180〜430℃"},
-  {n:"Venus",j:"金星",d:108,r:6.0,p:225,c:"rgba(230,180,80,1)",t:177.4,rot:-243,type:"venus",mass:"4.87×10²⁴ kg",grav:"8.9 m/s²",moons:0,day:"243日(逆行)",year:"225日",atm:"CO₂ 96%",temp:"約462℃"},
-  {n:"Earth",j:"地球",d:150,r:6.4,p:365,c:"rgba(70,130,230,1)",t:23.4,rot:1,type:"earth",mass:"5.97×10²⁴ kg",grav:"9.8 m/s²",moons:1,day:"24時間",year:"365.25日",atm:"N₂ 78% O₂ 21%",temp:"平均15℃"},
-  {n:"Mars",j:"火星",d:228,r:3.4,p:687,c:"rgba(210,100,60,1)",t:25.2,rot:1.03,type:"mars",mass:"6.42×10²³ kg",grav:"3.7 m/s²",moons:2,day:"24.6時間",year:"687日",atm:"CO₂ 95%",temp:"平均−63℃"},
-  {n:"Jupiter",j:"木星",d:778,r:71.5,p:4333,c:"rgba(210,170,110,1)",t:3.1,rot:0.41,type:"gas1",mass:"1.90×10²⁷ kg",grav:"24.8 m/s²",moons:95,day:"9.9時間",year:"11.9年",atm:"H₂ 90% He 10%",temp:"−110℃"},
-  {n:"Saturn",j:"土星",d:1427,r:60.3,p:10759,c:"rgba(220,200,150,1)",t:26.7,rot:0.44,type:"gas2",mass:"5.68×10²⁶ kg",grav:"10.4 m/s²",moons:146,day:"10.7時間",year:"29.5年",atm:"H₂ 96% He 3%",temp:"−140℃"},
-  {n:"Uranus",j:"天王星",d:2871,r:25.6,p:30687,c:"rgba(150,220,230,1)",t:97.8,rot:-0.72,type:"ice1",mass:"8.68×10²⁵ kg",grav:"8.9 m/s²",moons:28,day:"17.2時間(逆行)",year:"84年",atm:"H₂ 83% He 15%",temp:"−195℃"},
-  {n:"Neptune",j:"海王星",d:4495,r:24.8,p:60190,c:"rgba(60,100,220,1)",t:28.3,rot:0.67,type:"ice2",mass:"1.02×10²⁶ kg",grav:"11.2 m/s²",moons:16,day:"16.1時間",year:"165年",atm:"H₂ 80% He 19%",temp:"−200℃"},
+  {n:"Mercury",j:"水星",d:58,r:2.4,p:88,c:"rgba(180,180,180,1)",t:0.03,rot:58.6,type:"rock",mass:"3.30×10²³ kg",grav:"3.7 m/s²",moons:0,day:"58.6日",year:"88日",atm:"ほぼ無し",temp:"−180〜430℃",dens:"5.43",esc:"4.3",alb:0.068},
+  {n:"Venus",j:"金星",d:108,r:6.0,p:225,c:"rgba(230,180,80,1)",t:177.4,rot:-243,type:"venus",mass:"4.87×10²⁴ kg",grav:"8.9 m/s²",moons:0,day:"243日(逆行)",year:"225日",atm:"CO₂ 96%",temp:"約462℃",dens:"5.24",esc:"10.4",alb:0.65},
+  {n:"Earth",j:"地球",d:150,r:6.4,p:365,c:"rgba(70,130,230,1)",t:23.4,rot:1,type:"earth",mass:"5.97×10²⁴ kg",grav:"9.8 m/s²",moons:1,day:"24時間",year:"365.25日",atm:"N₂ 78% O₂ 21%",temp:"平均15℃",dens:"5.51",esc:"11.2",alb:0.37},
+  {n:"Mars",j:"火星",d:228,r:3.4,p:687,c:"rgba(210,100,60,1)",t:25.2,rot:1.03,type:"mars",mass:"6.42×10²³ kg",grav:"3.7 m/s²",moons:2,day:"24.6時間",year:"687日",atm:"CO₂ 95%",temp:"平均−63℃",dens:"3.93",esc:"5.0",alb:0.15},
+  {n:"Jupiter",j:"木星",d:778,r:71.5,p:4333,c:"rgba(210,170,110,1)",t:3.1,rot:0.41,type:"gas1",mass:"1.90×10²⁷ kg",grav:"24.8 m/s²",moons:95,day:"9.9時間",year:"11.9年",atm:"H₂ 90% He 10%",temp:"−110℃",dens:"1.33",esc:"59.5",alb:0.52},
+  {n:"Saturn",j:"土星",d:1427,r:60.3,p:10759,c:"rgba(220,200,150,1)",t:26.7,rot:0.44,type:"gas2",mass:"5.68×10²⁶ kg",grav:"10.4 m/s²",moons:146,day:"10.7時間",year:"29.5年",atm:"H₂ 96% He 3%",temp:"−140℃",dens:"0.69",esc:"35.5",alb:0.47},
+  {n:"Uranus",j:"天王星",d:2871,r:25.6,p:30687,c:"rgba(150,220,230,1)",t:97.8,rot:-0.72,type:"ice1",mass:"8.68×10²⁵ kg",grav:"8.9 m/s²",moons:28,day:"17.2時間(逆行)",year:"84年",atm:"H₂ 83% He 15%",temp:"−195℃",dens:"1.27",esc:"21.3",alb:0.51},
+  {n:"Neptune",j:"海王星",d:4495,r:24.8,p:60190,c:"rgba(60,100,220,1)",t:28.3,rot:0.67,type:"ice2",mass:"1.02×10²⁶ kg",grav:"11.2 m/s²",moons:16,day:"16.1時間",year:"165年",atm:"H₂ 80% He 19%",temp:"−200℃",dens:"1.64",esc:"23.5",alb:0.41},
 ];
-export var SUNINFO={j:"太陽",mass:"1.99×10³⁰ kg",r:"69.6万km",temp:"表面5,500℃ / 中心1,500万℃",type:"G型主系列星",age:"約46億年"};
+export var SUNINFO={j:"太陽",mass:"1.99×10³⁰ kg",r:"69.6万km",temp:"表面5,500℃ / 中心1,500万℃",type:"G型主系列星",age:"約46億年",dens:"1.41",esc:"617.7"};
 export var MD={oR:18,r:2.5,p:27.3,rd:0.384,rr:1.737};
 /* Moon as a landing target: d=150 (~1 AU), p=365.25 (yr), rot=27.32 (sidereal) → solar day ≈ 29.5d */
-export var MOON_INFO={n:"Moon",j:"月",e:"Moon",d:150,r:1.737,p:365.25,c:"rgba(200,200,200,1)",t:6.68,rot:27.32,type:"moon",mass:"7.34×10²² kg",grav:"1.62 m/s²",moons:0,day:"29.5日(太陽日)",year:"27.3日(公転)",atm:"なし(真空)",temp:"−173〜+127℃",distEarth:"38.44万km",synPeriod:"29.53日",discovery:"有史以前",landingsInfo:"アポロ11号(1969)〜17号(1972)"};
+export var MOON_INFO={n:"Moon",j:"月",e:"Moon",d:150,r:1.737,p:365.25,c:"rgba(200,200,200,1)",t:6.68,rot:27.32,type:"moon",mass:"7.34×10²² kg",grav:"1.62 m/s²",moons:0,day:"29.5日(太陽日)",year:"27.3日(公転)",atm:"なし(真空)",temp:"−173〜+127℃",distEarth:"38.44万km",synPeriod:"29.53日",discovery:"有史以前",landingsInfo:"アポロ11号(1969)〜17号(1972)",dens:"3.34",esc:"2.4",alb:0.12};
 export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
   {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
@@ -24,9 +24,9 @@ export var COMETS=[
 export var PL_MAP={};PL.forEach(function(p){PL_MAP[p.n]=p;});
 export var COMET_MAP={};COMETS.forEach(function(c){COMET_MAP[c.key]=c;});
 export var DWARFS=[
-  {n:"Ceres",j:"ケレス",e:"Ceres",d:414,r:0.47,p:1682,c:"rgba(155,150,143,1)",t:4.0,rot:0.378,type:"rock",mass:"9.39×10²⁰ kg",grav:"0.28 m/s²",moons:0,day:"9.1時間",year:"4.6年",atm:"なし",temp:"約−105℃"},
-  {n:"Pluto",j:"冥王星",e:"Pluto",d:5906,r:1.19,p:90560,c:"rgba(200,185,165,1)",t:122.5,rot:6.39,type:"rock",mass:"1.30×10²² kg",grav:"0.62 m/s²",moons:5,day:"6.39日",year:"248年",atm:"N₂ 微量",temp:"約−230℃"},
-  {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃"},
+  {n:"Ceres",j:"ケレス",e:"Ceres",d:414,r:0.47,p:1682,c:"rgba(155,150,143,1)",t:4.0,rot:0.378,type:"rock",mass:"9.39×10²⁰ kg",grav:"0.28 m/s²",moons:0,day:"9.1時間",year:"4.6年",atm:"なし",temp:"約−105℃",dens:"2.16",esc:"0.51",alb:0.09},
+  {n:"Pluto",j:"冥王星",e:"Pluto",d:5906,r:1.19,p:90560,c:"rgba(200,185,165,1)",t:122.5,rot:6.39,type:"rock",mass:"1.30×10²² kg",grav:"0.62 m/s²",moons:5,day:"6.39日",year:"248年",atm:"N₂ 微量",temp:"約−230℃",dens:"1.85",esc:"1.2",alb:0.49},
+  {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃",dens:"2.43",esc:"1.4",alb:0.96},
 ];
 export var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
 /* Register Moon in PL_MAP so it works with focus/landing/info systems uniformly */
@@ -184,3 +184,17 @@ export var EXO_SURF={
 
 /* Meteor showers - d = day-of-year peak, raD/decD = radiant equatorial coords (deg), rate = ZHR/h */
 export var MSHW=[{d:3,n:"しぶんぎ座",raD:230,decD:50,rate:120},{d:112,n:"こと座",raD:271,decD:34,rate:18},{d:125,n:"みずがめ座η",raD:338,decD:-1,rate:60},{d:223,n:"ペルセウス座",raD:48,decD:58,rate:100},{d:294,n:"オリオン座",raD:95,decD:16,rate:25},{d:321,n:"しし座",raD:152,decD:22,rate:15},{d:347,n:"ふたご座",raD:113,decD:33,rate:120}];
+export var QUIZ_DATA=[
+  {q:"太陽系で最も密度が低い惑星は？",a:["土星","天王星","木星","海王星"],c:0,hint:"水より軽い（0.69 g/cm³）"},
+  {q:"太陽系で最も脱出速度が大きい惑星は？",a:["木星","土星","海王星","天王星"],c:0,hint:"太陽系最大のガス惑星 (59.5 km/s)"},
+  {q:"ケプラーの第三法則: 公転周期T²は何に比例する？",a:["軌道長半径a³","軌道長半径a²","軌道長半径a","軌道短半径b²"],c:0,hint:"T²∝a³（全惑星で T²/a³≈1）"},
+  {q:"地軸傾斜が約98°で「横倒し」になっている惑星は？",a:["天王星","海王星","土星","木星"],c:0,hint:"自転軸が公転面とほぼ水平"},
+  {q:"逆行自転（自転が他の惑星と逆方向）はどれ？",a:["金星","水星","火星","天王星"],c:0,hint:"自転周期が−243日"},
+  {q:"太陽系で最も衛星が多い惑星は（2024年現在）？",a:["土星","木星","天王星","海王星"],c:0,hint:"146個以上を持つ"},
+  {q:"金星の表面温度が水星より高い主な理由は？",a:["温室効果","太陽に近い","自転が遅い","密度が高い"],c:0,hint:"CO₂ 96%の厚い大気による"},
+  {q:"火星の衛星の数は？",a:["2個","1個","3個","0個"],c:0,hint:"フォボスとデイモス"},
+  {q:"太陽系の惑星で最も公転周期が長いのは？",a:["海王星","天王星","土星","冥王星（除く）"],c:0,hint:"約165年"},
+  {q:"地球の脱出速度（第二宇宙速度）は？",a:["11.2 km/s","9.8 km/s","7.9 km/s","12.4 km/s"],c:0,hint:"ロケットが地球引力から脱出する速度"},
+  {q:"土星の平均密度として正しいのは？",a:["水より軽い","水と同程度","水より重い","地球の半分"],c:0,hint:"0.69 g/cm³ — もし巨大な海があれば浮く！"},
+  {q:"月の恒星月（恒星基準の公転周期）は約何日？",a:["27.3日","29.5日","24.8日","30.0日"],c:0,hint:"朔望月(29.5日)と恒星月は異なる"},
+];
