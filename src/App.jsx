@@ -142,6 +142,16 @@ export default function App(){
     }catch(e){return false;}
   },[stopTour]);
 
+  /* URL 経由の決定論的初期状態読み込み（テスト・共有用）
+     例: ?state=SS|0|0.22|0.3|17|all&paused=1 */
+  useEffect(function(){
+    try{
+      var qs=new URLSearchParams(window.location.search);
+      var st=qs.get("state");if(st)importState(st);
+      if(qs.get("paused")==="1")setPaused(true);
+    }catch(e){}
+  },[]);
+
 
 
   var[measureMode,setMeasureMode,measMR]=useRefSync(false);
@@ -652,7 +662,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.11.2</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.12.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
