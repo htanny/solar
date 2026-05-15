@@ -8,19 +8,9 @@ import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
-
-var PANEL_INIT={showEvents:false,showDate:false,searchOpen:false,dispColl:false,exoOpen:false,nightSkyOpen:false,bookOpen:false,moonCal:false,orbElemOpen:false,importMode:false};
-function panelReducer(state,action){if(action.type==="TOGGLE")return Object.assign({},state,{[action.key]:!state[action.key]});if(action.type==="SET")return Object.assign({},state,{[action.key]:action.value});return state;}
-
-/* N-body: initialize planet state from Kepler positions at time t */
-function initNBody(t){var GM=2.959e-4;return PL.map(function(pl){var r=pl.d/150,ang=(t/pl.p)*TAU,v=Math.sqrt(GM/r);return{pl:pl,x:Math.cos(ang)*r,z:Math.sin(ang)*r,vx:-Math.sin(ang)*v,vz:Math.cos(ang)*v,m:{Mercury:1.65e-7,Venus:2.45e-6,Earth:3.00e-6,Mars:3.23e-7,Jupiter:9.55e-4,Saturn:2.86e-4,Uranus:4.37e-5,Neptune:5.15e-5}[pl.n]||1e-7};})}
-/* Tonight's sky: compute planet visibility from observer position */
-function computeNightSky(t,lat,lng){var lstD=((280.46+360.98565*t+(lng||0))%360+360)%360,latR=(lat||35)*TAU/360;var ea=(t/365.25)*TAU,ex=Math.cos(ea)*150,ez=Math.sin(ea)*150;var sunEclLng=(ea*180/Math.PI+360)%360,sunHr=(lstD-sunEclLng)*TAU/360,sunSA=Math.cos(latR)*Math.cos(sunHr),sunAlt=Math.round(Math.asin(Math.max(-1,Math.min(1,sunSA)))*180/Math.PI);var isNight=sunAlt<-6;var items=PL.map(function(pl){var ang=(t/pl.p)*TAU,px=Math.cos(ang)*pl.d,pz=Math.sin(ang)*pl.d,dx=px-ex,dz=pz-ez;var eclLng=(Math.atan2(dz,dx)*180/Math.PI+360)%360;var hr=(lstD-eclLng)*TAU/360,sinAlt=Math.cos(latR)*Math.cos(hr),alt=Math.round(Math.asin(Math.max(-1,Math.min(1,sinAlt)))*180/Math.PI);var baseMag={Mercury:0.0,Venus:-4.4,Earth:99,Mars:-0.5,Jupiter:-2.7,Saturn:0.5,Uranus:5.7,Neptune:7.9}[pl.n]||5;return{name:pl.j,alt:alt,vis:alt>5&&pl.n!=="Earth",mag:baseMag.toFixed(1)};});return{items:items,isNight:isNight,sunAlt:sunAlt};}
-
-/* Moon phase calendar: generate phases for ~2 months around current time t */
-function computeMoonPhases(t){var syn=29.53059,t0=-5.7;var curAge=((t-t0)%syn+syn)%syn;var lastNew=t-curAge;var phases=[];for(var i=-1;i<4;i++){var base=lastNew+i*syn;phases.push({t:base,age:0,name:"🌑 新月"});phases.push({t:base+syn*0.25,age:syn*0.25,name:"🌓 上弦"});phases.push({t:base+syn*0.5,age:syn*0.5,name:"🌕 満月"});phases.push({t:base+syn*0.75,age:syn*0.75,name:"🌗 下弦"});}phases.sort(function(a,b){return a.t-b.t;});return phases;}
-/* Orbital elements for a planet at time t */
-function computeOrbElem(pl,t){var eMap={Mercury:0.206,Venus:0.007,Earth:0.017,Mars:0.093,Jupiter:0.049,Saturn:0.057,Uranus:0.046,Neptune:0.010};var iMap={Mercury:7.0,Venus:3.4,Earth:0,Mars:1.8,Jupiter:1.3,Saturn:2.5,Uranus:0.8,Neptune:1.8};var e=eMap[pl.n]||0.01,inc=iMap[pl.n]||0;var a=pl.d/150;var M_=((t/pl.p)*TAU%TAU+TAU)%TAU;var E_=M_;for(var ki=0;ki<8;ki++)E_=M_+e*Math.sin(E_);var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E_/2),Math.sqrt(1-e)*Math.cos(E_/2));var r_=a*(1-e*Math.cos(E_));var GM_au=2.959e-4;var v_auday=Math.sqrt(GM_au*(2/r_-1/a));var v_kms=v_auday*1.731e6/86400;return{a:a,e:e,i:inc,T:pl.p,M:M_*180/Math.PI,nu:nu*180/Math.PI,r:r_,v:v_kms};}
+import { initNBody, computeNightSky, computeMoonPhases, computeOrbElem } from "./utils/computations.js";
+import { PANEL_INIT, panelReducer } from "./utils/panelReducer.js";
+import { pn, bF, bN, bU, bD, lb, bT } from "./styles/panelStyles.js";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -406,16 +396,9 @@ export default function App(){
   /* Moon-specific data: phase/age, distance from Earth, sub-solar/observer point */
   function moonGeoData(){var t=S.current.t,syn=29.53059,t0=-5.7;var age=((t-t0)%syn+syn)%syn;var phaseFrac=(1-Math.cos(age/syn*TAU))/2;var pName;if(age<1.84)pName="🌑 新月";else if(age<5.53)pName="🌒 三日月(若)";else if(age<9.22)pName="🌓 上弦";else if(age<12.91)pName="🌔 十三夜";else if(age<16.61)pName="🌕 満月";else if(age<20.30)pName="🌖 居待月";else if(age<23.99)pName="🌗 下弦";else if(age<27.68)pName="🌘 有明月";else pName="🌑 新月";var distKm=384400+Math.sin(t*TAU/27.55)*21000;var angSize=2*Math.atan(1737/(distKm))*206264.8/3600;var sidMonth=27.32166;var sidPhase=((t/sidMonth)%1+1)%1;var mag=-12.7+0.026*Math.abs((age-14.77)/14.77*180);return{age:age,phaseFrac:phaseFrac,phaseName:pName,distKm:distKm,distEarthR:distKm/6378,angSizeDeg:angSize,sidMonth:sidMonth,sidPhase:sidPhase,mag:mag};}
 
-  var pn={position:"absolute",background:"rgba(8,10,20,0.88)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"7px 9px",color:"rgba(255,255,255,0.9)",fontSize:11,fontFamily:"system-ui,sans-serif",zIndex:10,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",maxWidth:"calc(100vw - 20px)",boxSizing:"border-box"};
-  var bF={background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.12)",borderRadius:6,color:"rgba(255,255,255,0.75)",fontSize:10,padding:"4px 8px",cursor:"pointer",fontFamily:"system-ui,sans-serif",whiteSpace:"nowrap",outline:"none"};
-  var bN=Object.assign({},bF,{background:"rgba(70,140,255,0.25)",border:"1px solid rgba(70,140,255,0.45)",color:"rgba(170,210,255,1)"});
-  var bU=Object.assign({},bF,{background:"rgba(255,170,50,0.25)",border:"1px solid rgba(255,170,50,0.5)",color:"rgba(255,210,140,1)"});
-  var bD=Object.assign({},bF,{opacity:0.35,cursor:"default"});
-  var lb={fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:4,textTransform:"uppercase",letterSpacing:1};
   var curZm=ZS[zi]||1;
   var zmStr=curZm>=10?curZm.toFixed(0)+"x":curZm>=1?curZm.toFixed(1)+"x":curZm>=0.01?curZm.toFixed(2)+"x":curZm.toFixed(5)+"x";
   var zmLabel=curZm<0.003?"銀河":curZm<0.03?"恒星間":"太陽系";
-  var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",border:"1px solid rgba("+c+",0.5)",color:"rgba(255,255,255,0.9)"});};
 
   return(
     <div style={{width:"100%",height:"100dvh",background:"rgba(3,3,10,1)",position:"relative",overflow:"hidden"}}>
@@ -662,7 +645,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.12.1</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.12.2</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
