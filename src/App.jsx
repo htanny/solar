@@ -10,7 +10,7 @@ import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
 import { initNBody, computeNightSky, computeMoonPhases, computeOrbElem } from "./utils/computations.js";
 import { PANEL_INIT, panelReducer } from "./utils/panelReducer.js";
-import { pn, bF, bN, bU, bD, lb, bT } from "./styles/panelStyles.js";
+import { pn, bF, bN, bU, bD, lb, bT, isMob, bFM, bNM, bTM } from "./styles/panelStyles.js";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -23,7 +23,7 @@ export default function App(){
   var focTransRef=useRef({active:false});
   var tourRef=useRef({active:false,idx:0,timer:0,trans:false});
   var[touring,setTouring]=useState(false);
-  var[panels,dispatchPanel]=useReducer(panelReducer,PANEL_INIT);var eventsRef=useRef([]);
+  var[panels,dispatchPanel]=useReducer(panelReducer,Object.assign({},PANEL_INIT,typeof window!=="undefined"&&window.innerWidth<640?{dispColl:true}:{}));var eventsRef=useRef([]);
   var cmpStateRef=useRef({offX:0,zm:1});
   var[bgm,setBgm]=useState(false);var audioRef=useRef(null);
   var[dateInput,setDateInput]=useState("");
@@ -37,6 +37,9 @@ export default function App(){
   var[lang,setLang,langR]=useRefSync("ja");
   var[quizState,setQuizState]=useState(null);
   var[cmpSort,setCmpSort]=useState({col:"d",asc:true});
+  var[winW,setWinW]=useState(typeof window!=="undefined"?window.innerWidth:1280);
+  useEffect(function(){function onResize(){setWinW(window.innerWidth);}window.addEventListener("resize",onResize);return function(){window.removeEventListener("resize",onResize);};},[]);
+  var isPhone=winW<640;
   var[searchQ,setSearchQ]=useState("");
   var[habZone,setHabZone,habZR]=useRefSync(false);
   var[helio,setHelio,helioR]=useRefSync(false);
@@ -409,7 +412,7 @@ export default function App(){
       <canvas ref={cR} style={{display:"block",width:"100%",height:"100%",touchAction:"none",cursor:"crosshair"}} onClick={handleClick}/>
 
       {/* Focus panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&!isPhone&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>速度 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
@@ -578,6 +581,8 @@ export default function App(){
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
 
+      {isPhone&&cleanView===0&&!landing&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:20,background:"rgba(8,10,20,0.92)",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 8px",display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{FL.map(function(f){return <button key={f.k} style={Object.assign({},foc===f.k?bNM:bFM,{flexShrink:0,padding:"6px 10px",fontSize:11})} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div>}
+
       {/* Landing mode control panel — left: latitude vertical, bottom: lng+az+speed */}
       {landing&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>N</span>
@@ -651,7 +656,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.13.1</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.13.2</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>

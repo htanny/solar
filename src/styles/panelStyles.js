@@ -6,4 +6,9 @@ var bD=Object.assign({},bF,{opacity:0.35,cursor:"default"});
 var lb={fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:4,textTransform:"uppercase",letterSpacing:1};
 var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",border:"1px solid rgba("+c+",0.5)",color:"rgba(255,255,255,0.9)"});};
 
-export { pn, bF, bN, bU, bD, lb, bT };
+var isMob=typeof window!=="undefined"&&window.innerWidth<640;
+var bFM=Object.assign({},bF,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
+var bNM=Object.assign({},bN,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
+var bTM=function(c){return Object.assign({},bT(c),isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});};
+
+export { pn, bF, bN, bU, bD, lb, bT, isMob, bFM, bNM, bTM };
