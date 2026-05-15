@@ -6,9 +6,15 @@ import { terrainH } from "./landingUtils.js";
    Called from drawLanding after all sky/celestial sections are complete. */
 function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,lat,lngDeg,sBot){
   var tSeed=plName.charCodeAt(0)*13+plName.length;
+  /* Moon near/far side: near side = maria basalt, far side = bright highlands */
+  var _mLng=plName==="Moon"?(((lngDeg||0)+540)%360-180):0;
+  var _mAbs=Math.abs(_mLng);
+  var moonNearF=plName==="Moon"?Math.max(0,1-_mAbs/90):0;
+  var moonFarF=plName==="Moon"?Math.max(0,(_mAbs-90)/90):0;
+  var moonGT=plName==="Moon"?_mAbs/180:0;
 
   /* ======== FAR MOUNTAINS (parallax layer 3 - slowest) ======== */
-  var farMh=plName==="Mercury"||plName==="Mars"?18:plName==="Moon"?14:plName==="Venus"?6:plName==="Earth"?bConf.mhF:3;
+  var farMh=plName==="Mercury"||plName==="Mars"?18:plName==="Moon"?(8+Math.round(14*(1-moonNearF))):plName==="Venus"?6:plName==="Earth"?bConf.mhF:3;
   if(farMh>2){ctx.globalAlpha=0.15;
     ctx.beginPath();ctx.moveTo(0,hrzY);
     for(var fx=0;fx<=W;fx+=3){var fh=terrainH(fx+yaw*15,tSeed+100)*farMh;ctx.lineTo(fx,hrzY-fh-8);}
@@ -16,7 +22,7 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     ctx.fillStyle=plName==="Mars"?"rgba(140,70,40,1)":plName==="Earth"?bConf.far:plName==="Moon"?"rgba(75,72,68,1)":"rgba(80,75,70,1)";ctx.fill();ctx.globalAlpha=1;}
 
   /* ======== MID MOUNTAINS (parallax layer 2) ======== */
-  var midMh=plName==="Mercury"||plName==="Mars"?30:plName==="Moon"?22:plName==="Venus"?10:plName==="Earth"?bConf.mhM:4;
+  var midMh=plName==="Mercury"||plName==="Mars"?30:plName==="Moon"?(12+Math.round(18*(1-moonNearF))):plName==="Venus"?10:plName==="Earth"?bConf.mhM:4;
   if(midMh>2){ctx.globalAlpha=0.3;
     ctx.beginPath();ctx.moveTo(0,hrzY);
     for(var mx=0;mx<=W;mx+=2){var mh2=terrainH(mx+yaw*30,tSeed+50)*midMh;ctx.lineTo(mx,hrzY-mh2-3);}
@@ -25,19 +31,22 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
 
   /* ======== NEAR TERRAIN (parallax layer 1 - fastest) + ground ======== */
   ctx.beginPath();ctx.moveTo(0,hrzY);
-  var nearMh=plName==="Mercury"||plName==="Mars"?25:plName==="Moon"?16:plName==="Venus"?8:plName==="Earth"?bConf.mhN:5;
+  var nearMh=plName==="Mercury"||plName==="Mars"?25:plName==="Moon"?(10+Math.round(14*(1-moonNearF))):plName==="Venus"?8:plName==="Earth"?bConf.mhN:5;
   for(var tx=0;tx<=W;tx+=2){var th2=terrainH(tx+yaw*50,tSeed)*nearMh;ctx.lineTo(tx,hrzY-th2);}
   ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
-  var groundCol=plName==="Earth"?bConf.g:sf.g;
+  var groundCol=plName==="Earth"?bConf.g:plName==="Moon"?"rgba("+Math.round(78+80*moonGT)+","+Math.round(75+79*moonGT)+","+Math.round(68+78*moonGT)+",1)":sf.g;
   var gG=ctx.createLinearGradient(0,hrzY-20,0,H);gG.addColorStop(0,groundCol);
   var gDark=groundCol.replace(/\d+/g,function(v,i){return i<3?Math.max(0,parseInt(v)-25)+"":v;});
   gG.addColorStop(1,gDark);ctx.fillStyle=gG;ctx.fill();
+
+  /* ======== MOON NEAR-SIDE MARIA (dark basaltic plains) ======== */
+  if(plName==="Moon"&&moonNearF>0.08){var marR2=seedR(499);ctx.globalAlpha=Math.min(0.55,moonNearF*0.6);ctx.fillStyle="rgba(40,38,35,1)";for(var mri2=0;mri2<5;mri2++){var maX=marR2()*W,maY=hrzY+20+marR2()*(H-hrzY)*0.48,maRx=50+marR2()*W*0.2,maRy=(16+marR2()*(H-hrzY)*0.06)*(0.45+((maY-hrzY)/(H-hrzY))*0.55),maRot=marR2()*Math.PI;ctx.beginPath();ctx.ellipse(maX,maY,maRx,maRy,maRot,0,TAU);ctx.fill();}ctx.globalAlpha=1;}
 
   /* ======== FOREGROUND DETAIL (parallax fastest) ======== */
   if(plName==="Mercury"||plName==="Mars"||plName==="Moon"){
     var cr=seedR(plName==="Mercury"?55:plName==="Moon"?91:77);
     var craterRim=plName==="Mercury"?"rgba(80,75,70,1)":plName==="Moon"?"rgba(130,127,118,1)":"rgba(140,80,45,1)";
-    for(var ci2=0;ci2<(plName==="Moon"?60:40);ci2++){var cx3=cr()*W,cy3=hrzY+12+cr()*(H-hrzY-25),dist=(cy3-hrzY)/(H-hrzY),sz=1+dist*14+cr()*8*dist;
+    for(var ci2=0;ci2<(plName==="Moon"?Math.round(25+30*(1-moonNearF)+35*moonFarF):40);ci2++){var cx3=cr()*W,cy3=hrzY+12+cr()*(H-hrzY-25),dist=(cy3-hrzY)/(H-hrzY),sz=(1+dist*14+cr()*8*dist)*(plName==="Moon"?0.6+(1-moonNearF)*0.4+moonFarF*0.4:1);
       ctx.globalAlpha=0.25*dist;ctx.fillStyle="rgba(0,0,0,1)";ctx.beginPath();ctx.arc(cx3+sz*0.15,cy3+sz*0.1,sz*0.9,0,TAU);ctx.fill();
       ctx.globalAlpha=0.4*dist;ctx.fillStyle=craterRim;ctx.beginPath();ctx.arc(cx3,cy3,sz*0.8,0,TAU);ctx.fill();
       ctx.globalAlpha=0.12*dist;ctx.beginPath();ctx.arc(cx3-sz*0.2,cy3-sz*0.2,sz*0.35,0,TAU);ctx.fillStyle="rgba(255,255,255,1)";ctx.fill();}
@@ -45,7 +54,7 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     if(plName==="Moon"){
       var mrn=seedR(307);ctx.globalAlpha=0.4;
       for(var rgi=0;rgi<120;rgi++){var rgx=mrn()*W,rgy=hrzY+6+mrn()*(H-hrzY-10),rgsz=0.5+mrn()*1.5;
-        ctx.fillStyle=mrn()<0.4?"rgba(190,185,175,1)":"rgba(70,68,62,1)";
+        ctx.fillStyle=mrn()<(0.2+0.5*moonGT)?"rgba(190,185,175,1)":"rgba(70,68,62,1)";
         ctx.fillRect(rgx,rgy,rgsz,rgsz);}
       ctx.globalAlpha=1;
       if((lngDeg||0)>-10&&(lngDeg||0)<10&&Math.abs(lat||0)<10){
