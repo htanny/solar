@@ -1,6 +1,6 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA, APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES } from "./data/solarData.js";
+import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA, APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TITAN_INFO, ITOKAWA_INFO, RYUGU_INFO } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
@@ -620,6 +620,20 @@ export default function App(){
             style={{fontSize:8,padding:"2px 6px",background:"rgba(180,200,255,0.12)",border:"1px solid rgba(180,200,255,0.45)",borderRadius:3,color:"rgba(200,220,255,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
             {s.en}
           </button>;})}</div>}
+        {landing==="Titan"&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(255,210,140,0.7)",fontSize:9,flexShrink:0}}>探査機</span>
+          {TITAN_PROBES.map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(255,180,80,0.12)",border:"1px solid rgba(255,180,80,0.45)",borderRadius:3,color:"rgba(255,210,140,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {s.en}
+          </button>;})}</div>}
+        {(landing==="Itokawa"||landing==="Ryugu")&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(180,200,255,0.7)",fontSize:9,flexShrink:0}}>着陸点</span>
+          {HAYABUSA_SITES.filter(function(s){return s.body===landing;}).map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(160,180,255,0.12)",border:"1px solid rgba(160,180,255,0.45)",borderRadius:3,color:"rgba(200,215,255,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {s.en}
+          </button>;})}</div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>経度</span>
           <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
@@ -684,7 +698,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.16.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.17.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>

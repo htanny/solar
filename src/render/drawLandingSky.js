@@ -280,6 +280,68 @@ function drawLandingSky(ctx,W,H,s){
     if(!isNight||sunAlt>-0.3){var venX=(W*0.3+t*0.1+yaw*60)%W,venY=hrzY*0.4+Math.sin(t*0.01)*hrzY*0.1;
       ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
       var vglow=ctx.createRadialGradient(venX,venY,1,venX,venY,8);vglow.addColorStop(0,"rgba(255,255,200,0.3)");vglow.addColorStop(1,"rgba(255,255,200,0)");ctx.fillStyle=vglow;ctx.fillRect(venX-8,venY-8,16,16);ctx.globalAlpha=1;}
+  }else if(plName==="Io"||plName==="Europa"||plName==="Ganymede"||plName==="Callisto"){
+    /* Jupiter dominates the sky — tidally locked (sub-Jovian point = lat:0 lng:0) */
+    var jupLngR=((lngDeg||0)+540)%360-180;jupLngR=jupLngR*0.01745;
+    var jupLatR=(lat||0)*0.01745;
+    var subJovCos=Math.cos(jupLatR)*Math.cos(jupLngR);
+    if(subJovCos>-0.05){
+      var jupAlt=Math.asin(Math.max(-1,Math.min(1,subJovCos)));
+      var jupAz=Math.atan2(Math.sin(jupLngR),-Math.sin(jupLatR)*Math.cos(jupLngR));
+      var jupADiff=((jupAz-yaw)%TAU+TAU)%TAU;if(jupADiff>Math.PI)jupADiff-=TAU;
+      if(Math.abs(jupADiff)<TAU*0.4){
+        var jupX=W/2+jupADiff*W*0.8/TAU;
+        var jupY=hrzY-(jupAlt/(Math.PI*0.5))*hrzY*0.85;
+        /* angular radius: Io=0.168 Europa=0.106 Ganymede=0.067 Callisto=0.038 rad */
+        var jupAngR=plName==="Io"?0.168:plName==="Europa"?0.106:plName==="Ganymede"?0.067:0.038;
+        var jupRad=Math.max(3,jupAngR*W*0.8/TAU/fov);
+        /* glow */
+        var jg=ctx.createRadialGradient(jupX,jupY,jupRad,jupX,jupY,jupRad*2.4);
+        jg.addColorStop(0,"rgba(210,170,100,0.18)");jg.addColorStop(1,"rgba(210,170,100,0)");
+        ctx.fillStyle=jg;ctx.fillRect(jupX-jupRad*3,jupY-jupRad*3,jupRad*6,jupRad*6);
+        ctx.save();ctx.beginPath();ctx.arc(jupX,jupY,jupRad,0,TAU);ctx.clip();
+        /* base color */
+        ctx.fillStyle="rgba(205,175,115,1)";ctx.fillRect(jupX-jupRad,jupY-jupRad,jupRad*2,jupRad*2);
+        /* cloud bands */
+        var jupBands=[{y:-0.55,h:0.18,c:"rgba(175,120,70,0.8)"},{y:-0.25,h:0.14,c:"rgba(155,105,60,0.7)"},{y:0.05,h:0.20,c:"rgba(185,130,80,0.75)"},{y:0.38,h:0.15,c:"rgba(160,110,65,0.65)"}];
+        for(var jbi=0;jbi<jupBands.length;jbi++){var jb=jupBands[jbi];ctx.fillStyle=jb.c;ctx.fillRect(jupX-jupRad,jupY+jb.y*jupRad,jupRad*2,jb.h*jupRad);}
+        /* Great Red Spot (small oval) */
+        ctx.fillStyle="rgba(180,80,55,0.7)";ctx.beginPath();ctx.ellipse(jupX-jupRad*0.2,jupY+jupRad*0.12,jupRad*0.22,jupRad*0.10,0,0,TAU);ctx.fill();
+        ctx.restore();
+        if(jupY<hrzY-2&&jupRad>5){ctx.fillStyle="rgba(220,185,130,0.6)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("木星",jupX,jupY-jupRad-4);}
+      }
+    }
+  }else if(plName==="Titan"){
+    /* Saturn with rings visible through orange haze (tidally locked, sub-Saturnian at lng:0) */
+    var satLngR=((lngDeg||0)+540)%360-180;satLngR=satLngR*0.01745;
+    var satLatR=(lat||0)*0.01745;
+    var subSatCos=Math.cos(satLatR)*Math.cos(satLngR);
+    if(subSatCos>-0.05){
+      var satAlt=Math.asin(Math.max(-1,Math.min(1,subSatCos)));
+      var satAz=Math.atan2(Math.sin(satLngR),-Math.sin(satLatR)*Math.cos(satLngR));
+      var satADiff=((satAz-yaw)%TAU+TAU)%TAU;if(satADiff>Math.PI)satADiff-=TAU;
+      if(Math.abs(satADiff)<TAU*0.4){
+        var satX=W/2+satADiff*W*0.8/TAU;
+        var satY=hrzY-(satAlt/(Math.PI*0.5))*hrzY*0.85;
+        var satAngR=0.049;/* atan(60268/1222000) */
+        var satRad=Math.max(2,satAngR*W*0.8/TAU/fov);
+        ctx.save();ctx.globalAlpha=0.55;/* dimmed by thick haze */
+        /* ring (ellipse) behind */
+        ctx.strokeStyle="rgba(200,178,120,0.6)";ctx.lineWidth=satRad*0.35;
+        ctx.beginPath();ctx.ellipse(satX,satY,satRad*2.2,satRad*0.55,0,0,TAU);ctx.stroke();
+        /* planet disk */
+        ctx.beginPath();ctx.arc(satX,satY,satRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(215,195,148,1)";ctx.fillRect(satX-satRad,satY-satRad,satRad*2,satRad*2);
+        ctx.fillStyle="rgba(185,160,110,0.6)";ctx.fillRect(satX-satRad,satY+satRad*0.1,satRad*2,satRad*0.25);
+        ctx.restore();
+        ctx.globalAlpha=0.55;
+        /* ring front (draw over planet) */
+        ctx.strokeStyle="rgba(200,178,120,0.5)";ctx.lineWidth=satRad*0.28;
+        ctx.beginPath();ctx.ellipse(satX,satY+satRad*0.12,satRad*2.2,satRad*0.55,0,Math.PI,0,false);ctx.stroke();
+        ctx.globalAlpha=1;
+        if(satY<hrzY-2&&satRad>3){ctx.fillStyle="rgba(220,195,148,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("土星",satX,satY-satRad-4);}
+      }
+    }
   }else if(plName==="Mars"){
     /* Phobos - fast, large moon */
     var phAng=(t/0.319)*TAU,phX=(W*0.5+Math.cos(phAng+yaw)*W*0.3),phY=hrzY*0.35+Math.sin(phAng)*hrzY*0.15;

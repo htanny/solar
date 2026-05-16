@@ -210,7 +210,31 @@ export var SURF={
   Pluto:{atm:0,sunSz:0.0025,g:"rgba(165,145,125,1)",skyTop:"0,0,0",skyBot:"2,2,4"},
   Eris:{atm:0,sunSz:0.0007,g:"rgba(155,155,158,1)",skyTop:"0,0,0",skyBot:"1,1,3"},
   Moon:{atm:0,sunSz:1,g:"rgba(135,130,122,1)",skyTop:"0,0,0",skyBot:"3,3,6",showEarth:true},
+  Io:{atm:0.05,sunSz:0.037,g:"rgba(210,185,68,1)",skyTop:"3,0,0",skyBot:"12,5,0"},
+  Europa:{atm:0,sunSz:0.037,g:"rgba(215,212,225,1)",skyTop:"0,0,4",skyBot:"4,6,14"},
+  Ganymede:{atm:0,sunSz:0.037,g:"rgba(148,140,128,1)",skyTop:"0,0,0",skyBot:"3,3,5"},
+  Callisto:{atm:0,sunSz:0.037,g:"rgba(72,68,62,1)",skyTop:"0,0,0",skyBot:"2,2,3"},
+  Titan:{atm:3.5,sunSz:0.011,g:"rgba(118,92,52,1)",skyTop:"175,108,38",skyBot:"155,86,28"},
+  Itokawa:{atm:0,sunSz:0.13,g:"rgba(132,114,90,1)",skyTop:"0,0,0",skyBot:"2,2,2"},
+  Ryugu:{atm:0,sunSz:0.13,g:"rgba(20,17,14,1)",skyTop:"0,0,0",skyBot:"1,1,1"},
 };
+
+export var IO_INFO={n:"Io",j:"イオ",e:"Io",d:778,r:1.821,p:365.25,c:"rgba(220,200,100,1)",t:0,rot:1.769,type:"io",mass:"8.93×10²² kg",grav:"1.80 m/s²",moons:0,day:"1.77日(公転=自転)",year:"木星を1.77日",atm:"SO₂ 極微量",temp:"−143〜+1650℃",dens:"3.53",esc:"2.56",alb:0.63};
+export var EUROPA_INFO={n:"Europa",j:"エウロパ",e:"Europa",d:778,r:1.560,p:365.25,c:"rgba(195,188,178,1)",t:0,rot:3.551,type:"europa",mass:"4.80×10²² kg",grav:"1.32 m/s²",moons:0,day:"3.55日",year:"木星を3.55日",atm:"O₂ 極微量",temp:"−160℃",dens:"3.01",esc:"2.03",alb:0.67};
+export var GANYMEDE_INFO={n:"Ganymede",j:"ガニメデ",e:"Ganymede",d:778,r:2.634,p:365.25,c:"rgba(162,158,145,1)",t:0,rot:7.155,type:"ganymede",mass:"1.48×10²³ kg",grav:"1.43 m/s²",moons:0,day:"7.16日",year:"木星を7.16日",atm:"O₂ 極微量",temp:"−163℃",dens:"1.94",esc:"2.74",alb:0.43};
+export var CALLISTO_INFO={n:"Callisto",j:"カリスト",e:"Callisto",d:778,r:2.410,p:365.25,c:"rgba(128,122,112,1)",t:0,rot:16.689,type:"callisto",mass:"1.08×10²³ kg",grav:"1.24 m/s²",moons:0,day:"16.69日",year:"木星を16.69日",atm:"CO₂ 極微量",temp:"−139℃",dens:"1.83",esc:"2.44",alb:0.17};
+export var TITAN_INFO={n:"Titan",j:"タイタン",e:"Titan",d:1427,r:2.575,p:365.25,c:"rgba(218,168,88,1)",t:0,rot:15.945,type:"titan",mass:"1.35×10²³ kg",grav:"1.35 m/s²",moons:0,day:"15.95日(公転=自転)",year:"土星を15.95日",atm:"N₂ 95% CH₄ 5%",temp:"−179℃",dens:"1.88",esc:"2.64",alb:0.22};
+export var ITOKAWA_INFO={n:"Itokawa",j:"イトカワ",e:"25143 Itokawa",d:230,r:0.000165,p:556,c:"rgba(168,140,108,1)",t:0,rot:0.5,type:"asteroid",mass:"3.58×10¹⁰ kg",grav:"0.00009 m/s²",moons:0,day:"12.1時間",year:"1.52年",atm:"なし",temp:"−90〜+60℃",dens:"1.90",esc:"0.0015",alb:0.18};
+export var RYUGU_INFO={n:"Ryugu",j:"リュウグウ",e:"162173 Ryugu",d:231,r:0.000448,p:474,c:"rgba(28,22,18,1)",t:0,rot:0.319,type:"asteroid",mass:"4.50×10¹¹ kg",grav:"0.00012 m/s²",moons:0,day:"7.63時間",year:"1.30年",atm:"なし",temp:"−93〜+52℃",dens:"1.19",esc:"0.003",alb:0.045};
+/* Titan probe site */
+export var TITAN_PROBES=[
+  {n:"ホイヘンス",en:"Huygens",lat:-10.3,lng:167.6,date:"2005-01",info:"ESAのタイタン大気突入プローブ ホイヘンス 72分間送信"},
+];
+/* Asteroid probe sites */
+export var HAYABUSA_SITES=[
+  {n:"はやぶさ（Muses-C）",en:"Hayabusa",body:"Itokawa",lat:0.0,lng:0.0,date:"2005-11",info:"JAXA はやぶさ 表面接触・試料採取"},
+  {n:"はやぶさ2（TD1）",en:"Hayabusa2 TD1",body:"Ryugu",lat:11.0,lng:228.0,date:"2019-02",info:"JAXA はやぶさ2 第1回タッチダウン"},
+];
 
 /* Exoplanets - rendered only in landing mode (not in solar view) */
 export var EXOPLANETS=[
@@ -220,6 +244,9 @@ export var EXOPLANETS=[
   {n:"HD189733b",j:"HD189733b",e:"HD 189733 b",d:0,r:80.5,p:2.2,c:"rgba(50,40,110,1)",t:0,rot:2.2,type:"hotgas",mass:"1.13 木星",grav:"≈22 m/s²",moons:0,day:"潮汐固定",year:"2.2日",atm:"H₂・シリケート粒子（ガラスの雨）",temp:"930℃",starInfo:"K型 (64.5 ly)"},
 ];
 export var EXO_MAP={};EXOPLANETS.forEach(function(p){EXO_MAP[p.n]=p;PL_MAP[p.n]=p;});
+/* Register Galilean moons + Titan + asteroids as landing targets */
+PL_MAP["Io"]=IO_INFO;PL_MAP["Europa"]=EUROPA_INFO;PL_MAP["Ganymede"]=GANYMEDE_INFO;PL_MAP["Callisto"]=CALLISTO_INFO;
+PL_MAP["Titan"]=TITAN_INFO;PL_MAP["Itokawa"]=ITOKAWA_INFO;PL_MAP["Ryugu"]=RYUGU_INFO;
 /* Exoplanet surface data - merged into SURF for landing render */
 export var EXO_SURF={
   ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},
