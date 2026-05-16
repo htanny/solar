@@ -1,6 +1,6 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA } from "./data/solarData.js";
+import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA, APOLLO_SITES } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
@@ -589,19 +589,30 @@ export default function App(){
       {/* Landing mode control panel — left: latitude vertical, bottom: lng+az+speed */}
       {landing&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>N</span>
-        <span style={{color:"rgba(255,255,255,0.85)",fontSize:9}}>{landLat>=0?"+":""}{landLat}°</span>
+        <input type="number" min="-90" max="90" step="0.01" value={landLat}
+          onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
+          style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"center"}}/>
         <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>緯度</span>
-        <input type="range" min="-90" max="90" step="1" value={landLat}
+        <input type="range" min="-90" max="90" step="0.1" value={landLat}
           style={{writingMode:"vertical-lr",direction:"rtl",height:130,width:24,cursor:"pointer",accentColor:"#64b4ff"}}
           onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
       </div>}
       {landing&&<div style={{position:"absolute",bottom:0,left:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
+        {landing==="Moon"&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,flexShrink:0}}>アポロ</span>
+          {APOLLO_SITES.map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(255,180,30,0.12)",border:"1px solid rgba(255,180,30,0.45)",borderRadius:3,color:"rgba(255,220,80,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {"A"+["11","12","14","15","16","17"][si]}
+          </button>;})}</div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>経度</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="1" value={landLng}
+          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
-          <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landLng>=0?"+":""}{landLng}°</span>
+          <input type="number" min="-180" max="180" step="0.01" value={landLng}
+            onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-180,Math.min(180,v));setLandLng(c);landLngR.current=c;}}}
+            style={{width:52,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"right",flexShrink:0}}/>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>方位</span>
@@ -659,7 +670,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.14.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.14.1</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
