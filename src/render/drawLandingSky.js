@@ -312,12 +312,15 @@ function drawLandingSky(ctx,W,H,s){
     var tiAng=(t/15.945)*TAU,tiX=(W*0.4+Math.cos(tiAng+yaw)*W*0.2),tiY=hrzY*0.35;
     ctx.globalAlpha=0.6;fillCirc(ctx,tiX,tiY,2.5/fov,"rgba(200,180,120,1)");ctx.globalAlpha=1;
   }else if(plName==="Moon"){
-    /* Earth in lunar sky — tidally locked: sub-Earth point at lat=0, lng=0 */
-    var lngRadE=((lngDeg||0)+540)%360-180;lngRadE*=0.01745;
-    var subEarthCos=Math.cos(latRad)*Math.cos(lngRadE);
+    /* Earth in lunar sky — tidally locked + optical libration (Earth gently sways) */
+    var libL=7.9*Math.sin(t*2*Math.PI/27.55);/* longitudinal libration ±7.9° */
+    var libB=6.7*Math.sin(t*2*Math.PI/27.21);/* latitudinal libration ±6.7° */
+    var lngRadE=(((lngDeg||0)-libL+540)%360-180)*0.01745;
+    var latRadEff=((lat||0)-libB)*0.01745;
+    var subEarthCos=Math.cos(latRadEff)*Math.cos(lngRadE);
     if(subEarthCos>0.02){
       var earthAlt=Math.asin(Math.max(-1,Math.min(1,subEarthCos)));
-      var earthAz=Math.atan2(Math.sin(lngRadE),-Math.sin(latRad)*Math.cos(lngRadE));
+      var earthAz=Math.atan2(Math.sin(lngRadE),-Math.sin(latRadEff)*Math.cos(lngRadE));
       var earthADiff=((earthAz-yaw)%TAU+TAU)%TAU;if(earthADiff>Math.PI)earthADiff-=TAU;
       if(Math.abs(earthADiff)<TAU*0.32){
         var earthX=W/2+earthADiff*W*0.8/TAU;

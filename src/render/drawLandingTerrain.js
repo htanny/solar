@@ -1,4 +1,4 @@
-import { TAU } from "../data/solarData.js";
+import { TAU, APOLLO_SITES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -57,13 +57,26 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
         ctx.fillStyle=mrn()<(0.2+0.5*moonGT)?"rgba(190,185,175,1)":"rgba(70,68,62,1)";
         ctx.fillRect(rgx,rgy,rgsz,rgsz);}
       ctx.globalAlpha=1;
-      if((lngDeg||0)>-10&&(lngDeg||0)<10&&Math.abs(lat||0)<10){
-        var fpY=H-32;ctx.globalAlpha=0.55;ctx.fillStyle="rgba(20,20,18,1)";
-        ctx.fillRect(W*0.78-12,fpY,24,8);
-        ctx.beginPath();ctx.moveTo(W*0.78-14,fpY+8);ctx.lineTo(W*0.78-8,fpY+18);ctx.lineTo(W*0.78-6,fpY+8);ctx.fill();
-        ctx.beginPath();ctx.moveTo(W*0.78+14,fpY+8);ctx.lineTo(W*0.78+8,fpY+18);ctx.lineTo(W*0.78+6,fpY+8);ctx.fill();
-        ctx.fillStyle="rgba(220,210,180,0.7)";ctx.fillRect(W*0.78-3,fpY-6,6,6);
-        ctx.globalAlpha=1;
+      /* Apollo landing site flag — show when within ~5° of any site */
+      for(var _ai=0;_ai<APOLLO_SITES.length;_ai++){var _as=APOLLO_SITES[_ai];
+        var _dl=(_as.lng-(lngDeg||0))*0.01745,_a1=(lat||0)*0.01745,_a2=_as.lat*0.01745;
+        var _cd=Math.sin(_a1)*Math.sin(_a2)+Math.cos(_a1)*Math.cos(_a2)*Math.cos(_dl);
+        var _da=Math.acos(Math.max(-1,Math.min(1,_cd)))*57.2958;
+        if(_da<5){
+          var fpY=H-32;ctx.globalAlpha=0.65;ctx.fillStyle="rgba(20,20,18,1)";
+          ctx.fillRect(W*0.78-12,fpY,24,8);
+          ctx.beginPath();ctx.moveTo(W*0.78-14,fpY+8);ctx.lineTo(W*0.78-8,fpY+18);ctx.lineTo(W*0.78-6,fpY+8);ctx.fill();
+          ctx.beginPath();ctx.moveTo(W*0.78+14,fpY+8);ctx.lineTo(W*0.78+8,fpY+18);ctx.lineTo(W*0.78+6,fpY+8);ctx.fill();
+          ctx.fillStyle="rgba(220,210,180,0.8)";ctx.fillRect(W*0.78-3,fpY-6,6,6);
+          ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+          ctx.fillText(_as.n,W*0.78,fpY-10);
+          ctx.fillStyle="rgba(220,220,200,0.85)";ctx.font="8px sans-serif";
+          ctx.fillText(_as.region,W*0.78,fpY+30);
+          ctx.fillStyle="rgba(180,180,160,0.7)";ctx.font="7px sans-serif";
+          ctx.fillText(_as.date+" "+_as.crew,W*0.78,fpY+40);
+          ctx.globalAlpha=1;
+          break;
+        }
       }
     }
     if(plName==="Mars"){ctx.globalAlpha=0.18;ctx.fillStyle="rgba(180,100,55,1)";for(var mi=0;mi<6;mi++){var mx2=((rng()*W*2+yaw*40)%(W*1.3))-W*0.15;ctx.beginPath();ctx.moveTo(mx2-45,hrzY);ctx.lineTo(mx2,hrzY-18-rng()*22);ctx.lineTo(mx2+45,hrzY);ctx.fill();}ctx.globalAlpha=1;}
