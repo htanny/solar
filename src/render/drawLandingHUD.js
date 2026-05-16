@@ -1,4 +1,4 @@
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 function drawLandingHUD(ctx,W,H,h){
@@ -92,8 +92,58 @@ function drawLandingHUD(ctx,W,H,h){
     ctx.restore();
   }
 
+  /* ======== MARS MINI MAP ======== */
+  if(plName==="Moon"||plName==="Mars"){var mmW=130,mmH=65,mmX=52,mmY=90;}
+  if(plName==="Mars"){
+    ctx.save();
+    var mgBg=ctx.createLinearGradient(mmX,mmY,mmX,mmY+mmH);
+    mgBg.addColorStop(0,"rgba(155,85,45,0.88)");mgBg.addColorStop(1,"rgba(110,52,25,0.88)");
+    ctx.fillStyle=mgBg;ctx.fillRect(mmX,mmY,mmW,mmH);
+    /* Tharsis volcanic plateau — dark reddish band left-center */
+    ctx.fillStyle="rgba(90,38,18,0.65)";
+    ctx.beginPath();ctx.ellipse(mmX+((-101+180)/360)*mmW,mmY+(90-1)/180*mmH,28,22,0,0,TAU);ctx.fill();
+    /* Hellas basin — dark circular depression right */
+    ctx.fillStyle="rgba(65,28,12,0.75)";
+    ctx.beginPath();ctx.ellipse(mmX+((70.5+180)/360)*mmW,mmY+(90+42.7)/180*mmH,10,7,0,0,TAU);ctx.fill();
+    /* Valles Marineris — thin dark slash center-right */
+    ctx.strokeStyle="rgba(50,18,8,0.85)";ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(mmX+((-82+180)/360)*mmW,mmY+(90+11)/180*mmH);ctx.lineTo(mmX+((-36+180)/360)*mmW,mmY+(90+17)/180*mmH);ctx.stroke();
+    /* Polar caps */
+    ctx.fillStyle="rgba(220,215,210,0.72)";
+    ctx.beginPath();ctx.ellipse(mmX+mmW/2,mmY+3,mmW*0.35,4,0,0,TAU);ctx.fill();
+    ctx.beginPath();ctx.ellipse(mmX+mmW/2,mmY+mmH-3,mmW*0.2,3,0,0,TAU);ctx.fill();
+    /* Equator / meridian */
+    ctx.strokeStyle="rgba(255,200,150,0.2)";ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(mmX,mmY+mmH/2);ctx.lineTo(mmX+mmW,mmY+mmH/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mmX+mmW/2,mmY);ctx.lineTo(mmX+mmW/2,mmY+mmH);ctx.stroke();
+    ctx.strokeStyle="rgba(200,130,80,0.5)";ctx.lineWidth=0.8;ctx.strokeRect(mmX,mmY,mmW,mmH);
+    /* Landmarks */
+    for(var mli=0;mli<MARS_LANDMARKS.length;mli++){var ml=MARS_LANDMARKS[mli];
+      var mlX=mmX+(ml.lng+180)/360*mmW,mlY=mmY+(90-ml.lat)/180*mmH;
+      if(ml.type==="rover"){
+        fillCirc(ctx,mlX,mlY,2.2,"rgba(255,220,60,1)");
+        ctx.fillStyle="rgba(255,220,60,0.8)";ctx.font="bold 7px sans-serif";ctx.textAlign="left";
+        ctx.fillText(ml.en==="Perseverance"?"P":"C",mlX+2.5,mlY-2);
+      }else if(ml.type==="volcano"){
+        ctx.fillStyle="rgba(255,120,60,0.9)";ctx.font="8px sans-serif";ctx.textAlign="center";
+        ctx.fillText("▲",mlX,mlY+3);}
+      else if(ml.type==="ice"){
+        fillCirc(ctx,mlX,mlY,2,"rgba(220,215,210,0.9)");}
+    }
+    /* Observer */
+    var moX=mmX+((lngDeg||0)+180)/360*mmW,moY=mmY+(90-(lat||0))/180*mmH;
+    moX=Math.max(mmX+1,Math.min(mmX+mmW-1,moX));moY=Math.max(mmY+1,Math.min(mmY+mmH-1,moY));
+    ctx.strokeStyle="rgba(255,55,55,1)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(moX-4,moY);ctx.lineTo(moX+4,moY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(moX,moY-4);ctx.lineTo(moX,moY+4);ctx.stroke();
+    fillCirc(ctx,moX,moY,1.8,"rgba(255,55,55,1)");
+    ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="7px sans-serif";ctx.textAlign="left";
+    ctx.fillText("▲火山  P/Cローバー  ✕現在地",mmX,mmY+mmH+9);
+    ctx.restore();
+  }
+
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -129,6 +179,23 @@ function drawLandingHUD(ctx,W,H,h){
     var _liB=6.7*Math.sin(t*2*Math.PI/27.21);
     ctx.fillStyle="rgba(255,220,140,0.7)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText(_aSel.n+"地点まで "+_aKm.toLocaleString()+"km　秤動 L:"+_liL.toFixed(1)+"° B:"+_liB.toFixed(1)+"°",W/2,94);
+  }
+  if(plName==="Mars"){
+    var _mMin=1e9,_mIdx=-1;
+    for(var _mli=0;_mli<MARS_LANDMARKS.length;_mli++){var _ml=MARS_LANDMARKS[_mli];
+      var _mDL=(_ml.lng-(lngDeg||0))*0.01745,_mL1=(lat||0)*0.01745,_mL2=_ml.lat*0.01745;
+      var _mCos=Math.sin(_mL1)*Math.sin(_mL2)+Math.cos(_mL1)*Math.cos(_mL2)*Math.cos(_mDL);
+      var _mD=Math.acos(Math.max(-1,Math.min(1,_mCos)))*57.2958;
+      if(_mD<_mMin){_mMin=_mD;_mIdx=_mli;}}
+    var _mSel=MARS_LANDMARKS[_mIdx];
+    var _mKm=Math.round(_mMin*3389.5*Math.PI/180);
+    /* bearing to landmark */
+    var _mbDL=(_mSel.lng-(lngDeg||0))*0.01745,_mbL1=(lat||0)*0.01745,_mbL2=_mSel.lat*0.01745;
+    var _mbB=Math.atan2(Math.sin(_mbDL)*Math.cos(_mbL2),Math.cos(_mbL1)*Math.sin(_mbL2)-Math.sin(_mbL1)*Math.cos(_mbL2)*Math.cos(_mbDL));
+    var _mbDeg=Math.round(((_mbB*57.296)%360+360)%360);
+    var _mbN=_mbDeg<23?"N":_mbDeg<68?"NE":_mbDeg<113?"E":_mbDeg<158?"SE":_mbDeg<203?"S":_mbDeg<248?"SW":_mbDeg<293?"W":_mbDeg<338?"NW":"N";
+    ctx.fillStyle="rgba(255,160,100,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_mSel.n+"　"+_mKm.toLocaleString()+"km "+_mbN+"("+_mbDeg+"°)",W/2,94);
   }
 
   /* ======== COMPASS STRIP (just above horizon) ======== */
