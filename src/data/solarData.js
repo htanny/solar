@@ -33,6 +33,18 @@ export var LUNAR_MARIA=[
   {n:"嵐の大洋",lat:18,lng:-57,rLng:18,rLat:12},
   {n:"晴れの海",lat:28,lng:18,rLng:8,rLat:6}
 ];
+/* Mars landmarks — IAU longitudes normalized to -180..+180 */
+export var MARS_LANDMARKS=[
+  {n:"オリンポス山",en:"Olympus Mons",lat:18.4,lng:-133.8,type:"volcano",info:"太陽系最高峰 高さ21km 直径600km"},
+  {n:"マリナリス渓谷",en:"Valles Marineris",lat:-13.9,lng:-59.2,type:"canyon",info:"全長4000km 深さ7km 幅200km — 太陽系最大峡谷"},
+  {n:"ヘラス平原",en:"Hellas Planitia",lat:-42.7,lng:70.5,type:"basin",info:"直径2300km 深さ7km — 太陽系最大の衝突盆地"},
+  {n:"タルシス地域",en:"Tharsis",lat:1.0,lng:-101.0,type:"volcanic",info:"巨大火山台地 高度4km 直径5000km"},
+  {n:"エリシウム山",en:"Elysium Mons",lat:25.0,lng:147.2,type:"volcano",info:"タルシス次の大火山 高さ13.9km"},
+  {n:"パーサヴィアランス",en:"Perseverance",lat:18.4,lng:77.5,type:"rover",info:"ジェゼロクレーター 2021年着陸 NASAサンプルリターン"},
+  {n:"キュリオシティ",en:"Curiosity",lat:-4.6,lng:137.4,type:"rover",info:"ゲールクレーター 2012年着陸 NASAマーズサイエンスラボ"},
+  {n:"北極冠",en:"North Polar Cap",lat:87.0,lng:0.0,type:"ice",info:"CO₂と水の氷 夏に縮小 冬に拡大"},
+  {n:"南極冠",en:"South Polar Cap",lat:-87.0,lng:0.0,type:"ice",info:"恒久的な水の氷を保持 CO₂の乾燥氷の層"}
+];
 export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
   {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},

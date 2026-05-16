@@ -1,4 +1,4 @@
-import { TAU, APOLLO_SITES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -79,7 +79,33 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
         }
       }
     }
-    if(plName==="Mars"){ctx.globalAlpha=0.18;ctx.fillStyle="rgba(180,100,55,1)";for(var mi=0;mi<6;mi++){var mx2=((rng()*W*2+yaw*40)%(W*1.3))-W*0.15;ctx.beginPath();ctx.moveTo(mx2-45,hrzY);ctx.lineTo(mx2,hrzY-18-rng()*22);ctx.lineTo(mx2+45,hrzY);ctx.fill();}ctx.globalAlpha=1;}
+    if(plName==="Mars"){
+      ctx.globalAlpha=0.18;ctx.fillStyle="rgba(180,100,55,1)";
+      for(var mi=0;mi<6;mi++){var mx2=((rng()*W*2+yaw*40)%(W*1.3))-W*0.15;ctx.beginPath();ctx.moveTo(mx2-45,hrzY);ctx.lineTo(mx2,hrzY-18-rng()*22);ctx.lineTo(mx2+45,hrzY);ctx.fill();}
+      ctx.globalAlpha=1;
+      /* Rover marker when near a landing site */
+      for(var _mri=0;_mri<MARS_LANDMARKS.length;_mri++){var _mr=MARS_LANDMARKS[_mri];if(_mr.type!=="rover")continue;
+        var _mrDL=(_mr.lng-(lngDeg||0))*0.01745,_mrL1=(lat||0)*0.01745,_mrL2=_mr.lat*0.01745;
+        var _mrCos=Math.sin(_mrL1)*Math.sin(_mrL2)+Math.cos(_mrL1)*Math.cos(_mrL2)*Math.cos(_mrDL);
+        var _mrD=Math.acos(Math.max(-1,Math.min(1,_mrCos)))*57.2958;
+        if(_mrD<5){
+          var rvX=W*0.72,rvY=H-48;ctx.globalAlpha=0.8;
+          /* rover body */
+          ctx.fillStyle="rgba(200,180,120,0.9)";ctx.fillRect(rvX-12,rvY-6,24,10);
+          /* solar panels */
+          ctx.fillStyle="rgba(60,80,160,0.85)";ctx.fillRect(rvX-22,rvY-4,8,6);ctx.fillRect(rvX+14,rvY-4,8,6);
+          /* mast */
+          ctx.fillStyle="rgba(180,160,100,0.9)";ctx.fillRect(rvX-1,rvY-20,2,14);ctx.fillRect(rvX-4,rvY-22,8,4);
+          /* wheels */
+          ctx.fillStyle="rgba(80,60,30,0.85)";
+          for(var wi=0;wi<3;wi++){ctx.beginPath();ctx.ellipse(rvX-10+wi*10,rvY+6,3,4,0,0,TAU);ctx.fill();}
+          ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+          ctx.fillText(_mr.n,rvX,rvY-26);
+          ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";
+          ctx.fillText(_mr.info.split(" ").slice(0,3).join(" "),rvX,rvY+22);
+          ctx.globalAlpha=1;break;}
+      }
+    }
   }else if(plName==="Earth"){
     if(biome==="polar"){
       ctx.globalAlpha=0.32;ctx.fillStyle="rgba(218,230,244,1)";
