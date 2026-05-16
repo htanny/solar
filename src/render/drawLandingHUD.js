@@ -1,4 +1,4 @@
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 function drawLandingHUD(ctx,W,H,h){
@@ -123,7 +123,8 @@ function drawLandingHUD(ctx,W,H,h){
       if(ml.type==="rover"){
         fillCirc(ctx,mlX,mlY,2.2,"rgba(255,220,60,1)");
         ctx.fillStyle="rgba(255,220,60,0.8)";ctx.font="bold 7px sans-serif";ctx.textAlign="left";
-        ctx.fillText(ml.en==="Perseverance"?"P":"C",mlX+2.5,mlY-2);
+        var _rl={"Perseverance":"P","Curiosity":"C","Viking 1":"V1","Viking 2":"V2","Pathfinder":"Pf","InSight":"IS","Zhurong":"Zh"};
+        ctx.fillText(_rl[ml.en]||ml.en[0],mlX+2.5,mlY-2);
       }else if(ml.type==="volcano"){
         ctx.fillStyle="rgba(255,120,60,0.9)";ctx.font="8px sans-serif";ctx.textAlign="center";
         ctx.fillText("▲",mlX,mlY+3);}
@@ -138,12 +139,86 @@ function drawLandingHUD(ctx,W,H,h){
     ctx.beginPath();ctx.moveTo(moX,moY-4);ctx.lineTo(moX,moY+4);ctx.stroke();
     fillCirc(ctx,moX,moY,1.8,"rgba(255,55,55,1)");
     ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="7px sans-serif";ctx.textAlign="left";
-    ctx.fillText("▲火山  P/Cローバー  ✕現在地",mmX,mmY+mmH+9);
+    ctx.fillText("▲火山  ●ローバー(P/C/V1/V2/Pf/IS/Zh)  ✕現在地",mmX,mmY+mmH+9);
+    ctx.restore();
+  }
+
+  /* ======== VENUS MINI MAP ======== */
+  if(plName==="Venus"){
+    var vmW=130,vmH=65,vmX=52,vmY=90;
+    ctx.save();
+    var vmBg=ctx.createLinearGradient(vmX,vmY,vmX,vmY+vmH);
+    vmBg.addColorStop(0,"rgba(195,138,58,0.88)");vmBg.addColorStop(1,"rgba(155,98,38,0.88)");
+    ctx.fillStyle=vmBg;ctx.fillRect(vmX,vmY,vmW,vmH);
+    /* Ishtar Terra — northern highland (60-75°N, roughly -30 to +60°E) */
+    ctx.fillStyle="rgba(220,178,88,0.62)";
+    ctx.beginPath();ctx.ellipse(vmX+(30+180)/360*vmW,vmY+(90-67)/180*vmH,vmW*0.19,vmH*0.13,0,0,TAU);ctx.fill();
+    /* Aphrodite Terra — equatorial highland (right half) */
+    ctx.fillStyle="rgba(210,155,72,0.52)";
+    ctx.beginPath();ctx.ellipse(vmX+(130+180)/360*vmW,vmY+(90-10)/180*vmH,vmW*0.26,vmH*0.09,0,0,TAU);ctx.fill();
+    /* equator / prime meridian */
+    ctx.strokeStyle="rgba(255,200,150,0.2)";ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(vmX,vmY+vmH/2);ctx.lineTo(vmX+vmW,vmY+vmH/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(vmX+vmW/2,vmY);ctx.lineTo(vmX+vmW/2,vmY+vmH);ctx.stroke();
+    ctx.strokeStyle="rgba(200,148,78,0.5)";ctx.lineWidth=0.8;ctx.strokeRect(vmX,vmY,vmW,vmH);
+    /* Venera lander sites */
+    for(var vli2=0;vli2<VENUS_LANDERS.length;vli2++){var vlp=VENUS_LANDERS[vli2];
+      var vlX=vmX+(vlp.lng+180)/360*vmW,vlY=vmY+(90-vlp.lat)/180*vmH;
+      fillCirc(ctx,vlX,vlY,2,"rgba(255,200,80,1)");
+      ctx.fillStyle="rgba(255,200,80,0.82)";ctx.font="bold 7px sans-serif";ctx.textAlign="left";
+      ctx.fillText(vlp.en.replace("Venera ","V"),vlX+2.5,vlY-2);}
+    /* observer */
+    var voX=vmX+((lngDeg||0)+180)/360*vmW,voY=vmY+(90-(lat||0))/180*vmH;
+    voX=Math.max(vmX+1,Math.min(vmX+vmW-1,voX));voY=Math.max(vmY+1,Math.min(vmY+vmH-1,voY));
+    ctx.strokeStyle="rgba(255,55,55,1)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(voX-4,voY);ctx.lineTo(voX+4,voY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(voX,voY-4);ctx.lineTo(voX,voY+4);ctx.stroke();
+    fillCirc(ctx,voX,voY,1.8,"rgba(255,55,55,1)");
+    ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="7px sans-serif";ctx.textAlign="left";
+    ctx.fillText("●ベネラ着陸点  ✕現在地",vmX,vmY+vmH+9);
+    ctx.restore();
+  }
+
+  /* ======== MERCURY MINI MAP ======== */
+  if(plName==="Mercury"){
+    var hgW=130,hgH=65,hgX=52,hgY=90;
+    ctx.save();
+    var hgBg=ctx.createLinearGradient(hgX,hgY,hgX,hgY+hgH);
+    hgBg.addColorStop(0,"rgba(162,157,150,0.88)");hgBg.addColorStop(1,"rgba(112,107,100,0.88)");
+    ctx.fillStyle=hgBg;ctx.fillRect(hgX,hgY,hgW,hgH);
+    /* Caloris Basin (~30°N, 162°E) */
+    ctx.fillStyle="rgba(88,82,76,0.68)";
+    ctx.beginPath();ctx.ellipse(hgX+(162+180)/360*hgW,hgY+(90-30)/180*hgH,hgW*0.12,hgH*0.18,0,0,TAU);ctx.fill();
+    ctx.strokeStyle="rgba(120,115,108,0.5)";ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.ellipse(hgX+(162+180)/360*hgW,hgY+(90-30)/180*hgH,hgW*0.14,hgH*0.21,0,0,TAU);ctx.stroke();
+    /* North polar region */
+    ctx.fillStyle="rgba(192,188,178,0.52)";
+    ctx.beginPath();ctx.ellipse(hgX+hgW/2,hgY+3,hgW*0.46,4,0,0,TAU);ctx.fill();
+    /* equator / meridian */
+    ctx.strokeStyle="rgba(200,200,200,0.2)";ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(hgX,hgY+hgH/2);ctx.lineTo(hgX+hgW,hgY+hgH/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(hgX+hgW/2,hgY);ctx.lineTo(hgX+hgW/2,hgY+hgH);ctx.stroke();
+    ctx.strokeStyle="rgba(155,150,142,0.5)";ctx.lineWidth=0.8;ctx.strokeRect(hgX,hgY,hgW,hgH);
+    /* MESSENGER sites */
+    for(var hsi=0;hsi<MERCURY_SITES.length;hsi++){var hsp=MERCURY_SITES[hsi];
+      var hsX=hgX+(hsp.lng+180)/360*hgW,hsY=hgY+(90-hsp.lat)/180*hgH;
+      fillCirc(ctx,hsX,hsY,2.2,"rgba(255,200,80,1)");
+      ctx.fillStyle="rgba(255,200,80,0.82)";ctx.font="bold 7px sans-serif";ctx.textAlign="left";
+      ctx.fillText("M",hsX+2.5,hsY-2);}
+    /* observer */
+    var hoX=hgX+((lngDeg||0)+180)/360*hgW,hoY=hgY+(90-(lat||0))/180*hgH;
+    hoX=Math.max(hgX+1,Math.min(hgX+hgW-1,hoX));hoY=Math.max(hgY+1,Math.min(hgY+hgH-1,hoY));
+    ctx.strokeStyle="rgba(255,55,55,1)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(hoX-4,hoY);ctx.lineTo(hoX+4,hoY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(hoX,hoY-4);ctx.lineTo(hoX,hoY+4);ctx.stroke();
+    fillCirc(ctx,hoX,hoY,1.8,"rgba(255,55,55,1)");
+    ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="7px sans-serif";ctx.textAlign="left";
+    ctx.fillText("●MESSENGER衝突点  ✕現在地",hgX,hgY+hgH+9);
     ctx.restore();
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -196,6 +271,30 @@ function drawLandingHUD(ctx,W,H,h){
     var _mbN=_mbDeg<23?"N":_mbDeg<68?"NE":_mbDeg<113?"E":_mbDeg<158?"SE":_mbDeg<203?"S":_mbDeg<248?"SW":_mbDeg<293?"W":_mbDeg<338?"NW":"N";
     ctx.fillStyle="rgba(255,160,100,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("最寄: "+_mSel.n+"　"+_mKm.toLocaleString()+"km "+_mbN+"("+_mbDeg+"°)",W/2,94);
+  }
+  if(plName==="Venus"){
+    var _vMin=1e9,_vIdx=-1;
+    for(var _vli=0;_vli<VENUS_LANDERS.length;_vli++){var _vl2=VENUS_LANDERS[_vli];
+      var _vDL=(_vl2.lng-(lngDeg||0))*0.01745,_vL1=(lat||0)*0.01745,_vL2=_vl2.lat*0.01745;
+      var _vCos=Math.sin(_vL1)*Math.sin(_vL2)+Math.cos(_vL1)*Math.cos(_vL2)*Math.cos(_vDL);
+      var _vD=Math.acos(Math.max(-1,Math.min(1,_vCos)))*57.2958;
+      if(_vD<_vMin){_vMin=_vD;_vIdx=_vli;}}
+    var _vSel=VENUS_LANDERS[_vIdx];
+    var _vKm=Math.round(_vMin*6051.8*Math.PI/180);
+    ctx.fillStyle="rgba(255,200,120,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_vSel.n+"　"+_vKm.toLocaleString()+"km",W/2,94);
+  }
+  if(plName==="Mercury"){
+    var _hMin=1e9,_hIdx=-1;
+    for(var _hsi2=0;_hsi2<MERCURY_SITES.length;_hsi2++){var _hs2=MERCURY_SITES[_hsi2];
+      var _hDL=(_hs2.lng-(lngDeg||0))*0.01745,_hL1=(lat||0)*0.01745,_hL2=_hs2.lat*0.01745;
+      var _hCos=Math.sin(_hL1)*Math.sin(_hL2)+Math.cos(_hL1)*Math.cos(_hL2)*Math.cos(_hDL);
+      var _hD=Math.acos(Math.max(-1,Math.min(1,_hCos)))*57.2958;
+      if(_hD<_hMin){_hMin=_hD;_hIdx=_hsi2;}}
+    var _hSel=MERCURY_SITES[_hIdx];
+    var _hKm=Math.round(_hMin*2439.7*Math.PI/180);
+    ctx.fillStyle="rgba(200,200,228,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_hSel.n+"　"+_hKm.toLocaleString()+"km",W/2,94);
   }
 
   /* ======== COMPASS STRIP (just above horizon) ======== */

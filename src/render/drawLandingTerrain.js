@@ -1,4 +1,4 @@
-import { TAU, APOLLO_SITES, MARS_LANDMARKS } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -106,6 +106,24 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
           ctx.globalAlpha=1;break;}
       }
     }
+    if(plName==="Mercury"){
+      /* MESSENGER crash site marker when within ~5° */
+      for(var _msi=0;_msi<MERCURY_SITES.length;_msi++){var _ms=MERCURY_SITES[_msi];
+        var _msdl=(_ms.lng-(lngDeg||0))*0.01745,_msl1=(lat||0)*0.01745,_msl2=_ms.lat*0.01745;
+        var _mscos=Math.sin(_msl1)*Math.sin(_msl2)+Math.cos(_msl1)*Math.cos(_msl2)*Math.cos(_msdl);
+        var _msda=Math.acos(Math.max(-1,Math.min(1,_mscos)))*57.2958;
+        if(_msda<5){
+          var msx=W*0.72,msy=H-52;ctx.globalAlpha=0.82;
+          ctx.fillStyle="rgba(90,82,72,0.65)";ctx.beginPath();ctx.ellipse(msx,msy+10,20,8,0,0,TAU);ctx.fill();
+          ctx.fillStyle="rgba(172,168,158,0.9)";ctx.fillRect(msx-10,msy-10,20,16);
+          ctx.fillStyle="rgba(55,72,155,0.85)";ctx.fillRect(msx-28,msy-5,15,5);ctx.fillRect(msx+13,msy-5,15,5);
+          ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+          ctx.fillText(_ms.n,msx,msy-16);
+          ctx.fillStyle="rgba(200,200,220,0.75)";ctx.font="7px sans-serif";
+          ctx.fillText(_ms.date,msx,msy+24);
+          ctx.globalAlpha=1;break;}
+      }
+    }
   }else if(plName==="Earth"){
     if(biome==="polar"){
       ctx.globalAlpha=0.32;ctx.fillStyle="rgba(218,230,244,1)";
@@ -182,6 +200,24 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     for(var vi2=0;vi2<25;vi2++){var vx=vr()*W,vy=hrzY+8+vr()*(H-hrzY-15),vsz=2+((vy-hrzY)/(H-hrzY))*12;
       ctx.fillStyle="rgba(80,60,35,1)";ctx.beginPath();ctx.arc(vx,vy,vsz,0,TAU);ctx.fill();
       if(vr()<0.2){ctx.fillStyle="rgba(220,80,20,"+(0.15+Math.sin(t*3+vi2)*0.08).toFixed(2)+")";ctx.beginPath();ctx.arc(vx,vy+vsz*0.3,vsz*0.6,0,TAU);ctx.fill();}}ctx.globalAlpha=1;
+    /* Venera cylindrical lander when within ~5° of a landing site */
+    for(var _vi=0;_vi<VENUS_LANDERS.length;_vi++){var _vl=VENUS_LANDERS[_vi];
+      var _vdl=(_vl.lng-(lngDeg||0))*0.01745,_vll1=(lat||0)*0.01745,_vll2=_vl.lat*0.01745;
+      var _vcos=Math.sin(_vll1)*Math.sin(_vll2)+Math.cos(_vll1)*Math.cos(_vll2)*Math.cos(_vdl);
+      var _vda=Math.acos(Math.max(-1,Math.min(1,_vcos)))*57.2958;
+      if(_vda<5){
+        var vvX=W*0.72,vvY=H-52;ctx.globalAlpha=0.84;
+        ctx.fillStyle="rgba(178,168,142,0.9)";ctx.fillRect(vvX-10,vvY-18,20,26);
+        ctx.fillStyle="rgba(138,128,108,0.85)";ctx.fillRect(vvX-16,vvY-20,32,4);
+        ctx.fillRect(vvX-16,vvY+6,32,4);
+        ctx.fillStyle="rgba(200,195,168,0.88)";ctx.fillRect(vvX-1,vvY-30,2,12);
+        ctx.fillRect(vvX-8,vvY-32,16,3);
+        ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+        ctx.fillText(_vl.n,vvX,vvY-38);
+        ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";
+        ctx.fillText(_vl.date,vvX,vvY+20);
+        ctx.globalAlpha=1;break;}
+    }
   }else if(plName==="Uranus"||plName==="Neptune"){
     ctx.globalAlpha=0.1;var ir=seedR(plName==="Uranus"?88:99);ctx.strokeStyle=plName==="Uranus"?"rgba(150,220,230,1)":"rgba(80,120,220,1)";ctx.lineWidth=0.5;
     for(var ii=0;ii<40;ii++){var ix=ir()*W,iy=hrzY+3+ir()*(H-hrzY-8);ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix+ir()*25-12,iy+ir()*12-6);ctx.stroke();

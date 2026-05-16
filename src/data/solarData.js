@@ -42,8 +42,25 @@ export var MARS_LANDMARKS=[
   {n:"エリシウム山",en:"Elysium Mons",lat:25.0,lng:147.2,type:"volcano",info:"タルシス次の大火山 高さ13.9km"},
   {n:"パーサヴィアランス",en:"Perseverance",lat:18.4,lng:77.5,type:"rover",info:"ジェゼロクレーター 2021年着陸 NASAサンプルリターン"},
   {n:"キュリオシティ",en:"Curiosity",lat:-4.6,lng:137.4,type:"rover",info:"ゲールクレーター 2012年着陸 NASAマーズサイエンスラボ"},
+  {n:"バイキング1号",en:"Viking 1",lat:22.27,lng:-47.94,type:"rover",info:"クリセ平原 1976年着陸 NASA初の火星軟着陸"},
+  {n:"バイキング2号",en:"Viking 2",lat:47.97,lng:134.26,type:"rover",info:"ウトピア平原 1976年着陸 NASA"},
+  {n:"パスファインダー",en:"Pathfinder",lat:19.13,lng:-33.22,type:"rover",info:"アレス・ヴァリス 1997年着陸 ソジャーナ搭載"},
+  {n:"インサイト",en:"InSight",lat:4.5,lng:135.9,type:"rover",info:"エリシウム平原 2018年着陸 地震計・熱流量計"},
+  {n:"祝融",en:"Zhurong",lat:25.07,lng:109.91,type:"rover",info:"ユートピア平原 2021年着陸 中国初の火星ローバー"},
   {n:"北極冠",en:"North Polar Cap",lat:87.0,lng:0.0,type:"ice",info:"CO₂と水の氷 夏に縮小 冬に拡大"},
   {n:"南極冠",en:"South Polar Cap",lat:-87.0,lng:0.0,type:"ice",info:"恒久的な水の氷を保持 CO₂の乾燥氷の層"}
+];
+/* Venus surface landers (lat N, lng in -180..+180) */
+export var VENUS_LANDERS=[
+  {n:"ベネラ4号",en:"Venera 4",lat:19.0,lng:38.0,date:"1967-10",info:"初の金星大気in-situ計測 ソビエト探査機"},
+  {n:"ベネラ7号",en:"Venera 7",lat:-5.25,lng:-9.0,date:"1970-12",info:"初の他惑星表面からの信号送信 23分稼働"},
+  {n:"ベネラ9号",en:"Venera 9",lat:31.7,lng:-68.4,date:"1975-10",info:"初の金星表面写真撮影 53分稼働"},
+  {n:"ベネラ13号",en:"Venera 13",lat:-7.5,lng:-57.0,date:"1982-03",info:"127分間稼働 カラー写真撮影"},
+  {n:"ベネラ14号",en:"Venera 14",lat:-13.25,lng:-49.9,date:"1982-03",info:"57分稼働 玄武岩質岩盤を確認"},
+];
+/* Mercury surface/impact sites */
+export var MERCURY_SITES=[
+  {n:"MESSENGER",en:"MESSENGER",lat:72.2,lng:-28.3,date:"2015-04",info:"NASA水星探査機 4年間観測後に北極近くに衝突"},
 ];
 export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
