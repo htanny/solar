@@ -1,4 +1,4 @@
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -216,6 +216,88 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
         ctx.fillText(_vl.n,vvX,vvY-38);
         ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";
         ctx.fillText(_vl.date,vvX,vvY+20);
+        ctx.globalAlpha=1;break;}
+    }
+  }else if(plName==="Io"){
+    /* Sulfur plains with lava pools and volcanic calderas */
+    var ior=seedR(777);ctx.globalAlpha=0.3;
+    for(var ioi=0;ioi<8;ioi++){var iox=ior()*W,ioy=hrzY+10+ior()*(H-hrzY-20),ioR=8+ior()*25;
+      ctx.fillStyle=ior()<0.5?"rgba(30,10,5,1)":"rgba(80,20,5,1)";ctx.beginPath();ctx.ellipse(iox,ioy,ioR,ioR*0.38,0,0,TAU);ctx.fill();}
+    ctx.globalAlpha=0.18;ctx.fillStyle="rgba(240,80,20,1)";
+    for(var ili=0;ili<3;ili++){var ilx=((rng()*W*1.5+yaw*40)%(W*1.2))-W*0.1;ctx.beginPath();ctx.moveTo(ilx-30,hrzY);ctx.lineTo(ilx,hrzY-4-rng()*8);ctx.lineTo(ilx+30,hrzY);ctx.fill();}
+    ctx.globalAlpha=1;
+  }else if(plName==="Europa"){
+    /* Ice ridges and linear chaos terrain */
+    var eur=seedR(888);ctx.globalAlpha=0.22;
+    for(var eui=0;eui<14;eui++){var eux=eur()*W,euy=hrzY+5+eur()*(H-hrzY-12),euw=1+eur()*3,eul=20+eur()*80,eua=(eur()-0.5)*0.6;
+      ctx.strokeStyle=eur()<0.3?"rgba(160,100,70,1)":"rgba(180,150,120,1)";ctx.lineWidth=euw;
+      ctx.beginPath();ctx.moveTo(eux,euy);ctx.lineTo(eux+Math.cos(eua)*eul,euy+Math.sin(eua)*eul);ctx.stroke();}
+    ctx.globalAlpha=1;
+  }else if(plName==="Ganymede"){
+    /* Mix of dark ancient and bright grooved terrain */
+    var gnr=seedR(999);ctx.globalAlpha=0.18;
+    for(var gni=0;gni<10;gni++){var gnx=gnr()*W,gny=hrzY+8+gnr()*(H-hrzY-15),gnsz=4+gnr()*18;
+      ctx.fillStyle=gnr()<0.45?"rgba(60,55,48,1)":"rgba(155,148,130,1)";ctx.beginPath();ctx.ellipse(gnx,gny,gnsz,gnsz*0.5,gnr()*Math.PI,0,0,TAU);ctx.fill();}
+    ctx.globalAlpha=0.12;ctx.strokeStyle="rgba(180,172,155,1)";ctx.lineWidth=2;
+    for(var gri=0;gri<5;gri++){var grx=gnr()*W;ctx.beginPath();ctx.moveTo(grx,hrzY);ctx.lineTo(grx+(gnr()-0.5)*60,hrzY+(H-hrzY)*0.8);ctx.stroke();}
+    ctx.globalAlpha=1;
+  }else if(plName==="Callisto"){
+    /* Old dark ice, dense multi-ring craters */
+    var clr=seedR(111);ctx.globalAlpha=0.22;
+    for(var cali=0;cali<12;cali++){var calx=clr()*W,caly=hrzY+8+clr()*(H-hrzY-15),calsz=5+clr()*20;
+      ctx.fillStyle="rgba(25,22,18,1)";ctx.beginPath();ctx.arc(calx,caly,calsz,0,TAU);ctx.fill();
+      ctx.strokeStyle="rgba(88,82,72,1)";ctx.lineWidth=0.8;ctx.beginPath();ctx.arc(calx,caly,calsz*1.35,0,TAU);ctx.stroke();}
+    ctx.globalAlpha=1;
+  }else if(plName==="Titan"){
+    /* Orange-tinted dunes and methane lake patches */
+    var ttnr=seedR(222);ctx.globalAlpha=0.2;
+    for(var tdi=0;tdi<20;tdi++){var tdx=ttnr()*W,tdy=hrzY+4+ttnr()*(H-hrzY-10),tdD=(tdy-hrzY)/(H-hrzY),tdsz=3+tdD*14;
+      ctx.strokeStyle="rgba(80,55,25,1)";ctx.lineWidth=tdsz*0.4;ctx.beginPath();ctx.moveTo(tdx,tdy);ctx.lineTo(tdx+(ttnr()-0.5)*tdsz*4,tdy-tdsz*0.5);ctx.stroke();}
+    ctx.globalAlpha=0.15;ctx.fillStyle="rgba(40,28,12,1)";
+    for(var tli=0;tli<4;tli++){var tlx=ttnr()*W,tly=hrzY+25+ttnr()*(H-hrzY-38),tlrx=30+ttnr()*60,tlry=8+ttnr()*14;
+      ctx.beginPath();ctx.ellipse(tlx,tly,tlrx,tlry,0,0,TAU);ctx.fill();}
+    ctx.globalAlpha=1;
+    /* Huygens probe site marker */
+    for(var _tpi=0;_tpi<TITAN_PROBES.length;_tpi++){var _tp=TITAN_PROBES[_tpi];
+      var _tdl=(_tp.lng-(lngDeg||0))*0.01745,_tl1=(lat||0)*0.01745,_tl2=_tp.lat*0.01745;
+      var _tcos=Math.sin(_tl1)*Math.sin(_tl2)+Math.cos(_tl1)*Math.cos(_tl2)*Math.cos(_tdl);
+      var _tda=Math.acos(Math.max(-1,Math.min(1,_tcos)))*57.2958;
+      if(_tda<5){
+        var hgx=W*0.72,hgy=H-52;ctx.globalAlpha=0.82;
+        ctx.fillStyle="rgba(175,165,140,0.9)";ctx.beginPath();ctx.ellipse(hgx,hgy-8,10,14,0,0,TAU);ctx.fill();
+        ctx.fillStyle="rgba(135,125,108,0.85)";ctx.beginPath();ctx.ellipse(hgx,hgy-22,6,6,0,0,TAU);ctx.fill();
+        ctx.fillStyle="rgba(200,190,160,0.88)";ctx.fillRect(hgx-1,hgy-30,2,10);
+        ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+        ctx.fillText(_tp.n,hgx,hgy-36);ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";ctx.fillText(_tp.date,hgx,hgy+18);
+        ctx.globalAlpha=1;break;}
+    }
+  }else if(plName==="Itokawa"||plName==="Ryugu"){
+    /* Rough rocky asteroid surface: boulders + regolith */
+    var asr=seedR(plName==="Itokawa"?333:444);ctx.globalAlpha=0.28;
+    var asCol=plName==="Itokawa"?"rgba(140,120,95,1)":"rgba(25,20,16,1)";
+    var asRim=plName==="Itokawa"?"rgba(160,138,110,1)":"rgba(38,30,22,1)";
+    for(var asi=0;asi<30;asi++){var asx=asr()*W,asy=hrzY+6+asr()*(H-hrzY-14),asD=(asy-hrzY)/(H-hrzY),assz=1+asD*10+asr()*6*asD;
+      ctx.fillStyle=asCol;ctx.beginPath();var asp=3+Math.floor(asr()*4);
+      ctx.save();ctx.translate(asx,asy);ctx.rotate(asr()*Math.PI);
+      ctx.beginPath();for(var av=0;av<asp;av++){var aa=av/asp*TAU,ar=assz*(0.7+asr()*0.3);if(av===0)ctx.moveTo(Math.cos(aa)*ar,Math.sin(aa)*ar*0.6);else ctx.lineTo(Math.cos(aa)*ar,Math.sin(aa)*ar*0.6);}
+      ctx.closePath();ctx.fill();ctx.strokeStyle=asRim;ctx.lineWidth=0.5;ctx.globalAlpha=0.4;ctx.stroke();
+      ctx.restore();}
+    ctx.globalAlpha=0.35;ctx.fillStyle=asCol;
+    for(var agi=0;agi<80;agi++){var agx=asr()*W,agy=hrzY+3+asr()*(H-hrzY-8);ctx.fillRect(agx,agy,0.8+asr()*1.5,0.8+asr()*1.5);}
+    ctx.globalAlpha=1;
+    /* Hayabusa spacecraft marker */
+    for(var _hai=0;_hai<HAYABUSA_SITES.length;_hai++){var _ha=HAYABUSA_SITES[_hai];
+      if(_ha.body!==plName)continue;
+      var _hadl=(_ha.lng-(lngDeg||0))*0.01745,_hal1=(lat||0)*0.01745,_hal2=_ha.lat*0.01745;
+      var _hacos=Math.sin(_hal1)*Math.sin(_hal2)+Math.cos(_hal1)*Math.cos(_hal2)*Math.cos(_hadl);
+      var _hada=Math.acos(Math.max(-1,Math.min(1,_hacos)))*57.2958;
+      if(_hada<8){
+        var hax=W*0.72,hay=H-48;ctx.globalAlpha=0.84;
+        ctx.fillStyle="rgba(165,160,148,0.9)";ctx.fillRect(hax-8,hay-12,16,12);
+        ctx.fillStyle="rgba(55,70,148,0.85)";ctx.fillRect(hax-22,hay-8,12,5);ctx.fillRect(hax+10,hay-8,12,5);
+        ctx.fillStyle="rgba(200,195,175,0.85)";ctx.fillRect(hax-1,hay-22,2,12);ctx.fillRect(hax-5,hay-24,10,3);
+        ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_ha.n,hax,hay-30);
+        ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";ctx.fillText(_ha.date,hax,hay+16);
         ctx.globalAlpha=1;break;}
     }
   }else if(plName==="Uranus"||plName==="Neptune"){

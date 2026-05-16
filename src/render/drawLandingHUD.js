@@ -1,4 +1,4 @@
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 function drawLandingHUD(ctx,W,H,h){
@@ -218,13 +218,21 @@ function drawLandingHUD(ctx,W,H,h){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
   var _mhL=((lngDeg||0)+540)%360-180,_mhA=Math.abs(_mhL);
   var _mhNF=Math.max(0,1-_mhA/90),_mhFF=Math.max(0,(_mhA-90)/90);
-  var descs={Mercury:"大気なし・灼熱の昼(430℃)と極寒の夜(−180℃)",Venus:"厚い硫酸雲・気温462℃・気圧90気圧",Earth:"青い空・白い雲・生命の惑星",Mars:"薄いCO₂大気・赤い空・砂嵐",Jupiter:"ガス惑星・巨大な雲の海",Saturn:"ガス惑星・空を横切る壮大なリング",Uranus:"氷の巨人・メタンの青い大気",Neptune:"最果ての惑星・時速2000kmの暴風",Ceres:"小惑星帯最大の天体・岩と氷の世界",Pluto:"冥王星・−230℃の極寒の世界",Eris:"最も遠い矮小惑星・太陽が極小",Moon:_mhFF>0.3?"反地球側（遠地面）— 大型クレーター密集・地球は永遠に見えない":_mhNF>0.3?"地球側（近地面）— 月の海が広がる・地球が空に浮かぶ":"月の縁（秤動で地球が揺れる）"};
+  var descs={Mercury:"大気なし・灼熱の昼(430℃)と極寒の夜(−180℃)",Venus:"厚い硫酸雲・気温462℃・気圧90気圧",Earth:"青い空・白い雲・生命の惑星",Mars:"薄いCO₂大気・赤い空・砂嵐",Jupiter:"ガス惑星・巨大な雲の海",Saturn:"ガス惑星・空を横切る壮大なリング",Uranus:"氷の巨人・メタンの青い大気",Neptune:"最果ての惑星・時速2000kmの暴風",Ceres:"小惑星帯最大の天体・岩と氷の世界",Pluto:"冥王星・−230℃の極寒の世界",Eris:"最も遠い矮小惑星・太陽が極小",Moon:_mhFF>0.3?"反地球側（遠地面）— 大型クレーター密集・地球は永遠に見えない":_mhNF>0.3?"地球側（近地面）— 月の海が広がる・地球が空に浮かぶ":"月の縁（秤動で地球が揺れる）",
+Io:"火山が500個以上 — 常に噴火する最も地質活動が活発な天体",
+Europa:"厚さ数kmの氷殻の下に地下海 — 生命の可能性が最も高い場所のひとつ",
+Ganymede:"太陽系最大の衛星 — 固有の磁場を持つ唯一の衛星",
+Callisto:"太陽系で最も古い地表 — 40億年変わらぬクレーターの海",
+Titan:"窒素・メタンの濃い大気 — 液体の川と湖が存在する地球外の世界",
+Itokawa:"はやぶさが2005年に試料採取 — 地球に持ち帰られた最初の小惑星サンプル",
+Ryugu:"はやぶさ2が2019年着陸 — 炭素質コンドライト 太陽系初期の物質を保存",
+};
   ctx.fillText(descs[plName]||"",W/2,38);
   var tod=sunAlt>0.3?"昼":sunAlt>0.05?"朝/夕":sunAlt>-0.08?"薄明":"夜";
   var sdStr=solarDay<1?(solarDay*24).toFixed(1)+"h":solarDay<100?solarDay.toFixed(1)+"日":(solarDay/365.25).toFixed(1)+"年";
@@ -295,6 +303,32 @@ function drawLandingHUD(ctx,W,H,h){
     var _hKm=Math.round(_hMin*2439.7*Math.PI/180);
     ctx.fillStyle="rgba(200,200,228,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("最寄: "+_hSel.n+"　"+_hKm.toLocaleString()+"km",W/2,94);
+  }
+  if(plName==="Titan"){
+    var _tpMin=1e9,_tpIdx=-1;
+    for(var _tpii=0;_tpii<TITAN_PROBES.length;_tpii++){var _tp2=TITAN_PROBES[_tpii];
+      var _tpDL=(_tp2.lng-(lngDeg||0))*0.01745,_tpL1=(lat||0)*0.01745,_tpL2=_tp2.lat*0.01745;
+      var _tpCos=Math.sin(_tpL1)*Math.sin(_tpL2)+Math.cos(_tpL1)*Math.cos(_tpL2)*Math.cos(_tpDL);
+      var _tpD=Math.acos(Math.max(-1,Math.min(1,_tpCos)))*57.2958;
+      if(_tpD<_tpMin){_tpMin=_tpD;_tpIdx=_tpii;}}
+    var _tpSel=TITAN_PROBES[_tpIdx];
+    var _tpKm=Math.round(_tpMin*2575*Math.PI/180);
+    ctx.fillStyle="rgba(255,210,140,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_tpSel.n+"　"+_tpKm.toLocaleString()+"km",W/2,94);
+  }
+  if(plName==="Itokawa"||plName==="Ryugu"){
+    var _haMin=1e9,_haIdx=-1,_haR=plName==="Itokawa"?0.000165:0.000448;
+    for(var _ha2i=0;_ha2i<HAYABUSA_SITES.length;_ha2i++){var _ha2=HAYABUSA_SITES[_ha2i];
+      if(_ha2.body!==plName)continue;
+      var _haDL=(_ha2.lng-(lngDeg||0))*0.01745,_haL1=(lat||0)*0.01745,_haL2=_ha2.lat*0.01745;
+      var _haCos=Math.sin(_haL1)*Math.sin(_haL2)+Math.cos(_haL1)*Math.cos(_haL2)*Math.cos(_haDL);
+      var _haD=Math.acos(Math.max(-1,Math.min(1,_haCos)))*57.2958;
+      if(_haD<_haMin){_haMin=_haD;_haIdx=_ha2i;}}
+    if(_haIdx>=0){
+      var _haSel=HAYABUSA_SITES[_haIdx];
+      var _haKm=(_haMin*_haR*Math.PI/180*1000).toFixed(1);
+      ctx.fillStyle="rgba(200,210,255,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
+      ctx.fillText("最寄: "+_haSel.n+"　"+_haKm+"m",W/2,94);}
   }
 
   /* ======== COMPASS STRIP (just above horizon) ======== */
