@@ -1,7 +1,7 @@
 {
   "name": "solar",
   "private": true,
-  "version": "2.13.4",
+  "version": "2.14.0",
   "type": "module",
   "description": "プロシージャル描画による太陽系・銀河系・惑星表面の3Dシミュレーター",
   "scripts": {

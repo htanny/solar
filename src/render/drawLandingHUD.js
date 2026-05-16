@@ -1,4 +1,4 @@
-import { TAU, MAP_CTNS } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 function drawLandingHUD(ctx,W,H,h){
@@ -38,8 +38,62 @@ function drawLandingHUD(ctx,W,H,h){
     ctx.restore();
   }
 
+  /* ======== MINI MOON MAP (Moon only) — Apollo sites + sub-Earth + maria ======== */
+  if(plName==="Moon"){
+    var lmW=130,lmH=65,lmX=52,lmY=90;
+    ctx.save();
+    /* background — gradient from far side (bright highlands) edges to near side (dark) center */
+    var lmBg=ctx.createLinearGradient(lmX,0,lmX+lmW,0);
+    lmBg.addColorStop(0,"rgba(150,146,138,0.85)");/* far side left */
+    lmBg.addColorStop(0.25,"rgba(100,96,88,0.85)");/* limb */
+    lmBg.addColorStop(0.5,"rgba(78,75,68,0.85)");/* near center */
+    lmBg.addColorStop(0.75,"rgba(100,96,88,0.85)");/* limb */
+    lmBg.addColorStop(1,"rgba(150,146,138,0.85)");/* far side right */
+    ctx.fillStyle=lmBg;ctx.fillRect(lmX,lmY,lmW,lmH);
+    /* maria on near side */
+    ctx.fillStyle="rgba(40,38,35,0.85)";
+    for(var lmi=0;lmi<LUNAR_MARIA.length;lmi++){var lma=LUNAR_MARIA[lmi];
+      var lmCx=lmX+(lma.lng+180)/360*lmW,lmCy=lmY+(90-lma.lat)/180*lmH;
+      var lmRx=lma.rLng/360*lmW,lmRy=lma.rLat/180*lmH;
+      ctx.beginPath();ctx.ellipse(lmCx,lmCy,lmRx,lmRy,0,0,TAU);ctx.fill();}
+    /* near/far side boundary (dashed) */
+    ctx.strokeStyle="rgba(255,200,100,0.45)";ctx.lineWidth=0.7;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(lmX+lmW*0.25,lmY);ctx.lineTo(lmX+lmW*0.25,lmY+lmH);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lmX+lmW*0.75,lmY);ctx.lineTo(lmX+lmW*0.75,lmY+lmH);ctx.stroke();
+    ctx.setLineDash([]);
+    /* equator/meridian */
+    ctx.strokeStyle="rgba(255,255,255,0.18)";ctx.lineWidth=0.5;
+    ctx.beginPath();ctx.moveTo(lmX,lmY+lmH/2);ctx.lineTo(lmX+lmW,lmY+lmH/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(lmX+lmW/2,lmY);ctx.lineTo(lmX+lmW/2,lmY+lmH);ctx.stroke();
+    ctx.strokeStyle="rgba(200,200,200,0.55)";ctx.lineWidth=0.8;ctx.strokeRect(lmX,lmY,lmW,lmH);
+    /* sub-Earth point with libration (visible only on near side) */
+    var lmLibL=7.9*Math.sin(t*2*Math.PI/27.55);
+    var lmLibB=6.7*Math.sin(t*2*Math.PI/27.21);
+    var seMx=lmX+(lmLibL+180)/360*lmW,seMy=lmY+(90-lmLibB)/180*lmH;
+    ctx.strokeStyle="rgba(120,170,255,0.55)";ctx.lineWidth=0.7;
+    ctx.beginPath();ctx.arc(seMx,seMy,4.5,0,TAU);ctx.stroke();
+    fillCirc(ctx,seMx,seMy,2.2,"rgba(140,190,255,0.95)");
+    /* Apollo sites */
+    for(var lai=0;lai<APOLLO_SITES.length;lai++){var lap=APOLLO_SITES[lai];
+      var lapX=lmX+(lap.lng+180)/360*lmW,lapY=lmY+(90-lap.lat)/180*lmH;
+      fillCirc(ctx,lapX,lapY,1.6,"rgba(255,220,80,1)");
+      ctx.fillStyle="rgba(255,220,80,0.7)";ctx.font="bold 7px sans-serif";ctx.textAlign="left";
+      ctx.fillText(lap.n.replace("Apollo ","A"),lapX+2.5,lapY-2);}
+    /* observer position */
+    var omX=lmX+((lngDeg||0)+180)/360*lmW,omY=lmY+(90-(lat||0))/180*lmH;
+    omX=Math.max(lmX+1,Math.min(lmX+lmW-1,omX));omY=Math.max(lmY+1,Math.min(lmY+lmH-1,omY));
+    ctx.strokeStyle="rgba(255,55,55,1)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(omX-4,omY);ctx.lineTo(omX+4,omY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(omX,omY-4);ctx.lineTo(omX,omY+4);ctx.stroke();
+    fillCirc(ctx,omX,omY,1.8,"rgba(255,55,55,1)");
+    /* legend */
+    ctx.fillStyle="rgba(255,255,255,0.45)";ctx.font="7px sans-serif";ctx.textAlign="left";
+    ctx.fillText("◐近地面 ⚪地球副点(秤動) ●アポロ ✕現在地",lmX,lmY+lmH+9);
+    ctx.restore();
+  }
+
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -62,6 +116,20 @@ function drawLandingHUD(ctx,W,H,h){
   var _utc=_dms.getUTCFullYear()+"/"+_p2(_dms.getUTCMonth()+1)+"/"+_p2(_dms.getUTCDate())+" "+_p2(_dms.getUTCHours())+":"+_p2(_dms.getUTCMinutes())+":"+_p2(_dms.getUTCSeconds())+" UTC";
   ctx.fillStyle="rgba(140,200,255,0.6)";ctx.font="9px monospace";ctx.fillText(_utc,W/2,80);
   if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.font="9px sans-serif";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,94);}
+  if(plName==="Moon"){
+    var _aMin=1e9,_aIdx=-1;
+    for(var _api=0;_api<APOLLO_SITES.length;_api++){var _aS=APOLLO_SITES[_api];
+      var _aDL=(_aS.lng-(lngDeg||0))*0.01745,_aL1=(lat||0)*0.01745,_aL2=_aS.lat*0.01745;
+      var _aCos=Math.sin(_aL1)*Math.sin(_aL2)+Math.cos(_aL1)*Math.cos(_aL2)*Math.cos(_aDL);
+      var _aD=Math.acos(Math.max(-1,Math.min(1,_aCos)))*57.2958;
+      if(_aD<_aMin){_aMin=_aD;_aIdx=_api;}}
+    var _aSel=APOLLO_SITES[_aIdx];
+    var _aKm=Math.round(_aMin*1737*Math.PI/180);
+    var _liL=7.9*Math.sin(t*2*Math.PI/27.55);
+    var _liB=6.7*Math.sin(t*2*Math.PI/27.21);
+    ctx.fillStyle="rgba(255,220,140,0.7)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText(_aSel.n+"地点まで "+_aKm.toLocaleString()+"km　秤動 L:"+_liL.toFixed(1)+"° B:"+_liB.toFixed(1)+"°",W/2,94);
+  }
 
   /* ======== COMPASS STRIP (just above horizon) ======== */
   var compY=hrzY-2;
