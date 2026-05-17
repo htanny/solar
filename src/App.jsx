@@ -1,6 +1,6 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, ZODIAC, ZODIAC_BASE, J2000, QUIZ_DATA } from "./data/solarData.js";
+import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
@@ -15,6 +15,7 @@ import InfoPanel from "./components/panels/InfoPanel.jsx";
 import LandingQuickJump from "./components/LandingQuickJump.jsx";
 import CompareTablePanel from "./components/panels/CompareTablePanel.jsx";
 import QuizPanel from "./components/panels/QuizPanel.jsx";
+import TourPickerPanel from "./components/panels/TourPickerPanel.jsx";
 import EventsPanel from "./components/panels/EventsPanel.jsx";
 import ExoplanetPanel from "./components/panels/ExoplanetPanel.jsx";
 import SatellitePanel from "./components/panels/SatellitePanel.jsx";
@@ -33,7 +34,15 @@ export default function App(){
   var[foc,setFoc,foR]=useRefSync("all");var[zi,setZi,ziR]=useRefSync(17);
   var[paused,setPaused,pausR]=useRefSync(false);var[info,setInfo]=useState(null);var[compare,setCompare,cmpR]=useRefSync(false);
   var focTransRef=useRef({active:false});
-  var tourRef=useRef({active:false,idx:0,timer:0,trans:false});
+  var tourRef=useRef({active:false,idx:0,timer:0,trans:false,lv:"int"});
+  /* Pick TOUR_DESC/EXAM/NAMES arrays based on current level + language */
+  function tourData(lv,enFlag){
+    var names=enFlag?TOUR_NAMES_EN:TOUR_NAMES;
+    if(enFlag)return{names:names,desc:TOUR_DESC_EN,exam:TOUR_EXAM_EN};
+    if(lv==="beg")return{names:names,desc:TOUR_DESC_BEG,exam:TOUR_EXAM_BEG};
+    if(lv==="adv")return{names:names,desc:TOUR_DESC_ADV,exam:TOUR_EXAM_ADV};
+    return{names:names,desc:TOUR_DESC,exam:TOUR_EXAM};
+  }
   var[touring,setTouring]=useState(false);
   var[panels,dispatchPanel]=useReducer(panelReducer,Object.assign({},PANEL_INIT,typeof window!=="undefined"&&window.innerWidth<640?{dispColl:true}:{}));var eventsRef=useRef([]);
   var cmpStateRef=useRef({offX:0,zm:1});
@@ -82,7 +91,10 @@ export default function App(){
   var autoZoom=useCallback(function(name,isUni){if(!isUni)return;var wr;if(name==="sun"){wr=(SRR/1000)*DK;}else if(name==="all"){return;}else{var pl=PL_MAP[name]||DWARF_MAP[name];if(!pl)return;wr=(pl.r/1000)*DK;}var ideal=30/Math.max(wr,0.00001),best=0,bd=1e15;for(var i=0;i<ZS.length;i++){var d=Math.abs(ZS[i]-ideal);if(d<bd){bd=d;best=i;}}S.current.cam.tzm=ZS[best];ziR.current=best;setZi(best);},[]);
   useEffect(function(){if(uni&&foc!=="all"){autoZoom(foc,true);}},[uni,foc,autoZoom]);
   var stopTour=useCallback(function(){setTouring(false);if(tourRef.current)tourRef.current.active=false;},[]);
-  var startQuiz=useCallback(function(){var qs=QUIZ_DATA.slice().sort(function(){return Math.random()-0.5;}).slice(0,5);setQuizState({questions:qs,idx:0,score:0,answered:null});},[]);
+  var startTourLv=useCallback(function(lv){setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:lv};setFoc("sun");setInfo({type:"sun"});},[stopTour]);
+  /* Toggle a panel; on phone, close other exclusive panels at the same time */
+  var togglePanel=useCallback(function(key){dispatchPanel({type:isPhone?"TOGGLE_EX":"TOGGLE",key:key});},[isPhone]);
+  var startQuiz=useCallback(function(){setQuizState({lv:null});},[]);
   var closeQuiz=useCallback(function(){setQuizState(null);},[]);
   var saveBM=useCallback(function(name){var s=S.current,c=s.cam;var code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;setBookmarks(function(prev){var next=prev.concat({name:name||simDaysToDate(s.t),code:code});try{localStorage.setItem("solar_bm",JSON.stringify(next));}catch(e){}return next;});},[zi,foc]);
   var delBM=useCallback(function(idx){setBookmarks(function(prev){var next=prev.filter(function(_,i2){return i2!==idx;});try{localStorage.setItem("solar_bm",JSON.stringify(next));}catch(e){}return next;});},[]);
@@ -179,7 +191,7 @@ export default function App(){
     function tst(e){if(cmpR.current){e.preventDefault();if(e.touches.length===1){sim.cmpDrag={x:e.touches[0].clientX};sim.dragged=false;}if(e.touches.length===2){sim.cmpPinch=td3(e);sim.cmpDrag=null;}return;}if(e.touches.length===3){sim.triSwipe={x:e.touches[0].clientX};sim.dr=null;return;}if(e.touches.length===1){sim.dr={x:e.touches[0].clientX,y:e.touches[0].clientY};sim.dragged=false;}if(e.touches.length===2){sim.pi=td3(e);sim.dr=null;}}
     function tmv(e){e.preventDefault();if(e.touches.length===3&&sim.triSwipe){var dx3f=e.touches[0].clientX-sim.triSwipe.x;if(Math.abs(dx3f)>55){var foIdx=FL.findIndex(function(f){return f.k===foR.current;});var newFo=FL[(foIdx+(dx3f<0?1:foIdx>0?-1:FL.length-1)+FL.length)%FL.length];focusOn(newFo.k);sim.triSwipe={x:e.touches[0].clientX};}return;}if(cmpR.current){if(e.touches.length===1&&sim.cmpDrag){cmpStateRef.current.offX+=e.touches[0].clientX-sim.cmpDrag.x;sim.cmpDrag.x=e.touches[0].clientX;}if(e.touches.length===2&&sim.cmpPinch){var dp=td3(e),rp=dp/sim.cmpPinch;if(rp>1.01||rp<0.99){cmpStateRef.current.zm=Math.max(0.2,Math.min(5,cmpStateRef.current.zm*rp));sim.cmpPinch=dp;}}return;}if(e.touches.length===1&&sim.dr){var dx=e.touches[0].clientX-sim.dr.x,dy=e.touches[0].clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(!landR.current){sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.touches[0].clientX;sim.dr.y=e.touches[0].clientY;}if(e.touches.length===2&&sim.pi){var d3=td3(e),ratio=d3/sim.pi;if(landR.current){var newFov=Math.max(0.3,Math.min(3,landFovR.current/ratio));landFovR.current=newFov;setLandFov(newFov);sim.pi=d3;}else if(ratio>1.06||ratio<0.94){var dir=ratio>1?1:-1,c3=ziR.current,n2=Math.max(0,Math.min(ZS.length-1,c3+dir));if(n2!==c3){dz(n2);ziR.current=n2;setZi(n2);sim.cam.tzm=ZS[n2];}sim.pi=d3;}}}
     function ten(e){if(e.touches.length<2){sim.pi=null;sim.cmpPinch=null;}if(e.touches.length===0){sim.dr=null;sim.cmpDrag=null;}}
-    function kd(e){var k=e.key;if(k===" "){e.preventDefault();setPaused(function(p){return!p;});}else if(k==="0"){focusOn("all");}else if(k.toLowerCase()==="s"){focusOn("sun");}else if(k>="1"&&k<="8"){focusOn(PL[parseInt(k)-1].n);}else if(k==="9"){focusOn("Halley");}else if(k.toLowerCase()==="e"){focusOn("Encke");}else if(k==="+"||k==="="){e.preventDefault();zIn();}else if(k==="-"||k==="_"){e.preventDefault();zOut();}else if(k==="ArrowRight"){var ci2=SP.indexOf(spR.current);if(ci2<SP.length-1){setSpd(SP[ci2+1]);setPaused(false);}}else if(k==="ArrowLeft"){var ci3=SP.indexOf(spR.current);if(ci3>0){setSpd(SP[ci3-1]);setPaused(false);}}else if(k.toLowerCase()==="c"){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}else if(k.toLowerCase()==="t"){if(tourRef.current.active){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}}else if(k.toLowerCase()==="m"){setBgm(function(p){return!p;});}
+    function kd(e){var k=e.key;if(k===" "){e.preventDefault();setPaused(function(p){return!p;});}else if(k==="0"){focusOn("all");}else if(k.toLowerCase()==="s"){focusOn("sun");}else if(k>="1"&&k<="8"){focusOn(PL[parseInt(k)-1].n);}else if(k==="9"){focusOn("Halley");}else if(k.toLowerCase()==="e"){focusOn("Encke");}else if(k==="+"||k==="="){e.preventDefault();zIn();}else if(k==="-"||k==="_"){e.preventDefault();zOut();}else if(k==="ArrowRight"){var ci2=SP.indexOf(spR.current);if(ci2<SP.length-1){setSpd(SP[ci2+1]);setPaused(false);}}else if(k==="ArrowLeft"){var ci3=SP.indexOf(spR.current);if(ci3>0){setSpd(SP[ci3-1]);setPaused(false);}}else if(k.toLowerCase()==="c"){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}else if(k.toLowerCase()==="t"){if(tourRef.current.active){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"int"};setFoc("sun");setInfo({type:"sun"});}}else if(k.toLowerCase()==="m"){setBgm(function(p){return!p;});}
       else if(k.toLowerCase()==="g"){var galIdx=2;var ssIdx=17;if(ziR.current>9){dz(galIdx);ziR.current=galIdx;setZi(galIdx);setFoc("all");setInfo(null);}else{dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}}
       else if(k.toLowerCase()==="l"){if(landR.current){setLanding(null);}else if(foR.current!=="all"&&foR.current!=="sun"){var lpl=PL_MAP[foR.current];if(lpl){doLanding(foR.current);}}}
       else if(k==="Escape"){if(landR.current)setLanding(null);}}
@@ -392,7 +404,7 @@ export default function App(){
 
       if(fc!=="all"){var mmSz=90,mmX=W-mmSz-55,mmY=H-mmSz-55;ctx.fillStyle="rgba(5,5,15,0.75)";ctx.fillRect(mmX-2,mmY-2,mmSz+4,mmSz+4);ctx.strokeStyle="rgba(255,255,255,0.15)";ctx.lineWidth=1;ctx.strokeRect(mmX-2,mmY-2,mmSz+4,mmSz+4);var mmCx=mmX+mmSz/2,mmCy=mmY+mmSz/2,mmScale=(mmSz*0.45)/oR(PL[7],false,false);ctx.fillStyle="rgba(255,200,50,0.8)";ctx.fillRect(mmCx-1.5,mmCy-1.5,3,3);for(var mmi=0;mmi<pd.length;mmi++){var mmOr=oR(pd[mmi].pl,false,false),mmAng2=(t/pd[mmi].pl.p)*TAU,mmPx=mmCx+Math.cos(mmAng2)*mmOr*mmScale,mmPy=mmCy+Math.sin(mmAng2)*mmOr*mmScale;ctx.fillStyle=pd[mmi].pl.c;var mmDot=pd[mmi].pl.n===fc?2.5:1.2;ctx.fillRect(mmPx-mmDot,mmPy-mmDot,mmDot*2,mmDot*2);if(pd[mmi].pl.n===fc){ctx.strokeStyle="rgba(255,255,255,0.6)";ctx.lineWidth=0.8;ctx.beginPath();ctx.moveTo(mmPx-4,mmPy);ctx.lineTo(mmPx+4,mmPy);ctx.moveTo(mmPx,mmPy-4);ctx.lineTo(mmPx,mmPy+4);ctx.stroke();}}}
 
-      var tr2=tourRef.current;if(tr2.active){var tBarW=300,tBarX=(W-tBarW)/2,tBarY=H-20;if(tr2.trans){tr2.transT=Math.min(1,(tr2.transT||0)+dt/(tr2.transDur||1.8));var ease=tr2.transT<1?tr2.transT*tr2.transT*(3-2*tr2.transT):1;cam.fx=tr2.fromFx+(tr2.toFx-tr2.fromFx)*ease;cam.fz=tr2.fromFz+(tr2.toFz-tr2.fromFz)*ease;var tdx=tr2.toFx-tr2.fromFx,tdz=tr2.toFz-tr2.fromFz,tdist=Math.sqrt(tdx*tdx+tdz*tdz);var midZm=tdist>0.5?Math.min(W,H)*0.35/tdist:Math.max(1,Math.min(tr2.fromZm,tr2.toZm)*0.5);midZm=Math.max(1,midZm);if(ease<0.5){cam.zm=tr2.fromZm+(midZm-tr2.fromZm)*(ease*2);}else{cam.zm=midZm+(tr2.toZm-midZm)*((ease-0.5)*2);}if(tr2.transT>=1){tr2.trans=false;cam.fx=tr2.toFx;cam.fz=tr2.toFz;cam.zm=tr2.toZm;}var tPanProg=ease;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,22);ctx.fillStyle="rgba(255,255,255,0.1)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(255,160,50,0.85)";ctx.fillRect(tBarX,tBarY,tBarW*tPanProg,4);ctx.fillStyle="rgba(255,200,100,0.75)";ctx.font="10px sans-serif";ctx.textAlign="center";ctx.fillText("→ "+TOUR_NAMES[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-2);}else{tr2.timer+=dt;if(tr2.timer>=TOUR_HOLD){tr2.timer=0;var nextIdx=(tr2.idx+1)%TOUR_SEQ.length;if(nextIdx===0){tr2.active=false;setTouring(false);setFoc("all");setInfo(null);}else{tr2.fromFx=cam.fx;tr2.fromFz=cam.fz;tr2.fromZm=cam.zm;var tk2=TOUR_SEQ[nextIdx];var toTarget=null;for(var tfi=0;tfi<pd.length;tfi++){if(pd[tfi].pl.n===tk2){toTarget=pd[tfi];break;}}if(!toTarget){for(var tci=0;tci<cd.length;tci++){if(cd[tci].cm.key===tk2){toTarget=cd[tci];break;}}}tr2.toFx=toTarget?toTarget.wx:0;tr2.toFz=toTarget?toTarget.wz:0;tr2.toZm=cam.zm;tr2.idx=nextIdx;tr2.transT=0;tr2.transDur=1.8;tr2.trans=true;setFoc(tk2);setInfo(findInfo(tk2));}}var tProg=tr2.timer/TOUR_HOLD,panH=96,exFacts=TOUR_EXAM[tr2.idx];ctx.fillStyle="rgba(8,10,20,0.88)";ctx.fillRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.strokeStyle="rgba(100,150,255,0.18)";ctx.lineWidth=1;ctx.strokeRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.fillStyle="rgba(255,255,255,0.95)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(TOUR_NAMES[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-panH+12);ctx.fillStyle="rgba(255,220,120,0.88)";ctx.font="11px sans-serif";ctx.fillText(TOUR_DESC[tr2.idx],W/2,tBarY-panH+28);ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tBarX,tBarY-panH+35);ctx.lineTo(tBarX+tBarW,tBarY-panH+35);ctx.stroke();ctx.fillStyle="rgba(100,220,180,0.85)";ctx.font="9.5px sans-serif";ctx.textAlign="left";for(var efi=0;efi<exFacts.length;efi++){ctx.fillText("★ "+exFacts[efi],tBarX+4,tBarY-panH+50+efi*14);}ctx.fillStyle="rgba(255,255,255,0.12)";ctx.fillRect(tBarX,tBarY-8,tBarW,4);ctx.fillStyle="rgba(100,180,255,0.82)";ctx.fillRect(tBarX,tBarY-8,tBarW*tProg,4);var nextI2=(tr2.idx+1)%TOUR_SEQ.length;if(nextI2>0){ctx.fillStyle="rgba(255,255,255,0.38)";ctx.font="8px sans-serif";ctx.textAlign="right";ctx.fillText("次: "+TOUR_NAMES[nextI2],tBarX+tBarW,tBarY-11);}}}
+      var tr2=tourRef.current;if(tr2.active){var tBarW=300,tBarX=(W-tBarW)/2,tBarY=H-20;if(tr2.trans){tr2.transT=Math.min(1,(tr2.transT||0)+dt/(tr2.transDur||1.8));var ease=tr2.transT<1?tr2.transT*tr2.transT*(3-2*tr2.transT):1;cam.fx=tr2.fromFx+(tr2.toFx-tr2.fromFx)*ease;cam.fz=tr2.fromFz+(tr2.toFz-tr2.fromFz)*ease;var tdx=tr2.toFx-tr2.fromFx,tdz=tr2.toFz-tr2.fromFz,tdist=Math.sqrt(tdx*tdx+tdz*tdz);var midZm=tdist>0.5?Math.min(W,H)*0.35/tdist:Math.max(1,Math.min(tr2.fromZm,tr2.toZm)*0.5);midZm=Math.max(1,midZm);if(ease<0.5){cam.zm=tr2.fromZm+(midZm-tr2.fromZm)*(ease*2);}else{cam.zm=midZm+(tr2.toZm-midZm)*((ease-0.5)*2);}if(tr2.transT>=1){tr2.trans=false;cam.fx=tr2.toFx;cam.fz=tr2.toFz;cam.zm=tr2.toZm;}var tPanProg=ease;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,22);ctx.fillStyle="rgba(255,255,255,0.1)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(255,160,50,0.85)";ctx.fillRect(tBarX,tBarY,tBarW*tPanProg,4);ctx.fillStyle="rgba(255,200,100,0.75)";ctx.font="10px sans-serif";ctx.textAlign="center";var tD=tourData(tr2.lv,langR.current==="en");ctx.fillText("→ "+tD.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-2);}else{tr2.timer+=dt;if(tr2.timer>=TOUR_HOLD){tr2.timer=0;var nextIdx=(tr2.idx+1)%TOUR_SEQ.length;if(nextIdx===0){tr2.active=false;setTouring(false);setFoc("all");setInfo(null);}else{tr2.fromFx=cam.fx;tr2.fromFz=cam.fz;tr2.fromZm=cam.zm;var tk2=TOUR_SEQ[nextIdx];var toTarget=null;for(var tfi=0;tfi<pd.length;tfi++){if(pd[tfi].pl.n===tk2){toTarget=pd[tfi];break;}}if(!toTarget){for(var tci=0;tci<cd.length;tci++){if(cd[tci].cm.key===tk2){toTarget=cd[tci];break;}}}tr2.toFx=toTarget?toTarget.wx:0;tr2.toFz=toTarget?toTarget.wz:0;tr2.toZm=cam.zm;tr2.idx=nextIdx;tr2.transT=0;tr2.transDur=1.8;tr2.trans=true;setFoc(tk2);setInfo(findInfo(tk2));}}var tD2=tourData(tr2.lv,langR.current==="en"),tProg=tr2.timer/TOUR_HOLD,panH=96,exFacts=tD2.exam[tr2.idx];ctx.fillStyle="rgba(8,10,20,0.88)";ctx.fillRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.strokeStyle="rgba(100,150,255,0.18)";ctx.lineWidth=1;ctx.strokeRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.fillStyle="rgba(255,255,255,0.95)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(tD2.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-panH+12);ctx.fillStyle="rgba(255,220,120,0.88)";ctx.font="11px sans-serif";ctx.fillText(tD2.desc[tr2.idx],W/2,tBarY-panH+28);ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tBarX,tBarY-panH+35);ctx.lineTo(tBarX+tBarW,tBarY-panH+35);ctx.stroke();ctx.fillStyle="rgba(100,220,180,0.85)";ctx.font="9.5px sans-serif";ctx.textAlign="left";for(var efi=0;efi<exFacts.length;efi++){ctx.fillText("★ "+exFacts[efi],tBarX+4,tBarY-panH+50+efi*14);}ctx.fillStyle="rgba(255,255,255,0.12)";ctx.fillRect(tBarX,tBarY-8,tBarW,4);ctx.fillStyle="rgba(100,180,255,0.82)";ctx.fillRect(tBarX,tBarY-8,tBarW*tProg,4);var nextI2=(tr2.idx+1)%TOUR_SEQ.length;if(nextI2>0){ctx.fillStyle="rgba(255,255,255,0.38)";ctx.font="8px sans-serif";ctx.textAlign="right";ctx.fillText((langR.current==="en"?"Next: ":"次: ")+tD2.names[nextI2],tBarX+tBarW,tBarY-11);}}}
 
       /* ======== VISUALIZATION OVERLAYS (Hill / Shadow Cone / Tidal / Telescope) ======== */
       drawOverlays(ctx,{pd:pd,pjArr:pjArr,cam:cam,W:W,H:H,earthPd:earthPd,earthPdIdx:earthPdIdx,eclipseType:eclipseType,eclipseEarPj:eclipseEarPj,eclipseEarRr:eclipseEarRr,compare:cmpR.current,_rd:_rd,_un:_un,t:t,fc:fc,zmStr:zmStr,srScr:srScr,sunPj:sunPj,showHill:hillR.current,showShadow:shadowR.current,showTidal:tidalR.current,showTelescope:teleR.current});
@@ -427,80 +439,80 @@ export default function App(){
       {cleanView===0&&!landing&&!isPhone&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>速度 ⠿</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
 
       {/* Toggles panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300})}>
-        <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>表示 ⠿</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道"},{k:"trails",l:"軌跡"},{k:"belt",l:"小惑星帯"},{k:"nasteroid",l:"準惑星名"},{k:"tilt",l:"地軸"},{k:"moon",l:"月"},{k:"labels",l:"ラベル"},{k:"planets",l:"惑星"},{k:"lagrange",l:"L点"},{k:"spacecraft",l:"探査機"},{k:"cme",l:"CME"},{k:"distbar",l:"距離バー"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{x.l}</button>;})}</div>
-        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>実スケール</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>太陽{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>惑星{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>距離{!uni&&rDi?" ●":""}</button></div>
-        <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>統一比率{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>比較{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}}}>{touring?"ツアー停止":"学習ツアー"}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?"計測中"+(measurePair.length===0?"(1つ目)":measurePair.length===1?"(2つ目)":""):"📐計測"}</button></div>
-        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>ツール</div>
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
+        <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>{lang==="en"?"Display ⠿":"表示 ⠿"}</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道",e:"Orbits"},{k:"trails",l:"軌跡",e:"Trails"},{k:"belt",l:"小惑星帯",e:"Belt"},{k:"nasteroid",l:"準惑星名",e:"Dwarf names"},{k:"tilt",l:"地軸",e:"Axis"},{k:"moon",l:"月",e:"Moon"},{k:"labels",l:"ラベル",e:"Labels"},{k:"planets",l:"惑星",e:"Planets"},{k:"lagrange",l:"L点",e:"L points"},{k:"spacecraft",l:"探査機",e:"Probes"},{k:"cme",l:"CME",e:"CME"},{k:"distbar",l:"距離バー",e:"Dist bar"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{lang==="en"?x.e:x.l}</button>;})}</div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Real scale":"実スケール"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>{lang==="en"?"Sun":"太陽"}{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>{lang==="en"?"Planets":"惑星"}{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>{lang==="en"?"Distance":"距離"}{!uni&&rDi?" ●":""}</button></div>
+        <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>{lang==="en"?"Unify":"統一比率"}{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>{lang==="en"?"Compare":"比較"}{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{dispatchPanel({type:"SET",key:"tourPick",value:true});}}}>{touring?(lang==="en"?"Stop Tour":"ツアー停止"):(lang==="en"?"Tour":"学習ツアー")}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?(lang==="en"?"Measuring":"計測中")+(measurePair.length===0?(lang==="en"?"(1st)":"(1つ目)"):measurePair.length===1?(lang==="en"?"(2nd)":"(2つ目)"):""):(lang==="en"?"📐 Measure":"📐計測")}</button></div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Tools":"ツール"}</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
-          <button style={panels.showDate?bN:bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"showDate"});}}>日付移動</button>
-          <button style={bF} onClick={takeScreenshot}>📷 撮影モード</button>
-          <button style={bF} onClick={shareURL}>🔗 共有</button>
-          <button style={bF} onClick={function(){dispatchPanel({type:"SET",key:"importMode",value:true});}}>📥 読込</button>
-          <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>今日</button>
-          <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>軌跡クリア</button>
-          <button style={panels.showEvents?bT("255,200,80"):bF} onClick={function(){if(!panels.showEvents){eventsRef.current=scanEvents(S.current.t);}dispatchPanel({type:"TOGGLE",key:"showEvents"});}}>📅 天文イベント</button>
-          <button style={panels.searchOpen?bT("100,210,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"searchOpen"});setSearchQ("");}}>🔍 検索</button>
-          <button style={panels.exoOpen?bT("255,150,90"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"exoOpen"});}}>🪐 系外惑星</button>
-          <button style={panels.satOpen?bT("180,210,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"satOpen"});}}>🛰 衛星・小天体</button>
-          <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"nightSkyOpen"});}}>🌙 今夜の空</button>
-          <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"bookOpen"});setBookmarkName("");}}>🔖 ブックマーク</button>
-          <button style={bF} onClick={function(){setOnboardStep(0);}}>❓ ガイド</button>
-          <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?"クイズ終了":"クイズ"}</button>
-          <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"compareTable"});}} title="全惑星・準惑星の物理量比較表">📊 比較表</button>
+          <button style={panels.showDate?bN:bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"showDate"});}}>{lang==="en"?"Date":"日付移動"}</button>
+          <button style={bF} onClick={takeScreenshot}>{lang==="en"?"📷 Capture":"📷 撮影モード"}</button>
+          <button style={bF} onClick={shareURL}>{lang==="en"?"🔗 Share":"🔗 共有"}</button>
+          <button style={bF} onClick={function(){dispatchPanel({type:"SET",key:"importMode",value:true});}}>{lang==="en"?"📥 Import":"📥 読込"}</button>
+          <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Today":"今日"}</button>
+          <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Clear trails":"軌跡クリア"}</button>
+          <button style={panels.showEvents?bT("255,200,80"):bF} onClick={function(){if(!panels.showEvents){eventsRef.current=scanEvents(S.current.t);}togglePanel("showEvents");}}>{lang==="en"?"📅 Events":"📅 天文イベント"}</button>
+          <button style={panels.searchOpen?bT("100,210,255"):bF} onClick={function(){togglePanel("searchOpen");setSearchQ("");}}>{lang==="en"?"🔍 Search":"🔍 検索"}</button>
+          <button style={panels.exoOpen?bT("255,150,90"):bF} onClick={function(){togglePanel("exoOpen");}}>{lang==="en"?"🪐 Exoplanets":"🪐 系外惑星"}</button>
+          <button style={panels.satOpen?bT("180,210,255"):bF} onClick={function(){togglePanel("satOpen");}}>{lang==="en"?"🛰 Moons/SSSB":"🛰 衛星・小天体"}</button>
+          <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){togglePanel("nightSkyOpen");}}>{lang==="en"?"🌙 Tonight":"🌙 今夜の空"}</button>
+          <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){togglePanel("bookOpen");setBookmarkName("");}}>{lang==="en"?"🔖 Bookmarks":"🔖 ブックマーク"}</button>
+          <button style={bF} onClick={function(){setOnboardStep(0);}}>{lang==="en"?"❓ Guide":"❓ ガイド"}</button>
+          <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
+          <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
         </div>
-        <div style={Object.assign({},lb,{marginTop:6,marginBottom:2})}>可視化</div>
-        <div style={Object.assign({},lb,{marginTop:2,marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>宇宙構造</div>
+        <div style={Object.assign({},lb,{marginTop:6,marginBottom:2})}>{lang==="en"?"Visualization":"可視化"}</div>
+        <div style={Object.assign({},lb,{marginTop:2,marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Cosmic structure":"宇宙構造"}</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
           <button style={habZone?bN:bF} onClick={function(){setHabZone(function(p){return!p;});}} title="ハビタブルゾーン (0.95–1.37 AU)">🌍 HZ</button>
-          <button style={helio?bN:bF} onClick={function(){setHelio(function(p){return!p;});}} title="ヘリオスフィア境界">☀ ヘリオ圏</button>
-          <button style={nBody?bU:bF} onClick={toggleNBody} title="N体重力シミュレーション (統一比率強制)">⚛ N体</button>
+          <button style={helio?bN:bF} onClick={function(){setHelio(function(p){return!p;});}} title="ヘリオスフィア境界">{lang==="en"?"☀ Heliosphere":"☀ ヘリオ圏"}</button>
+          <button style={nBody?bU:bF} onClick={toggleNBody} title="N体重力シミュレーション (統一比率強制)">{lang==="en"?"⚛ N-body":"⚛ N体"}</button>
         </div>
-        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>物理現象</div>
+        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Physics":"物理現象"}</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
-          <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">🌐 磁気圏</button>
-          <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">⭕ ヒル球</button>
-          <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">🌑 影錐</button>
-          <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">🌊 潮汐力</button>
+          <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">{lang==="en"?"🌐 Magnetic":"🌐 磁気圏"}</button>
+          <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">{lang==="en"?"⭕ Hill":"⭕ ヒル球"}</button>
+          <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">{lang==="en"?"🌑 Shadow":"🌑 影錐"}</button>
+          <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">{lang==="en"?"🌊 Tidal":"🌊 潮汐力"}</button>
         </div>
-        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>観測ツール</div>
+        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Observation":"観測ツール"}</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
-          <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">🔭 望遠鏡</button>
-          <button style={panels.moonCal?bT("200,180,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"moonCal"});}} title="月相カレンダー">🌙 月相</button>
-          <button style={panels.orbElemOpen?bT("180,220,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"orbElemOpen"});}} title="軌道要素（惑星選択時）">📊 軌道</button>
+          <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">{lang==="en"?"🔭 Telescope":"🔭 望遠鏡"}</button>
+          <button style={panels.moonCal?bT("200,180,255"):bF} onClick={function(){togglePanel("moonCal");}} title="月相カレンダー">{lang==="en"?"🌙 Phases":"🌙 月相"}</button>
+          <button style={panels.orbElemOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("orbElemOpen");}} title="軌道要素（惑星選択時）">{lang==="en"?"📊 Orbit":"📊 軌道"}</button>
           <button style={showFps?bT("100,255,100"):bF} onClick={function(){setShowFps(function(p){return!p;});}} title="FPSカウンター表示">⏱ FPS</button>
         </div>
         {panels.showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
           <input type="date" value={dateInput} onChange={function(e){setDateInput(e.target.value);}} style={{background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"3px 6px",fontFamily:"system-ui",outline:"none",colorScheme:"dark"}}/>
-          <button style={bN} onClick={function(){if(dateInput)jumpToDate(dateInput);}}>移動</button>
+          <button style={bN} onClick={function(){if(dateInput)jumpToDate(dateInput);}}>{lang==="en"?"Go":"移動"}</button>
         </div>}
         {panels.showDate&&<div style={{marginTop:4,display:"flex",gap:3,flexWrap:"wrap"}}>
-          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2061-07-28");}}>ハレー彗星 2061</button>
-          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2035-09-02");}}>日食 2035</button>
-          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("1969-07-20");}}>月面着陸</button>
-          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2006-01-19");}}>NHニューホライズンズ</button>
+          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2061-07-28");}}>{lang==="en"?"Halley 2061":"ハレー彗星 2061"}</button>
+          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2035-09-02");}}>{lang==="en"?"Eclipse 2035":"日食 2035"}</button>
+          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("1969-07-20");}}>{lang==="en"?"Moon landing":"月面着陸"}</button>
+          <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2006-01-19");}}>{lang==="en"?"New Horizons":"NHニューホライズンズ"}</button>
         </div>}
       </div>
       </DragPanel>}
 
       {/* Zoom panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Event calendar panel */}
-      {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<ExoplanetPanel visible={panels.exoOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<ExoplanetPanel visible={panels.exoOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<SatellitePanel visible={panels.satOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<SatellitePanel visible={panels.satOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<BookmarkPanel visible={panels.bookOpen} dispatchPanel={dispatchPanel} bookmarks={bookmarks} bookmarkName={bookmarkName} setBookmarkName={setBookmarkName} saveBM={saveBM} delBM={delBM} importState={importState} S={S} pn={pn} bF={bF} bN={bN}/>}
+      {cleanView===0&&!landing&&<BookmarkPanel visible={panels.bookOpen} dispatchPanel={dispatchPanel} bookmarks={bookmarks} bookmarkName={bookmarkName} setBookmarkName={setBookmarkName} saveBM={saveBM} delBM={delBM} importState={importState} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF} bN={bN}/>}
 
-      {cleanView===0&&!landing&&<NightSkyPanel visible={panels.nightSkyOpen} dispatchPanel={dispatchPanel} nightSkyLat={nightSkyLat} setNightSkyLat={setNightSkyLat} nightSkyLng={nightSkyLng} setNightSkyLng={setNightSkyLng} S={S} isPhone={isPhone} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<NightSkyPanel visible={panels.nightSkyOpen} dispatchPanel={dispatchPanel} nightSkyLat={nightSkyLat} setNightSkyLat={setNightSkyLat} nightSkyLng={nightSkyLng} setNightSkyLng={setNightSkyLng} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<SearchPanel visible={panels.searchOpen} dispatchPanel={dispatchPanel} searchQ={searchQ} setSearchQ={setSearchQ} focusOn={focusOn} lang={lang} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<SearchPanel visible={panels.searchOpen} dispatchPanel={dispatchPanel} searchQ={searchQ} setSearchQ={setSearchQ} focusOn={focusOn} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       {/* Info panel */}
       {cleanView===0&&!landing&&<InfoPanel visible={info!==null} info={info} lang={lang} touring={touring} doLanding={doLanding} setInfo={setInfo} moonGeoData={moonGeoData} planetGeoData={planetGeoData} pn={pn} bF={bF} bT={bT} bD={bD} isPhone={isPhone}/>}
@@ -508,36 +520,44 @@ export default function App(){
       {/* Landing mode top-right: speed + liftoff */}
       {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
         <div style={{background:"rgba(0,5,18,0.82)",border:"1px solid rgba(100,160,255,0.2)",borderRadius:6,padding:"6px 8px",display:"flex",flexWrap:"wrap",justifyContent:"flex-end",gap:3,maxWidth:260}}>
-          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>速度</span>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>{lang==="en"?"Speed":"速度"}</span>
           <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
           {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
-          <button style={showConst?bT("100,160,255"):bF} onClick={function(){var v=!showConst;setShowConst(v);showConstR.current=v;}}>星座線{showConst?" ●":""}</button>
+          <button style={showConst?bT("100,160,255"):bF} onClick={function(){var v=!showConst;setShowConst(v);showConstR.current=v;}}>{lang==="en"?"Constel.":"星座線"}{showConst?" ●":""}</button>
           <button style={Object.assign({},bT("100,230,160"),{padding:"2px 6px",fontSize:9,marginTop:2,width:"100%"})} onClick={function(){
             S.current.t=(Date.now()-J2000)/86400000;setPaused(false);
             if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(pos){var lng2=Math.round(pos.coords.longitude),lat3=Math.round(pos.coords.latitude);setLandLng(lng2);landLngR.current=lng2;setLandLat(lat3);landLatR.current=lat3;},function(){});}
-          }}>📍 今</button>
+          }}>{lang==="en"?"📍 Now":"📍 今"}</button>
         </div>
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
       </div>}
 
       {isPhone&&cleanView===0&&!landing&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:20,background:"rgba(8,10,20,0.92)",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 8px",display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{FL.map(function(f){return <button key={f.k} style={Object.assign({},foc===f.k?bNM:bFM,{flexShrink:0,padding:"6px 10px",fontSize:11})} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div>}
 
-      {/* Landing mode control panel — left: latitude vertical, bottom: lng+az+speed */}
-      {landing&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
+      {/* Landing mode control panel — desktop: lat=left vertical, bottom=lng+az+tilt. Phone portrait: lat moved into bottom panel as horizontal slider. */}
+      {landing&&!isPhone&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>N</span>
         <input type="number" min="-90" max="90" step="0.01" value={landLat}
           onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
           style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"center"}}/>
-        <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>緯度</span>
+        <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>{lang==="en"?"Lat":"緯度"}</span>
         <input type="range" min="-90" max="90" step="0.1" value={landLat}
           style={{writingMode:"vertical-lr",direction:"rtl",height:130,width:24,cursor:"pointer",accentColor:"#64b4ff"}}
           onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
       </div>}
-      {landing&&<div style={{position:"absolute",bottom:0,left:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
+      {landing&&<div style={{position:"absolute",bottom:0,left:isPhone?0:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
         <LandingQuickJump landing={landing} setLandLat={setLandLat} setLandLng={setLandLng} landLatR={landLatR} landLngR={landLngR}/>
+        {isPhone&&<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lat":"緯度"}</span>
+          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
+            onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
+          <input type="number" min="-90" max="90" step="0.01" value={landLat}
+            onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
+            style={{width:52,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"right",flexShrink:0}}/>
+        </div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
-          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>経度</span>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lng":"経度"}</span>
           <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
           <input type="number" min="-180" max="180" step="0.01" value={landLng}
@@ -545,26 +565,26 @@ export default function App(){
             style={{width:52,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"right",flexShrink:0}}/>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
-          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>方位</span>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Az":"方位"}</span>
           <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
             value={Math.round(((landYaw*57.296)%360+360)%360)}
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
-          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>仰角</span>
+          <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Tilt":"仰角"}</span>
           <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
             onChange={function(e){var v=+e.target.value;setLandTilt(v);landTiltR.current=v;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landTilt>=0?"+":""}{landTilt}°</span>
         </div>
       </div>}
 
-      {cleanView===0&&!landing&&!isPhone&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      {cleanView===0&&!landing&&<MoonCalendarPanel visible={panels.moonCal} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&!isPhone&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>{lang==="en"?"Click: select　Drag: rotate　Pinch: zoom　Panels are draggable":"クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能"}</div>}
+      {cleanView===0&&!landing&&<MoonCalendarPanel visible={panels.moonCal} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<OrbitalElementsPanel visible={panels.orbElemOpen} dispatchPanel={dispatchPanel} info={info} S={S} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.23.1</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.24.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
@@ -597,9 +617,11 @@ export default function App(){
         </div>
       </div>}
 
-      {cleanView===0&&!landing&&<CompareTablePanel visible={panels.compareTable} dispatchPanel={dispatchPanel} cmpSort={cmpSort} setCmpSort={setCmpSort} foc={foc} focusOn={focusOn} lang={lang} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<CompareTablePanel visible={panels.compareTable} dispatchPanel={dispatchPanel} cmpSort={cmpSort} setCmpSort={setCmpSort} foc={foc} focusOn={focusOn} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} pn={pn} bF={bF} bT={bT}/>}
+      {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} lang={lang} pn={pn} bF={bF} bT={bT}/>}
+
+      {cleanView===0&&!landing&&<TourPickerPanel visible={panels.tourPick} dispatchPanel={dispatchPanel} startTourLv={startTourLv} lang={lang} pn={pn} bF={bF}/>}
 
       {/* Onboarding tour overlay */}
       {onboardStep>=0&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.78)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}} onClick={function(e){e.stopPropagation();}}>
@@ -613,7 +635,7 @@ export default function App(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:20}}>
             <button style={Object.assign({},bF,{fontSize:9,padding:"3px 10px"})} onClick={function(){setOnboardStep(-1);localStorage.setItem("solar_ob","1");}}>スキップ</button>
             <div style={{display:"flex",gap:5}}>{[0,1,2,3,4].map(function(i){return <div key={i} style={{width:6,height:6,borderRadius:3,background:i===onboardStep?"rgba(100,180,255,1)":"rgba(255,255,255,0.2)"}}/>;})}</div>
-            <button style={bN} onClick={function(){var n=onboardStep+1;if(n>=5){setOnboardStep(-1);localStorage.setItem("solar_ob","1");setLanding(null);setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false};setFoc("sun");setInfo({type:"sun"});}else setOnboardStep(n);}}>{onboardStep===4?"学習ツアーを開始 🚀":"次へ →"}</button>
+            <button style={bN} onClick={function(){var n=onboardStep+1;if(n>=5){setOnboardStep(-1);localStorage.setItem("solar_ob","1");setLanding(null);setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"beg"};setFoc("sun");setInfo({type:"sun"});}else setOnboardStep(n);}}>{onboardStep===4?"学習ツアーを開始 🚀":"次へ →"}</button>
           </div>
         </div>
       </div>}
