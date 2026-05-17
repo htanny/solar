@@ -1,6 +1,13 @@
+// @ts-check
 import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W
+ * @param {number} H
+ * @param {import("./drawLanding.js").LandingHUDState} h
+ */
 function drawLandingHUD(ctx,W,H,h){
   var t=h.t,lat=h.lat,lngDeg=h.lngDeg,yaw=h.yaw,plName=h.plName;
   var solarDay=h.solarDay,sunAlt=h.sunAlt,pl=h.pl,sf=h.sf,rot=h.rot;

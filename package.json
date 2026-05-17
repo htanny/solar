@@ -1,7 +1,7 @@
 {
   "name": "solar",
   "private": true,
-  "version": "2.20.0",
+  "version": "2.21.0",
   "type": "module",
   "description": "プロシージャル描画による太陽系・銀河系・惑星表面の3Dシミュレーター",
   "scripts": {
@@ -11,6 +11,7 @@
     "deploy": "npm run build && gh-pages -d dist",
     "test": "playwright test",
     "test:unit": "vitest run",
+    "typecheck": "tsc --noEmit",
     "test:unit:watch": "vitest",
     "test:update": "playwright test --update-snapshots",
     "test:ui": "playwright test --ui"
@@ -23,6 +24,7 @@
     "@playwright/test": "^1.60.0",
     "@vitejs/plugin-react": "^4.3.0",
     "gh-pages": "^6.1.1",
+    "typescript": "^6.0.3",
     "vite": "^5.4.0",
     "vitest": "^4.1.6"
   },

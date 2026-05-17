@@ -1,9 +1,27 @@
+// @ts-check
 import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
-/* Draw terrain layers, foreground detail, atmospheric fog, and perspective grid.
-   Called from drawLanding after all sky/celestial sections are complete. */
+/**
+ * 地表の遠近レイヤー・前景・大気フォグ・遠近グリッドを描画。
+ * drawLanding 内で空・天体描画後に呼ばれる。
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W
+ * @param {number} H
+ * @param {number} hrzY 水平線 Y 座標
+ * @param {string} plName 着陸先英名
+ * @param {number} yaw rad
+ * @param {string} biome バイオーム名 (Earthのみ意味あり)
+ * @param {{g:string,far:string,mid:string,mhF:number,mhM:number,mhN:number}} bConf BIOME_CONF[biome]
+ * @param {import("./drawLanding.js").SurfData} sf
+ * @param {() => number} rng
+ * @param {number} t シム時刻
+ * @param {number} dayF 0=夜,1=昼
+ * @param {number} lat 度
+ * @param {number} lngDeg 度
+ * @param {string} sBot 空下端 RGB
+ */
 function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,lat,lngDeg,sBot){
   var tSeed=plName.charCodeAt(0)*13+plName.length;
   /* Moon near/far side: near side = maria basalt, far side = bright highlands */
@@ -237,7 +255,7 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     /* Mix of dark ancient and bright grooved terrain */
     var gnr=seedR(999);ctx.globalAlpha=0.18;
     for(var gni=0;gni<10;gni++){var gnx=gnr()*W,gny=hrzY+8+gnr()*(H-hrzY-15),gnsz=4+gnr()*18;
-      ctx.fillStyle=gnr()<0.45?"rgba(60,55,48,1)":"rgba(155,148,130,1)";ctx.beginPath();ctx.ellipse(gnx,gny,gnsz,gnsz*0.5,gnr()*Math.PI,0,0,TAU);ctx.fill();}
+      ctx.fillStyle=gnr()<0.45?"rgba(60,55,48,1)":"rgba(155,148,130,1)";ctx.beginPath();ctx.ellipse(gnx,gny,gnsz,gnsz*0.5,gnr()*Math.PI,0,TAU);ctx.fill();}
     ctx.globalAlpha=0.12;ctx.strokeStyle="rgba(180,172,155,1)";ctx.lineWidth=2;
     for(var gri=0;gri<5;gri++){var grx=gnr()*W;ctx.beginPath();ctx.moveTo(grx,hrzY);ctx.lineTo(grx+(gnr()-0.5)*60,hrzY+(H-hrzY)*0.8);ctx.stroke();}
     ctx.globalAlpha=1;
@@ -338,7 +356,7 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       /* Reddish-brown tholin-rich terrain elsewhere */
       ctx.globalAlpha=0.25;ctx.fillStyle="rgba(85,55,40,1)";
       for(var pmci=0;pmci<10;pmci++){var pmx=plr()*W,pmy=hrzY+8+plr()*(H-hrzY-15),pmsz=6+plr()*22;
-        ctx.beginPath();ctx.ellipse(pmx,pmy,pmsz,pmsz*0.45,plr()*Math.PI,0,0,TAU);ctx.fill();}
+        ctx.beginPath();ctx.ellipse(pmx,pmy,pmsz,pmsz*0.45,plr()*Math.PI,0,TAU);ctx.fill();}
     }
     ctx.globalAlpha=0.18;ctx.fillStyle="rgba(195,178,158,1)";
     /* Water-ice mountains silhouette */
