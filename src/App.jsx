@@ -500,7 +500,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Exoplanet panel */}
-      {cleanView===0&&!landing&&panels.exoOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+      {cleanView===0&&!landing&&panels.exoOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,180,120,0.95)"}}>🪐 系外惑星 → 着陸</span>
           <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"exoOpen",value:false});}}>✕</button>
@@ -514,7 +514,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Satellite/Small-body landing panel */}
-      {cleanView===0&&!landing&&panels.satOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
+      {cleanView===0&&!landing&&panels.satOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,210,255,0.95)"}}>🛰 衛星・小天体 → 着陸</span>
           <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"satOpen",value:false});}}>✕</button>
@@ -555,7 +555,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Tonight's Sky panel */}
-      {cleanView===0&&!landing&&panels.nightSkyOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:240,width:230,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+      {cleanView===0&&!landing&&panels.nightSkyOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:230,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,220,80,0.95)"}}>🌙 今夜の空</span>
           <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"nightSkyOpen",value:false});}}>✕</button>
@@ -590,7 +590,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Info panel */}
-      {cleanView===0&&!landing&&<InfoPanel visible={info!==null} info={info} lang={lang} touring={touring} doLanding={doLanding} setInfo={setInfo} moonGeoData={moonGeoData} planetGeoData={planetGeoData} pn={pn} bF={bF} bT={bT} bD={bD}/>}
+      {cleanView===0&&!landing&&<InfoPanel visible={info!==null} info={info} lang={lang} touring={touring} doLanding={doLanding} setInfo={setInfo} moonGeoData={moonGeoData} planetGeoData={planetGeoData} pn={pn} bF={bF} bT={bT} bD={bD} isPhone={isPhone}/>}
 
       {/* Landing mode top-right: speed + liftoff */}
       {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
@@ -704,9 +704,9 @@ export default function App(){
         </div>
       </div>}
 
-      {cleanView===0&&!landing&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
+      {cleanView===0&&!landing&&!isPhone&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
       {/* Moon Phase Calendar panel */}
-      {cleanView===0&&!landing&&panels.moonCal&&<DragPanel style={Object.assign({},pn,{top:80,right:200,width:200,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+      {cleanView===0&&!landing&&panels.moonCal&&<DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:isPhone?10:200,width:200,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:11,fontWeight:"bold",color:"rgba(200,180,255,0.95)"}}>🌙 月相カレンダー</span>
           <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"moonCal",value:false});}}>✕</button>
@@ -724,7 +724,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Orbital Elements panel */}
-      {cleanView===0&&!landing&&panels.orbElemOpen&&info&&info.type==="planet"&&<DragPanel style={Object.assign({},pn,{top:80,right:200,width:185,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
+      {cleanView===0&&!landing&&panels.orbElemOpen&&info&&info.type==="planet"&&<DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:isPhone?10:200,width:185,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
           <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,220,255,0.95)"}}>📊 軌道要素</span>
           <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"orbElemOpen",value:false});}}>✕</button>
@@ -745,7 +745,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.18.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.19.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
