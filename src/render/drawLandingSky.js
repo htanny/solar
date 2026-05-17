@@ -1,10 +1,17 @@
+// @ts-check
 import { TAU, NAMED_STARS, CONST_LINES, MSHW, GMOONS } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 
+/**
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W
+ * @param {number} H
+ * @param {import("./drawLanding.js").LandingSkyState} s
+ */
 function drawLandingSky(ctx,W,H,s){
   var t=s.t,plName=s.plName,yaw=s.yaw,lat=s.lat,fov=s.fov,lngDeg=s.lngDeg,constOn=s.constOn;
   var sf=s.sf,biome=s.biome,rot=s.rot,rotAbs=s.rotAbs,latRad=s.latRad;
-  var sunDir=rot<0?-1:1;
+  var sunDir=s.sunDir;
   var sunAlt=s.sunAlt,sunAz=s.sunAz,aDiffSun=s.aDiffSun,isNight=s.isNight,dayF=s.dayF;
   var hrzY=s.hrzY,rng=s.rng,sTop=s.sTop,sBot=s.sBot;
   var sunScreenX=W/2+aDiffSun*W*0.8/TAU;
