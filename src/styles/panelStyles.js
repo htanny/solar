@@ -9,6 +9,5 @@ var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",bor
 var isMob=typeof window!=="undefined"&&window.innerWidth<640;
 var bFM=Object.assign({},bF,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
 var bNM=Object.assign({},bN,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
-var bTM=function(c){return Object.assign({},bT(c),isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});};
 
-export { pn, bF, bN, bU, bD, lb, bT, isMob, bFM, bNM, bTM };
+export { pn, bF, bN, bU, bD, lb, bT, bFM, bNM };
