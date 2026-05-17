@@ -4,6 +4,7 @@ import { fillCirc, seedR } from "./utils.js";
 function drawLandingSky(ctx,W,H,s){
   var t=s.t,plName=s.plName,yaw=s.yaw,lat=s.lat,fov=s.fov,lngDeg=s.lngDeg,constOn=s.constOn;
   var sf=s.sf,biome=s.biome,rot=s.rot,rotAbs=s.rotAbs,latRad=s.latRad;
+  var sunDir=rot<0?-1:1;
   var sunAlt=s.sunAlt,sunAz=s.sunAz,aDiffSun=s.aDiffSun,isNight=s.isNight,dayF=s.dayF;
   var hrzY=s.hrzY,rng=s.rng,sTop=s.sTop,sBot=s.sBot;
   var sunScreenX=W/2+aDiffSun*W*0.8/TAU;
