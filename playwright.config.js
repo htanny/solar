@@ -5,6 +5,7 @@ import { defineConfig, devices } from "@playwright/test";
    ベースライン更新: npm run test:update */
 export default defineConfig({
   testDir: "./tests",
+  testIgnore: "unit/**",
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: 0,
