@@ -1,6 +1,6 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA, APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TITAN_INFO, ITOKAWA_INFO, RYUGU_INFO } from "./data/solarData.js";
+import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA, APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TITAN_INFO, ITOKAWA_INFO, RYUGU_INFO, TRITON_INFO, CHARON_INFO, HALLEY_CORE_INFO, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
@@ -436,6 +436,7 @@ export default function App(){
           <button style={panels.showEvents?bT("255,200,80"):bF} onClick={function(){if(!panels.showEvents){eventsRef.current=scanEvents(S.current.t);}dispatchPanel({type:"TOGGLE",key:"showEvents"});}}>📅 天文イベント</button>
           <button style={panels.searchOpen?bT("100,210,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"searchOpen"});setSearchQ("");}}>🔍 検索</button>
           <button style={panels.exoOpen?bT("255,150,90"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"exoOpen"});}}>🪐 系外惑星</button>
+          <button style={panels.satOpen?bT("180,210,255"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"satOpen"});}}>🛰 衛星・小天体</button>
           <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"nightSkyOpen"});}}>🌙 今夜の空</button>
           <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"bookOpen"});setBookmarkName("");}}>🔖 ブックマーク</button>
           <button style={bF} onClick={function(){setOnboardStep(0);}}>❓ ガイド</button>
@@ -510,6 +511,28 @@ export default function App(){
           <div style={{fontSize:8,color:"rgba(220,200,180,0.65)"}}>{ex.e}</div>
           <div style={{fontSize:8,color:"rgba(200,180,160,0.55)"}}>{ex.starInfo} · {ex.temp}</div>
         </button>;})}
+      </DragPanel>}
+
+      {/* Satellite/Small-body landing panel */}
+      {cleanView===0&&!landing&&panels.satOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,210,255,0.95)"}}>🛰 衛星・小天体 → 着陸</span>
+          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"satOpen",value:false});}}>✕</button>
+        </div>
+        <div style={{overflowY:"auto",flex:1}}>
+          {[
+            {grp:"地球系",col:"180,210,255",items:[{k:"Moon",j:"月",e:"Moon"}]},
+            {grp:"木星のガリレオ衛星",col:"220,200,100",items:[{k:"Io",j:"イオ"},{k:"Europa",j:"エウロパ"},{k:"Ganymede",j:"ガニメデ"},{k:"Callisto",j:"カリスト"}]},
+            {grp:"土星系",col:"218,168,88",items:[{k:"Titan",j:"タイタン"}]},
+            {grp:"海王星系",col:"205,190,178",items:[{k:"Triton",j:"トリトン"}]},
+            {grp:"冥王星系",col:"195,175,150",items:[{k:"Charon",j:"カロン"}]},
+            {grp:"小惑星",col:"168,140,108",items:[{k:"Itokawa",j:"イトカワ"},{k:"Ryugu",j:"リュウグウ"}]},
+            {grp:"彗星核",col:"140,190,255",items:[{k:"HalleyCore",j:"ハレー彗星核"}]},
+          ].map(function(g){return <div key={g.grp} style={{marginBottom:6}}>
+            <div style={{fontSize:9,color:"rgba("+g.col+",0.7)",marginBottom:3}}>{g.grp}</div>
+            <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{g.items.map(function(it){return <button key={it.k} style={Object.assign({},bF,{fontSize:9,padding:"3px 7px",border:"1px solid rgba("+g.col+",0.45)",color:"rgba("+g.col+",1)"})} onClick={function(){doLanding(it.k);dispatchPanel({type:"SET",key:"satOpen",value:false});}}>{it.j}</button>;})}</div>
+          </div>;})}
+        </div>
       </DragPanel>}
 
       {/* Bookmarks panel */}
@@ -627,6 +650,30 @@ export default function App(){
             style={{fontSize:8,padding:"2px 6px",background:"rgba(255,180,80,0.12)",border:"1px solid rgba(255,180,80,0.45)",borderRadius:3,color:"rgba(255,210,140,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
             {s.en}
           </button>;})}</div>}
+        {landing==="Triton"&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(220,205,185,0.7)",fontSize:9,flexShrink:0}}>地形</span>
+          {TRITON_FEATURES.map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(220,205,185,0.12)",border:"1px solid rgba(220,205,185,0.45)",borderRadius:3,color:"rgba(240,225,205,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {s.n}
+          </button>;})}</div>}
+        {landing==="Pluto"&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(255,220,180,0.7)",fontSize:9,flexShrink:0}}>地形</span>
+          {PLUTO_FEATURES.map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(255,220,180,0.12)",border:"1px solid rgba(255,220,180,0.45)",borderRadius:3,color:"rgba(255,230,200,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {s.n}
+          </button>;})}
+          <button onClick={function(){var nh=OUTER_PROBES[0];setLandLat(nh.lat);landLatR.current=nh.lat;setLandLng(nh.lng);landLngR.current=nh.lng;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(255,220,80,0.12)",border:"1px solid rgba(255,220,80,0.45)",borderRadius:3,color:"rgba(255,230,120,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>NH最接近</button>
+        </div>}
+        {landing==="Charon"&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
+          <span style={{color:"rgba(255,200,180,0.7)",fontSize:9,flexShrink:0}}>地形</span>
+          {CHARON_FEATURES.map(function(s,si){return <button key={si}
+            onClick={function(){var la=Math.round(s.lat*100)/100;var lo=Math.round(s.lng*100)/100;setLandLat(la);landLatR.current=la;setLandLng(lo);landLngR.current=lo;}}
+            style={{fontSize:8,padding:"2px 6px",background:"rgba(255,200,180,0.12)",border:"1px solid rgba(255,200,180,0.45)",borderRadius:3,color:"rgba(255,215,200,0.95)",cursor:"pointer",fontFamily:"system-ui",flexShrink:0}}>
+            {s.n}
+          </button>;})}</div>}
         {(landing==="Itokawa"||landing==="Ryugu")&&<div style={{display:"flex",alignItems:"center",gap:4,marginBottom:4,flexWrap:"wrap"}}>
           <span style={{color:"rgba(180,200,255,0.7)",fontSize:9,flexShrink:0}}>着陸点</span>
           {HAYABUSA_SITES.filter(function(s){return s.body===landing;}).map(function(s,si){return <button key={si}
@@ -698,7 +745,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.17.2</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.18.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>

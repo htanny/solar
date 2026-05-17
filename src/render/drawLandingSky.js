@@ -312,6 +312,99 @@ function drawLandingSky(ctx,W,H,s){
         if(jupY<hrzY-2&&jupRad>5){ctx.fillStyle="rgba(220,185,130,0.6)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("木星",jupX,jupY-jupRad-4);}
       }
     }
+  }else if(plName==="Triton"){
+    /* Neptune dominates the sky — tidally locked, retrograde, sub-Neptunian at lat:0 lng:0 */
+    var neLngR=((lngDeg||0)+540)%360-180;neLngR=neLngR*0.01745;
+    var neLatR=(lat||0)*0.01745;
+    var subNepCos=Math.cos(neLatR)*Math.cos(neLngR);
+    if(subNepCos>-0.05){
+      var neAlt=Math.asin(Math.max(-1,Math.min(1,subNepCos)));
+      var neAz=Math.atan2(Math.sin(neLngR),-Math.sin(neLatR)*Math.cos(neLngR));
+      var neADiff=((neAz-yaw)%TAU+TAU)%TAU;if(neADiff>Math.PI)neADiff-=TAU;
+      if(Math.abs(neADiff)<TAU*0.4){
+        var neX=W/2+neADiff*W*0.8/TAU;
+        var neY=hrzY-(neAlt/(Math.PI*0.5))*hrzY*0.85;
+        var neAngR=0.139;/* atan(24622/354800) ≈ 8° */
+        var neRad=Math.max(4,neAngR*W*0.8/TAU/fov);
+        /* faint outer glow */
+        var neg=ctx.createRadialGradient(neX,neY,neRad,neX,neY,neRad*2.2);
+        neg.addColorStop(0,"rgba(80,120,220,0.18)");neg.addColorStop(1,"rgba(80,120,220,0)");
+        ctx.fillStyle=neg;ctx.fillRect(neX-neRad*3,neY-neRad*3,neRad*6,neRad*6);
+        ctx.save();ctx.beginPath();ctx.arc(neX,neY,neRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(45,80,180,1)";ctx.fillRect(neX-neRad,neY-neRad,neRad*2,neRad*2);
+        ctx.fillStyle="rgba(30,55,140,0.65)";ctx.fillRect(neX-neRad,neY-neRad*0.45,neRad*2,neRad*0.22);
+        ctx.fillStyle="rgba(70,110,200,0.55)";ctx.fillRect(neX-neRad,neY+neRad*0.1,neRad*2,neRad*0.18);
+        /* Great Dark Spot hint */
+        ctx.fillStyle="rgba(15,25,80,0.7)";ctx.beginPath();ctx.ellipse(neX-neRad*0.15,neY-neRad*0.05,neRad*0.22,neRad*0.10,0,0,TAU);ctx.fill();
+        ctx.restore();
+        if(neY<hrzY-2&&neRad>5){ctx.fillStyle="rgba(120,170,240,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("海王星",neX,neY-neRad-4);}
+      }
+    }
+  }else if(plName==="Charon"){
+    /* Pluto dominates Charon's sky — tidally locked, sub-Plutonian at lat:0 lng:0 */
+    var puLngR=((lngDeg||0)+540)%360-180;puLngR=puLngR*0.01745;
+    var puLatR=(lat||0)*0.01745;
+    var subPluCos=Math.cos(puLatR)*Math.cos(puLngR);
+    if(subPluCos>-0.05){
+      var puAlt=Math.asin(Math.max(-1,Math.min(1,subPluCos)));
+      var puAz=Math.atan2(Math.sin(puLngR),-Math.sin(puLatR)*Math.cos(puLngR));
+      var puADiff=((puAz-yaw)%TAU+TAU)%TAU;if(puADiff>Math.PI)puADiff-=TAU;
+      if(Math.abs(puADiff)<TAU*0.4){
+        var puX=W/2+puADiff*W*0.8/TAU;
+        var puY=hrzY-(puAlt/(Math.PI*0.5))*hrzY*0.85;
+        var puAngR=0.155;/* atan(1188/19571) ≈ 8.9° */
+        var puRad=Math.max(5,puAngR*W*0.8/TAU/fov);
+        ctx.save();ctx.beginPath();ctx.arc(puX,puY,puRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(195,175,150,1)";ctx.fillRect(puX-puRad,puY-puRad,puRad*2,puRad*2);
+        /* Heart-shaped Sputnik Planitia (brighter) */
+        ctx.fillStyle="rgba(235,220,200,0.8)";
+        ctx.beginPath();ctx.ellipse(puX+puRad*0.1,puY-puRad*0.05,puRad*0.3,puRad*0.28,0,0,TAU);ctx.fill();
+        /* Cthulhu dark mottling */
+        ctx.fillStyle="rgba(95,60,40,0.7)";
+        ctx.beginPath();ctx.ellipse(puX-puRad*0.35,puY+puRad*0.25,puRad*0.35,puRad*0.18,0.2,0,TAU);ctx.fill();
+        ctx.restore();
+        if(puY<hrzY-2&&puRad>5){ctx.fillStyle="rgba(220,200,170,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("冥王星",puX,puY-puRad-4);}
+      }
+    }
+  }else if(plName==="Pluto"){
+    /* Charon dominates Pluto's sky — tidally locked, sub-Charon at lat:0 lng:0 */
+    var caLngR=((lngDeg||0)+540)%360-180;caLngR=caLngR*0.01745;
+    var caLatR=(lat||0)*0.01745;
+    var subChaCos=Math.cos(caLatR)*Math.cos(caLngR);
+    if(subChaCos>-0.05){
+      var caAlt=Math.asin(Math.max(-1,Math.min(1,subChaCos)));
+      var caAz=Math.atan2(Math.sin(caLngR),-Math.sin(caLatR)*Math.cos(caLngR));
+      var caADiff=((caAz-yaw)%TAU+TAU)%TAU;if(caADiff>Math.PI)caADiff-=TAU;
+      if(Math.abs(caADiff)<TAU*0.4){
+        var caX=W/2+caADiff*W*0.8/TAU;
+        var caY=hrzY-(caAlt/(Math.PI*0.5))*hrzY*0.85;
+        var caAngR=0.067;/* atan(606/19571) ≈ 3.8° from Pluto */
+        var caRad=Math.max(4,caAngR*W*0.8/TAU/fov);
+        ctx.save();ctx.beginPath();ctx.arc(caX,caY,caRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(155,142,130,1)";ctx.fillRect(caX-caRad,caY-caRad,caRad*2,caRad*2);
+        /* Mordor red north polar cap */
+        ctx.fillStyle="rgba(140,55,35,0.7)";
+        ctx.beginPath();ctx.ellipse(caX,caY-caRad*0.7,caRad*0.65,caRad*0.3,0,0,TAU);ctx.fill();
+        ctx.restore();
+        if(caY<hrzY-2&&caRad>4){ctx.fillStyle="rgba(200,185,165,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("カロン",caX,caY-caRad-4);}
+      }
+    }
+  }else if(plName==="HalleyCore"){
+    /* Coma + ion tail anti-sunward streaks */
+    var coR=Math.min(W,hrzY)*0.6;
+    var coGr=ctx.createRadialGradient(sunScreenX,sunY,coR*0.05,sunScreenX,sunY,coR);
+    coGr.addColorStop(0,"rgba(180,220,255,0.18)");coGr.addColorStop(0.5,"rgba(140,190,240,0.06)");coGr.addColorStop(1,"rgba(100,150,220,0)");
+    ctx.fillStyle=coGr;ctx.fillRect(sunScreenX-coR,sunY-coR,coR*2,coR*2);
+    /* Ion tail (anti-sun direction) */
+    var antiSunAz=(sunAz+Math.PI)%TAU;
+    var antiDiff=((antiSunAz-yaw)%TAU+TAU)%TAU;if(antiDiff>Math.PI)antiDiff-=TAU;
+    if(Math.abs(antiDiff)<TAU*0.4){
+      var tailX=W/2+antiDiff*W*0.8/TAU;
+      ctx.globalAlpha=0.35;ctx.strokeStyle="rgba(140,190,255,0.85)";ctx.lineWidth=1;
+      for(var hti=0;hti<14;hti++){var htOff=(hti-7)*8;
+        ctx.beginPath();ctx.moveTo(tailX+htOff,hrzY*0.92);ctx.lineTo(tailX+htOff*1.5,hrzY*0.05);ctx.stroke();}
+      ctx.globalAlpha=1;
+    }
   }else if(plName==="Titan"){
     /* Saturn with rings visible through orange haze (tidally locked, sub-Saturnian at lng:0) */
     var satLngR=((lngDeg||0)+540)%360-180;satLngR=satLngR*0.01745;
