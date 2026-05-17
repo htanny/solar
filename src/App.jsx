@@ -1,8 +1,8 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, SUNINFO, MD, MOON_INFO, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, LAGRANGE, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, MAP_CTNS, NAMED_STARS, CONST_LINES, ZODIAC, ZODIAC_BASE, SURF, MSHW, J2000, EXOPLANETS, QUIZ_DATA } from "./data/solarData.js";
-import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, clipCirc, fillCirc, sphereShade, dC, seedR, lerpColor } from "./render/utils.js";
-import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, ZODIAC, ZODIAC_BASE, J2000, EXOPLANETS, QUIZ_DATA } from "./data/solarData.js";
+import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
+import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
@@ -10,7 +10,7 @@ import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
 import { initNBody, computeNightSky, computeMoonPhases, computeOrbElem } from "./utils/computations.js";
 import { PANEL_INIT, panelReducer } from "./utils/panelReducer.js";
-import { pn, bF, bN, bU, bD, lb, bT, isMob, bFM, bNM, bTM } from "./styles/panelStyles.js";
+import { pn, bF, bN, bU, bD, lb, bT, bFM, bNM } from "./styles/panelStyles.js";
 import InfoPanel from "./components/panels/InfoPanel.jsx";
 import LandingQuickJump from "./components/LandingQuickJump.jsx";
 import CompareTablePanel from "./components/panels/CompareTablePanel.jsx";
@@ -688,7 +688,7 @@ export default function App(){
         </div>;}())}
       </DragPanel>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.22.0</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.22.1</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
