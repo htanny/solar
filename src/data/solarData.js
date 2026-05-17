@@ -139,9 +139,19 @@ export var SP=[0.5,1,4,15,50,100];
 export var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,0.1,0.15,0.22,0.35,0.5,0.7,1,1.5,2.2,3.5,5,8,13,22,40,70,120,200,350,600,1100,2000,4000,8000,16000,35000,70000,150000];
 export var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
 export var TOUR_NAMES=["太陽","水星","金星","地球","火星","木星","土星","天王星","海王星","ハレー彗星","エンケ彗星"];
+export var TOUR_NAMES_EN=["Sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
 export var TOUR_HOLD=6;
+/* TOUR_DESC/EXAM: 既存=中級（"intermediate"）。初級/上級は別配列で提供 */
 export var TOUR_DESC=["太陽系全質量の99.9%を占める恒星","最小・公転最速・昼夜の温度差最大","最高温度・逆方向に自転する惑星","液体の水と生命が存在する惑星","赤い惑星・太陽系最高峰の山を持つ","最大・最重・大赤斑は巨大な嵐","美しいリング・密度は水より軽い","自転軸が98°傾く青緑の氷惑星","計算で予測・超音速の風が吹く","約75年周期・次回接近は2061年","最短公転周期3.3年の周期彗星"];
 export var TOUR_EXAM=[["主系列星（G型黄色矮星）","表面温度約5800K","半径は地球の約109倍"],["衛星なし・大気ほぼなし","1日が1年より長い","温度差は約610℃"],["表面温度約460℃（温室効果）","地球とは逆方向に自転","明けの明星・宵の明星"],["太陽系で唯一液体の水が存在","衛星1個（月）","8惑星で5番目の大きさ"],["オリンポス山：高さ約27km","衛星2個（フォボス・ダイモス）","赤色は地表の酸化鉄"],["太陽系で最大・最重の惑星","大赤斑は地球2個分の大きさ","衛星は95個以上"],["平均密度0.69g/cm³（水より軽）","リングは主に氷と岩の粒子","衛星は145個以上"],["自転軸の傾きが97.8°（横倒し）","氷惑星（メタン・水・アンモニア）","細いリングが13本"],["存在を数学的計算で予測された","風速は時速約2000km","衛星16個"],["公転周期75〜76年","前回近日点1986年・次回2061年","核の長径約15km"],["太陽系最短公転周期（3.3年）","1786年エンケが発見","核の直径約5km"]];
+/* 初級ツアー: シンプルな1行紹介・キーワード3つ */
+export var TOUR_DESC_BEG=["太陽系の中心・恒星","太陽に最も近い惑星","太陽系で最も熱い惑星","私たちの故郷の惑星","赤い砂漠の惑星","太陽系最大の惑星","美しい輪を持つ惑星","横倒しに回る氷の惑星","遠くて青い氷の惑星","75年周期の有名な彗星","3.3年周期の最短彗星"];
+export var TOUR_EXAM_BEG=[["太陽","光と熱の源","地球の109倍"],["小さい","速い","暑い/寒い"],["雲に覆われている","重い大気","非常に熱い"],["水と生命","青い惑星","月がある"],["赤い","砂嵐","2つの月"],["巨大","ガスの惑星","大赤斑"],["美しい輪","氷の粒","145個以上の月"],["横倒し","氷の惑星","薄い輪"],["遠い","青色","強い風"],["長い尾","次は2061年","氷と塵"],["短い周期","小さな核","3.3年で回る"]];
+/* 上級ツアー: 物理量・観測史を含む解説 */
+export var TOUR_DESC_ADV=["主系列G2V型恒星・年齢約46億年・光度3.828×10²⁶ W","近日点歳差が一般相対論で説明された惑星","D/H比は地球の100倍以上・初期の海洋蒸発の証拠","プレートテクトニクス・磁場ダイナモを持つ唯一の岩石惑星","液体の水の証拠（ガリー・周期的斜面線）・薄い大気","木星質量＝1.898×10²⁷ kg・太陽系全惑星質量の70%以上","リング（B環）の厚みは10-100m・年齢は約1億年（若い）","赤道傾斜97.8°・季節1サイクル≈84年・極夜は42年続く","内部熱の発生機構が未解明・ボイジャー2号(1989)が唯一の接近","非重力効果が大きく軌道予測が難しい・近日点でCO/CN放出","近日点1.183 AU・最近点2003年通過・OSIRIS-Rex母彗星"];
+export var TOUR_EXAM_ADV=[["太陽風 400-800 km/s","太陽振動 5分振動","ニュートリノ年間 6×10¹⁰/cm²s"],["近日点歳差 43″/世紀","核内部固化・磁場存在","氷の影に水氷確認(2012)"],["大気上層 SO₂ 100ppm","クラウド頂高度 65km","表面風速 0.3-1m/s"],["コア半径 1220 km","双極子磁場 25-65μT","プレート速度 数 cm/年"],["地殻厚 平均50km","水氷北極キャップ","CO₂氷季節変動 25%"],["内部熱放射>受熱","金属水素層 80GPa","磁気圏 太陽20倍長"],["A環 B環間隙(カッシーニ)","E環 = エンケラドス起源","リング質量 = ミマス1個分"],["L点に5衛星トロヤ","オベロン・チタニア","氷火山 トリトン跡"],["大暗斑 1989-1994消滅","海王星3:2 共鳴(冥王星)","NASA計画 2030s打上"],["近日点1.586 AU","非重力減速 4日/周","太陽系起源論争"],["離心率 e=0.848","タイプIIa彗星","Encke隙間との関係"]];
+export var TOUR_DESC_EN=["The star at the center of our solar system","Smallest planet, fastest orbit, extreme temperature swings","Hottest planet, rotates backward","The only planet with liquid water and life","The Red Planet, home of the tallest mountain","Largest and most massive, Great Red Spot is a vast storm","Beautiful rings, density lower than water","Tilted 98°, blue-green ice giant","Predicted by math, supersonic winds","~75-year period, next return in 2061","Shortest periodic comet (3.3 yr)"];
+export var TOUR_EXAM_EN=[["G-type main-sequence star","Surface temp ~5800 K","Radius ~109× Earth"],["No moons, almost no atmosphere","Day longer than year","~610°C temperature range"],["Surface ~460°C (greenhouse)","Rotates retrograde","Morning/evening star"],["Only world with surface water","One moon","5th largest planet"],["Olympus Mons: ~27 km tall","Two moons (Phobos, Deimos)","Red color from iron oxide"],["Largest, most massive","Great Red Spot ~2× Earth","95+ moons"],["Density 0.69 g/cm³ (floats!)","Rings: ice + rock","145+ moons"],["Axial tilt 97.8°","Methane-water-ammonia ice","13 narrow rings"],["Predicted mathematically","Winds up to ~2000 km/h","16 moons"],["Period 75-76 years","Last perihelion 1986, next 2061","Nucleus ~15 km long"],["Shortest period (3.3 yr)","Discovered by Encke (1786)","Nucleus ~5 km wide"]];
 export var LAND_SP=[
   {v:1/86400,l:"実速"},{v:60/86400,l:"1分/s"},
   {v:3600/86400,l:"1時/s"},{v:1,l:"1日/s"},
@@ -285,17 +295,39 @@ export var EXO_SURF={
 
 /* Meteor showers - d = day-of-year peak, raD/decD = radiant equatorial coords (deg), rate = ZHR/h */
 export var MSHW=[{d:3,n:"しぶんぎ座",raD:230,decD:50,rate:120},{d:112,n:"こと座",raD:271,decD:34,rate:18},{d:125,n:"みずがめ座η",raD:338,decD:-1,rate:60},{d:223,n:"ペルセウス座",raD:48,decD:58,rate:100},{d:294,n:"オリオン座",raD:95,decD:16,rate:25},{d:321,n:"しし座",raD:152,decD:22,rate:15},{d:347,n:"ふたご座",raD:113,decD:33,rate:120}];
+/* QUIZ_DATA: lv=1初級, 2中級, 3上級 ／ qe/ae/hinte は英語版 */
 export var QUIZ_DATA=[
-  {q:"太陽系で最も密度が低い惑星は？",a:["土星","天王星","木星","海王星"],c:0,hint:"水より軽い（0.69 g/cm³）"},
-  {q:"太陽系で最も脱出速度が大きい惑星は？",a:["木星","土星","海王星","天王星"],c:0,hint:"太陽系最大のガス惑星 (59.5 km/s)"},
-  {q:"ケプラーの第三法則: 公転周期T²は何に比例する？",a:["軌道長半径a³","軌道長半径a²","軌道長半径a","軌道短半径b²"],c:0,hint:"T²∝a³（全惑星で T²/a³≈1）"},
-  {q:"地軸傾斜が約98°で「横倒し」になっている惑星は？",a:["天王星","海王星","土星","木星"],c:0,hint:"自転軸が公転面とほぼ水平"},
-  {q:"逆行自転（自転が他の惑星と逆方向）はどれ？",a:["金星","水星","火星","天王星"],c:0,hint:"自転周期が−243日"},
-  {q:"太陽系で最も衛星が多い惑星は（2024年現在）？",a:["土星","木星","天王星","海王星"],c:0,hint:"146個以上を持つ"},
-  {q:"金星の表面温度が水星より高い主な理由は？",a:["温室効果","太陽に近い","自転が遅い","密度が高い"],c:0,hint:"CO₂ 96%の厚い大気による"},
-  {q:"火星の衛星の数は？",a:["2個","1個","3個","0個"],c:0,hint:"フォボスとデイモス"},
-  {q:"太陽系の惑星で最も公転周期が長いのは？",a:["海王星","天王星","土星","冥王星（除く）"],c:0,hint:"約165年"},
-  {q:"地球の脱出速度（第二宇宙速度）は？",a:["11.2 km/s","9.8 km/s","7.9 km/s","12.4 km/s"],c:0,hint:"ロケットが地球引力から脱出する速度"},
-  {q:"土星の平均密度として正しいのは？",a:["水より軽い","水と同程度","水より重い","地球の半分"],c:0,hint:"0.69 g/cm³ — もし巨大な海があれば浮く！"},
-  {q:"月の恒星月（恒星基準の公転周期）は約何日？",a:["27.3日","29.5日","24.8日","30.0日"],c:0,hint:"朔望月(29.5日)と恒星月は異なる"},
+  /* === 初級 (lv:1) 10問 === */
+  {lv:1,q:"太陽系で最大の惑星は？",a:["木星","土星","海王星","地球"],c:0,hint:"質量は地球の約318倍",qe:"Which is the largest planet in the solar system?",ae:["Jupiter","Saturn","Neptune","Earth"],hinte:"~318× Earth's mass"},
+  {lv:1,q:"地球から最も近い天体は？",a:["月","金星","火星","太陽"],c:0,hint:"約38万km",qe:"Which body is closest to Earth?",ae:["Moon","Venus","Mars","Sun"],hinte:"~384,000 km"},
+  {lv:1,q:"火星の衛星の数は？",a:["2個","1個","3個","0個"],c:0,hint:"フォボスとダイモス",qe:"How many moons does Mars have?",ae:["2","1","3","0"],hinte:"Phobos and Deimos"},
+  {lv:1,q:"太陽系で最も小さい惑星は？",a:["水星","火星","金星","冥王星"],c:0,hint:"冥王星は2006年以降は準惑星",qe:"What is the smallest planet?",ae:["Mercury","Mars","Venus","Pluto"],hinte:"Pluto is dwarf planet since 2006"},
+  {lv:1,q:"地球の公転周期は？",a:["約365日","約30日","約7日","約100日"],c:0,hint:"1年=地球の公転1周",qe:"Earth's orbital period?",ae:["~365 days","~30 days","~7 days","~100 days"],hinte:"1 year = 1 orbit"},
+  {lv:1,q:"赤い惑星と呼ばれているのは？",a:["火星","金星","水星","木星"],c:0,hint:"地表の酸化鉄が赤色の正体",qe:"Which is called the Red Planet?",ae:["Mars","Venus","Mercury","Jupiter"],hinte:"Iron oxide on surface"},
+  {lv:1,q:"夜空で最も明るい恒星は？",a:["シリウス","ベガ","ベテルギウス","北極星"],c:0,hint:"おおいぬ座α星",qe:"Brightest star in the night sky?",ae:["Sirius","Vega","Betelgeuse","Polaris"],hinte:"α Canis Majoris"},
+  {lv:1,q:"地球の自転周期は？",a:["約24時間","約12時間","約48時間","約8時間"],c:0,hint:"1日の長さ",qe:"Earth's rotation period?",ae:["~24 hours","~12 hours","~48 hours","~8 hours"],hinte:"Length of a day"},
+  {lv:1,q:"太陽系で唯一輪が大きく目立つ惑星は？",a:["土星","天王星","木星","海王星"],c:0,hint:"他の3つも実は薄いリングがある",qe:"Planet famous for prominent rings?",ae:["Saturn","Uranus","Jupiter","Neptune"],hinte:"All 4 giants have rings, Saturn's brightest"},
+  {lv:1,q:"月の満ち欠けの周期（朔望月）は？",a:["約29.5日","約27.3日","約24日","約31日"],c:0,hint:"新月から新月まで",qe:"Lunar phase cycle (synodic month)?",ae:["~29.5 days","~27.3 days","~24 days","~31 days"],hinte:"New moon to new moon"},
+  /* === 中級 (lv:2) 12問 === */
+  {lv:2,q:"太陽系で最も密度が低い惑星は？",a:["土星","天王星","木星","海王星"],c:0,hint:"水より軽い（0.69 g/cm³）",qe:"Lowest-density planet?",ae:["Saturn","Uranus","Jupiter","Neptune"],hinte:"Less dense than water (0.69 g/cm³)"},
+  {lv:2,q:"地軸傾斜が約98°で「横倒し」になっている惑星は？",a:["天王星","海王星","土星","木星"],c:0,hint:"自転軸が公転面とほぼ水平",qe:"Planet tilted ~98° (lying on its side)?",ae:["Uranus","Neptune","Saturn","Jupiter"],hinte:"Axis nearly parallel to orbital plane"},
+  {lv:2,q:"逆行自転（公転と逆方向に自転）はどれ？",a:["金星","水星","火星","天王星"],c:0,hint:"自転周期は−243日",qe:"Which planet rotates retrograde?",ae:["Venus","Mercury","Mars","Uranus"],hinte:"Rotation period: −243 days"},
+  {lv:2,q:"金星の表面温度が水星より高い主な理由は？",a:["温室効果","太陽に近い","自転が遅い","密度が高い"],c:0,hint:"CO₂ 96%の厚い大気による",qe:"Why is Venus hotter than Mercury?",ae:["Greenhouse effect","Closer to Sun","Slow rotation","Higher density"],hinte:"96% CO₂ atmosphere"},
+  {lv:2,q:"太陽系で最も衛星が多い惑星は？",a:["土星","木星","天王星","海王星"],c:0,hint:"2024年現在で146個以上",qe:"Planet with most moons?",ae:["Saturn","Jupiter","Uranus","Neptune"],hinte:"146+ as of 2024"},
+  {lv:2,q:"地球の脱出速度（第二宇宙速度）は？",a:["11.2 km/s","9.8 km/s","7.9 km/s","12.4 km/s"],c:0,hint:"地球引力からの脱出速度",qe:"Earth's escape velocity?",ae:["11.2 km/s","9.8 km/s","7.9 km/s","12.4 km/s"],hinte:"Velocity to escape Earth's gravity"},
+  {lv:2,q:"月の恒星月（恒星基準）は約何日？",a:["27.3日","29.5日","24.8日","30.0日"],c:0,hint:"朔望月(29.5日)と恒星月は異なる",qe:"Sidereal month of the Moon?",ae:["27.3 days","29.5 days","24.8 days","30.0 days"],hinte:"Differs from synodic month"},
+  {lv:2,q:"ハレー彗星の公転周期は約何年？",a:["75年","11年","165年","250年"],c:0,hint:"次回近日点は2061年",qe:"Halley's Comet period?",ae:["75 years","11 years","165 years","250 years"],hinte:"Next perihelion: 2061"},
+  {lv:2,q:"太陽から最も遠い惑星は？",a:["海王星","天王星","冥王星","木星"],c:0,hint:"約30 AU・冥王星は準惑星",qe:"Farthest planet from the Sun?",ae:["Neptune","Uranus","Pluto","Jupiter"],hinte:"~30 AU; Pluto is dwarf"},
+  {lv:2,q:"小惑星帯は主にどこにある？",a:["火星と木星の間","地球と火星の間","木星と土星の間","海王星の外側"],c:0,hint:"主帯小惑星は2-3.5 AU",qe:"Main asteroid belt location?",ae:["Between Mars & Jupiter","Earth-Mars","Jupiter-Saturn","Beyond Neptune"],hinte:"~2-3.5 AU"},
+  {lv:2,q:"オリンポス山がある惑星は？",a:["火星","金星","地球","水星"],c:0,hint:"太陽系最大の火山（高さ約27km）",qe:"Planet hosting Olympus Mons?",ae:["Mars","Venus","Earth","Mercury"],hinte:"~27 km tall, largest in solar system"},
+  {lv:2,q:"光の速度で太陽から地球まで何分？",a:["約8分","約1分","約1時間","約1秒"],c:0,hint:"1 AU = 8.3光分",qe:"Light travel time Sun→Earth?",ae:["~8 minutes","~1 minute","~1 hour","~1 second"],hinte:"1 AU = 8.3 light-minutes"},
+  /* === 上級 (lv:3) 8問 === */
+  {lv:3,q:"ケプラーの第三法則: 公転周期T²は何に比例する？",a:["軌道長半径a³","軌道長半径a²","軌道長半径a","軌道短半径b²"],c:0,hint:"T²∝a³（全惑星で T²/a³≈1）",qe:"Kepler's 3rd: T² is proportional to?",ae:["a³ (semi-major axis cubed)","a²","a","b²"],hinte:"T²∝a³ (T²/a³≈1 for all planets)"},
+  {lv:3,q:"太陽系で最も脱出速度が大きい惑星は？",a:["木星","土星","海王星","天王星"],c:0,hint:"太陽系最大のガス惑星 (59.5 km/s)",qe:"Highest escape velocity?",ae:["Jupiter","Saturn","Neptune","Uranus"],hinte:"59.5 km/s, largest gas giant"},
+  {lv:3,q:"土星の平均密度として正しいのは？",a:["水より軽い","水と同程度","水より重い","地球の半分"],c:0,hint:"0.69 g/cm³",qe:"Saturn's average density?",ae:["Less than water","Same as water","More than water","Half of Earth's"],hinte:"0.69 g/cm³"},
+  {lv:3,q:"ロッシュ限界とは何か？",a:["衛星が潮汐力で崩壊する距離","軌道速度の上限","重力圏の境界","脱出速度の最小値"],c:0,hint:"土星のリングはこの内側にある",qe:"What is the Roche limit?",ae:["Tidal-breakup distance","Max orbital speed","Hill sphere boundary","Min escape velocity"],hinte:"Saturn's rings lie inside it"},
+  {lv:3,q:"地球の公転速度（軌道速度）は約何km/s？",a:["29.8 km/s","11.2 km/s","7.9 km/s","59.5 km/s"],c:0,hint:"1 AU・1年から計算",qe:"Earth's orbital velocity?",ae:["29.8 km/s","11.2 km/s","7.9 km/s","59.5 km/s"],hinte:"Derived from 1 AU & 1 yr"},
+  {lv:3,q:"白色矮星の質量上限（チャンドラセカール限界）は？",a:["太陽の約1.4倍","太陽の約3倍","太陽の約0.5倍","太陽の約10倍"],c:0,hint:"これを超えるとIa型超新星",qe:"Chandrasekhar limit (white dwarf max mass)?",ae:["~1.4 M☉","~3 M☉","~0.5 M☉","~10 M☉"],hinte:"Above this → Type Ia supernova"},
+  {lv:3,q:"会合周期（地球から見て同じ位相に戻る周期）が最も長い惑星は？",a:["火星","金星","木星","水星"],c:0,hint:"火星は約780日（公転周期687日に近い）",qe:"Longest synodic period from Earth?",ae:["Mars","Venus","Jupiter","Mercury"],hinte:"Mars ~780 days (close to its 687-day year)"},
+  {lv:3,q:"L4・L5ラグランジュ点は何度の位置？",a:["公転軌道上で前後60°","前後45°","前後90°","前後120°"],c:0,hint:"主天体と副天体で正三角形を成す",qe:"L4/L5 Lagrange point angle?",ae:["±60° along orbit","±45°","±90°","±120°"],hinte:"Forms equilateral triangle"},
 ];
