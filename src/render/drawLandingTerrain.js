@@ -1,4 +1,4 @@
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -300,6 +300,116 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
         ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";ctx.fillText(_ha.date,hax,hay+16);
         ctx.globalAlpha=1;break;}
     }
+  }else if(plName==="Triton"){
+    /* Cantaloupe terrain — pitted melon-skin texture + pink-tinted nitrogen ice + geyser plumes */
+    var trr=seedR(555);ctx.globalAlpha=0.22;
+    for(var trci=0;trci<14;trci++){var trcx=trr()*W,trcy=hrzY+6+trr()*(H-hrzY-12),trcD=(trcy-hrzY)/(H-hrzY),trcsz=4+trcD*12;
+      ctx.fillStyle="rgba(165,145,128,1)";ctx.beginPath();ctx.ellipse(trcx,trcy,trcsz,trcsz*0.7,0,0,TAU);ctx.fill();
+      ctx.strokeStyle="rgba(210,190,168,1)";ctx.lineWidth=0.6;ctx.beginPath();ctx.ellipse(trcx,trcy,trcsz*1.15,trcsz*0.8,0,0,TAU);ctx.stroke();}
+    ctx.globalAlpha=0.12;ctx.fillStyle="rgba(220,180,180,1)";ctx.fillRect(0,hrzY,W,H-hrzY);/* pink frost tint */
+    ctx.globalAlpha=1;
+    /* Nitrogen geyser plumes — vertical dark streaks */
+    for(var trgi=0;trgi<3;trgi++){var trgx=((trr()*W*1.5+yaw*20)%(W*1.1))-W*0.05,trgw=2+trr()*3,trgh=40+trr()*60;
+      var trgG=ctx.createLinearGradient(trgx,hrzY,trgx,hrzY-trgh);
+      trgG.addColorStop(0,"rgba(40,30,35,0.7)");trgG.addColorStop(1,"rgba(40,30,35,0)");
+      ctx.fillStyle=trgG;ctx.fillRect(trgx-trgw,hrzY-trgh,trgw*2,trgh);}
+    /* Feature site marker */
+    for(var _tri=0;_tri<TRITON_FEATURES.length;_tri++){var _trf=TRITON_FEATURES[_tri];
+      var _trdl=(_trf.lng-(lngDeg||0))*0.01745,_trl1=(lat||0)*0.01745,_trl2=_trf.lat*0.01745;
+      var _trcos=Math.sin(_trl1)*Math.sin(_trl2)+Math.cos(_trl1)*Math.cos(_trl2)*Math.cos(_trdl);
+      var _trda=Math.acos(Math.max(-1,Math.min(1,_trcos)))*57.2958;
+      if(_trda<6){ctx.fillStyle="rgba(255,210,140,0.85)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_trf.n,W*0.72,H-42);
+        ctx.fillStyle="rgba(220,200,170,0.65)";ctx.font="7px sans-serif";ctx.fillText(_trf.info.split(" ")[0],W*0.72,H-30);break;}}
+  }else if(plName==="Pluto"){
+    /* Sputnik Planitia smooth nitrogen ice + Cthulhu Macula dark mottling + water-ice mountains */
+    var plr=seedR(311);ctx.globalAlpha=0.2;
+    /* Ice plain polygonal convection cells (visible near Sputnik) */
+    var _plDL=((175-(lngDeg||0)+540)%360-180),_plL1=(lat||0)*0.01745,_plL2=25*0.01745;
+    var _plCos=Math.sin(_plL1)*Math.sin(_plL2)+Math.cos(_plL1)*Math.cos(_plL2)*Math.cos(_plDL*0.01745);
+    var _plDist=Math.acos(Math.max(-1,Math.min(1,_plCos)))*57.2958;
+    if(_plDist<35){ctx.fillStyle="rgba(220,205,185,1)";
+      for(var plpi=0;plpi<8;plpi++){var plpx=plr()*W,plpy=hrzY+12+plr()*(H-hrzY-20),plpsz=8+plr()*20;
+        ctx.beginPath();var psd=5+Math.floor(plr()*3);
+        for(var pv=0;pv<psd;pv++){var pa=pv/psd*TAU,pr=plpsz*(0.85+plr()*0.15);
+          if(pv===0)ctx.moveTo(plpx+Math.cos(pa)*pr,plpy+Math.sin(pa)*pr*0.55);
+          else ctx.lineTo(plpx+Math.cos(pa)*pr,plpy+Math.sin(pa)*pr*0.55);}
+        ctx.closePath();ctx.fill();ctx.strokeStyle="rgba(180,160,140,1)";ctx.lineWidth=0.8;ctx.stroke();}
+    }else{
+      /* Reddish-brown tholin-rich terrain elsewhere */
+      ctx.globalAlpha=0.25;ctx.fillStyle="rgba(85,55,40,1)";
+      for(var pmci=0;pmci<10;pmci++){var pmx=plr()*W,pmy=hrzY+8+plr()*(H-hrzY-15),pmsz=6+plr()*22;
+        ctx.beginPath();ctx.ellipse(pmx,pmy,pmsz,pmsz*0.45,plr()*Math.PI,0,0,TAU);ctx.fill();}
+    }
+    ctx.globalAlpha=0.18;ctx.fillStyle="rgba(195,178,158,1)";
+    /* Water-ice mountains silhouette */
+    for(var pmi=0;pmi<5;pmi++){var pmtx=((plr()*W*1.5+yaw*30)%(W*1.2))-W*0.1;
+      ctx.beginPath();ctx.moveTo(pmtx-40,hrzY);ctx.lineTo(pmtx,hrzY-12-plr()*16);ctx.lineTo(pmtx+40,hrzY);ctx.fill();}
+    ctx.globalAlpha=1;
+    /* New Horizons closest approach marker */
+    for(var _opi=0;_opi<OUTER_PROBES.length;_opi++){var _op=OUTER_PROBES[_opi];
+      if(_op.body!=="Pluto")continue;
+      var _opDL=(_op.lng-(lngDeg||0))*0.01745,_opL1=(lat||0)*0.01745,_opL2=_op.lat*0.01745;
+      var _opCos=Math.sin(_opL1)*Math.sin(_opL2)+Math.cos(_opL1)*Math.cos(_opL2)*Math.cos(_opDL);
+      var _opD=Math.acos(Math.max(-1,Math.min(1,_opCos)))*57.2958;
+      if(_opD<8){
+        var nhx=W*0.72,nhy=H-50;ctx.globalAlpha=0.85;
+        ctx.fillStyle="rgba(180,170,148,0.9)";ctx.fillRect(nhx-10,nhy-8,20,8);/* main body */
+        ctx.fillStyle="rgba(55,70,148,0.85)";ctx.fillRect(nhx-18,nhy-4,8,4);/* dish antenna offset */
+        ctx.strokeStyle="rgba(220,200,170,0.85)";ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(nhx+14,nhy-2,5,0,TAU);ctx.stroke();/* HGA dish */
+        ctx.fillStyle="rgba(255,220,80,1)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+        ctx.fillText("New Horizons",nhx,nhy-16);
+        ctx.fillStyle="rgba(220,200,160,0.75)";ctx.font="7px sans-serif";ctx.fillText(_op.date,nhx,nhy+14);
+        ctx.globalAlpha=1;break;}}
+    /* Feature site label */
+    for(var _pfi=0;_pfi<PLUTO_FEATURES.length;_pfi++){var _pf=PLUTO_FEATURES[_pfi];
+      var _pfdl=(_pf.lng-(lngDeg||0))*0.01745,_pfl1=(lat||0)*0.01745,_pfl2=_pf.lat*0.01745;
+      var _pfcos=Math.sin(_pfl1)*Math.sin(_pfl2)+Math.cos(_pfl1)*Math.cos(_pfl2)*Math.cos(_pfdl);
+      var _pfda=Math.acos(Math.max(-1,Math.min(1,_pfcos)))*57.2958;
+      if(_pfda<10){ctx.fillStyle="rgba(255,210,160,0.7)";ctx.font="bold 8px sans-serif";ctx.textAlign="center";ctx.fillText("🛰 "+_pf.n,W*0.28,H-46);break;}}
+  }else if(plName==="Charon"){
+    /* Crater-pocked grey ice + Serenity Chasma rift + Mordor red polar */
+    var chr=seedR(412);ctx.globalAlpha=0.22;
+    for(var chci=0;chci<14;chci++){var chcx=chr()*W,chcy=hrzY+8+chr()*(H-hrzY-15),chcsz=4+chr()*18;
+      ctx.fillStyle="rgba(70,65,60,1)";ctx.beginPath();ctx.arc(chcx,chcy,chcsz,0,TAU);ctx.fill();
+      ctx.strokeStyle="rgba(180,170,160,1)";ctx.lineWidth=0.6;ctx.beginPath();ctx.arc(chcx,chcy,chcsz*1.18,0,TAU);ctx.stroke();}
+    /* Mordor red tint when at northern high latitudes */
+    if((lat||0)>50){ctx.globalAlpha=Math.min(0.25,((lat||0)-50)/40*0.25);ctx.fillStyle="rgba(140,55,30,1)";ctx.fillRect(0,hrzY,W,H-hrzY);}
+    /* Serenity Chasma rift visible near equator */
+    if(Math.abs(lat||0)<25){ctx.globalAlpha=0.3;ctx.fillStyle="rgba(20,18,16,1)";
+      var crX=((chr()*W*1.2+yaw*40)%(W*1.1))-W*0.05;
+      ctx.fillRect(crX,hrzY+H*0.18,W*0.6,H*0.08);}
+    ctx.globalAlpha=1;
+    /* Feature label */
+    for(var _cfi=0;_cfi<CHARON_FEATURES.length;_cfi++){var _cf=CHARON_FEATURES[_cfi];
+      var _cfdl=(_cf.lng-(lngDeg||0))*0.01745,_cfl1=(lat||0)*0.01745,_cfl2=_cf.lat*0.01745;
+      var _cfcos=Math.sin(_cfl1)*Math.sin(_cfl2)+Math.cos(_cfl1)*Math.cos(_cfl2)*Math.cos(_cfdl);
+      var _cfda=Math.acos(Math.max(-1,Math.min(1,_cfcos)))*57.2958;
+      if(_cfda<10){ctx.fillStyle="rgba(255,180,140,0.75)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_cf.n,W*0.72,H-42);break;}}
+  }else if(plName==="HalleyCore"){
+    /* Pitch-black irregular crust with bright sublimation jets */
+    var hcr=seedR(601);ctx.globalAlpha=0.4;ctx.fillStyle="rgba(8,6,5,1)";
+    ctx.fillRect(0,hrzY,W,H-hrzY);/* very dark ground overlay */
+    for(var hci=0;hci<35;hci++){var hcx=hcr()*W,hcy=hrzY+4+hcr()*(H-hrzY-8),hcsz=2+hcr()*8;
+      ctx.fillStyle=hcr()<0.5?"rgba(15,12,10,1)":"rgba(35,28,22,1)";
+      ctx.beginPath();var hcp=4+Math.floor(hcr()*4);
+      for(var hv=0;hv<hcp;hv++){var ha=hv/hcp*TAU,hr=hcsz*(0.75+hcr()*0.35);
+        if(hv===0)ctx.moveTo(hcx+Math.cos(ha)*hr,hcy+Math.sin(ha)*hr*0.65);
+        else ctx.lineTo(hcx+Math.cos(ha)*hr,hcy+Math.sin(ha)*hr*0.65);}
+      ctx.closePath();ctx.fill();}
+    /* Bright sublimation jets */
+    ctx.globalAlpha=0.5;
+    for(var hji=0;hji<4;hji++){var hjx=((hcr()*W*1.3+yaw*50+t*5)%(W*1.1))-W*0.05,hjh=80+hcr()*120;
+      var hjG=ctx.createLinearGradient(hjx,hrzY,hjx,hrzY-hjh);
+      hjG.addColorStop(0,"rgba(255,250,230,0.85)");hjG.addColorStop(0.6,"rgba(220,220,200,0.3)");hjG.addColorStop(1,"rgba(180,200,255,0)");
+      ctx.fillStyle=hjG;ctx.fillRect(hjx-2,hrzY-hjh,4,hjh);}
+    ctx.globalAlpha=1;
+    /* Giotto flyby label */
+    var _gpDL=0*0.01745,_gpL1=(lat||0)*0.01745,_gpL2=0*0.01745;
+    var _gpCos=Math.sin(_gpL1)*Math.sin(_gpL2)+Math.cos(_gpL1)*Math.cos(_gpL2)*Math.cos(_gpDL);
+    var _gpD=Math.acos(Math.max(-1,Math.min(1,_gpCos)))*57.2958;
+    if(_gpD<30){ctx.fillStyle="rgba(255,220,80,0.78)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText("⮕ ジオット最接近(1986)",W*0.5,hrzY*0.92);}
   }else if(plName==="Uranus"||plName==="Neptune"){
     ctx.globalAlpha=0.1;var ir=seedR(plName==="Uranus"?88:99);ctx.strokeStyle=plName==="Uranus"?"rgba(150,220,230,1)":"rgba(80,120,220,1)";ctx.lineWidth=0.5;
     for(var ii=0;ii<40;ii++){var ix=ir()*W,iy=hrzY+3+ir()*(H-hrzY-8);ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(ix+ir()*25-12,iy+ir()*12-6);ctx.stroke();

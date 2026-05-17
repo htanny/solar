@@ -217,6 +217,9 @@ export var SURF={
   Titan:{atm:3.5,sunSz:0.011,g:"rgba(118,92,52,1)",skyTop:"175,108,38",skyBot:"155,86,28"},
   Itokawa:{atm:0,sunSz:0.13,g:"rgba(132,114,90,1)",skyTop:"0,0,0",skyBot:"2,2,2"},
   Ryugu:{atm:0,sunSz:0.13,g:"rgba(20,17,14,1)",skyTop:"0,0,0",skyBot:"1,1,1"},
+  Triton:{atm:0.02,sunSz:0.0011,g:"rgba(195,170,150,1)",skyTop:"0,0,0",skyBot:"3,2,4"},
+  Charon:{atm:0,sunSz:0.0025,g:"rgba(140,128,118,1)",skyTop:"0,0,0",skyBot:"2,2,3"},
+  HalleyCore:{atm:0,sunSz:0.5,g:"rgba(18,15,12,1)",skyTop:"0,0,0",skyBot:"1,1,2"},
 };
 
 export var IO_INFO={n:"Io",j:"イオ",e:"Io",d:778,r:1.821,p:365.25,c:"rgba(220,200,100,1)",t:0,rot:1.769,type:"io",mass:"8.93×10²² kg",grav:"1.80 m/s²",moons:0,day:"1.77日(公転=自転)",year:"木星を1.77日",atm:"SO₂ 極微量",temp:"−143〜+1650℃",dens:"3.53",esc:"2.56",alb:0.63};
@@ -226,6 +229,30 @@ export var CALLISTO_INFO={n:"Callisto",j:"カリスト",e:"Callisto",d:778,r:2.4
 export var TITAN_INFO={n:"Titan",j:"タイタン",e:"Titan",d:1427,r:2.575,p:365.25,c:"rgba(218,168,88,1)",t:0,rot:15.945,type:"titan",mass:"1.35×10²³ kg",grav:"1.35 m/s²",moons:0,day:"15.95日(公転=自転)",year:"土星を15.95日",atm:"N₂ 95% CH₄ 5%",temp:"−179℃",dens:"1.88",esc:"2.64",alb:0.22};
 export var ITOKAWA_INFO={n:"Itokawa",j:"イトカワ",e:"25143 Itokawa",d:230,r:0.000165,p:556,c:"rgba(168,140,108,1)",t:0,rot:0.5,type:"asteroid",mass:"3.58×10¹⁰ kg",grav:"0.00009 m/s²",moons:0,day:"12.1時間",year:"1.52年",atm:"なし",temp:"−90〜+60℃",dens:"1.90",esc:"0.0015",alb:0.18};
 export var RYUGU_INFO={n:"Ryugu",j:"リュウグウ",e:"162173 Ryugu",d:231,r:0.000448,p:474,c:"rgba(28,22,18,1)",t:0,rot:0.319,type:"asteroid",mass:"4.50×10¹¹ kg",grav:"0.00012 m/s²",moons:0,day:"7.63時間",year:"1.30年",atm:"なし",temp:"−93〜+52℃",dens:"1.19",esc:"0.003",alb:0.045};
+export var TRITON_INFO={n:"Triton",j:"トリトン",e:"Triton",d:4495,r:1.353,p:365.25,c:"rgba(205,190,178,1)",t:0,rot:-5.877,type:"triton",mass:"2.14×10²² kg",grav:"0.78 m/s²",moons:0,day:"5.88日(逆行・潮汐固定)",year:"海王星を5.88日",atm:"N₂ 極希薄",temp:"−235℃",dens:"2.06",esc:"1.46",alb:0.76};
+export var CHARON_INFO={n:"Charon",j:"カロン",e:"Charon",d:5906,r:0.606,p:90560,c:"rgba(155,142,130,1)",t:0,rot:6.39,type:"charon",mass:"1.52×10²¹ kg",grav:"0.29 m/s²",moons:0,day:"6.39日(潮汐固定)",year:"冥王星を6.39日",atm:"なし",temp:"−220℃",dens:"1.70",esc:"0.58",alb:0.35};
+export var HALLEY_CORE_INFO={n:"HalleyCore",j:"ハレー彗星核",e:"1P/Halley nucleus",d:2660,r:0.011,p:27484,c:"rgba(22,18,15,1)",t:0,rot:2.2,type:"comet",mass:"2.2×10¹⁴ kg",grav:"0.0005 m/s²",moons:0,day:"52.8時間",year:"75.3年",atm:"昇華ガス(H₂O・CO)",temp:"−170〜+47℃",dens:"0.60",esc:"0.001",alb:0.04};
+/* Triton geological landmarks */
+export var TRITON_FEATURES=[
+  {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
+  {n:"窒素間欠泉",en:"Nitrogen Geysers",lat:-50,lng:-10,info:"高度8kmまで噴出する窒素ガスのプルーム"},
+];
+/* Pluto major regions (New Horizons 2015) */
+export var PLUTO_FEATURES=[
+  {n:"スプートニク平原",en:"Sputnik Planitia",lat:25,lng:175,info:"心臓型の窒素氷平原 直径約1000km 対流セルが存在"},
+  {n:"クトゥルフ地域",en:"Cthulhu Macula",lat:-10,lng:30,info:"赤褐色のトーリン（有機物）が堆積した暗黒帯"},
+  {n:"トンボー領域",en:"Tombaugh Regio",lat:25,lng:180,info:"発見者クライド・トンボーに因む心臓型の領域"},
+];
+/* Charon major regions */
+export var CHARON_FEATURES=[
+  {n:"モルドール斑",en:"Mordor Macula",lat:85,lng:0,info:"北極の赤褐色領域 冥王星から逃れた窒素・メタンが凍結"},
+  {n:"セレニティ・カスマ",en:"Serenity Chasma",lat:-15,lng:30,info:"赤道沿いの巨大な裂け目 全長1800km"},
+];
+/* New Horizons / Halley probe sites */
+export var OUTER_PROBES=[
+  {n:"ニュー・ホライズンズ最接近",en:"New Horizons closest approach",body:"Pluto",lat:11.5,lng:178.7,date:"2015-07",info:"NASA NH 12,500kmまで接近 スプートニク平原を撮影"},
+  {n:"ジオット最接近",en:"Giotto flyby",body:"HalleyCore",lat:0,lng:0,date:"1986-03",info:"ESA Giotto 596kmまで接近 ハレー彗星核を初撮影"},
+];
 /* Titan probe site */
 export var TITAN_PROBES=[
   {n:"ホイヘンス",en:"Huygens",lat:-10.3,lng:167.6,date:"2005-01",info:"ESAのタイタン大気突入プローブ ホイヘンス 72分間送信"},
@@ -247,6 +274,7 @@ export var EXO_MAP={};EXOPLANETS.forEach(function(p){EXO_MAP[p.n]=p;PL_MAP[p.n]=
 /* Register Galilean moons + Titan + asteroids as landing targets */
 PL_MAP["Io"]=IO_INFO;PL_MAP["Europa"]=EUROPA_INFO;PL_MAP["Ganymede"]=GANYMEDE_INFO;PL_MAP["Callisto"]=CALLISTO_INFO;
 PL_MAP["Titan"]=TITAN_INFO;PL_MAP["Itokawa"]=ITOKAWA_INFO;PL_MAP["Ryugu"]=RYUGU_INFO;
+PL_MAP["Triton"]=TRITON_INFO;PL_MAP["Charon"]=CHARON_INFO;PL_MAP["HalleyCore"]=HALLEY_CORE_INFO;
 /* Exoplanet surface data - merged into SURF for landing render */
 export var EXO_SURF={
   ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},
