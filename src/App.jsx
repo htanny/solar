@@ -1,6 +1,6 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { useRefSync } from "./hooks/useRefSync.js";
-import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, ZODIAC, ZODIAC_BASE, J2000, EXOPLANETS, QUIZ_DATA } from "./data/solarData.js";
+import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_HOLD, TOUR_DESC, TOUR_EXAM, LAND_SP, ZODIAC, ZODIAC_BASE, J2000, QUIZ_DATA } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
@@ -8,13 +8,21 @@ import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
-import { initNBody, computeNightSky, computeMoonPhases, computeOrbElem } from "./utils/computations.js";
+import { initNBody } from "./utils/computations.js";
 import { PANEL_INIT, panelReducer } from "./utils/panelReducer.js";
 import { pn, bF, bN, bU, bD, lb, bT, bFM, bNM } from "./styles/panelStyles.js";
 import InfoPanel from "./components/panels/InfoPanel.jsx";
 import LandingQuickJump from "./components/LandingQuickJump.jsx";
 import CompareTablePanel from "./components/panels/CompareTablePanel.jsx";
 import QuizPanel from "./components/panels/QuizPanel.jsx";
+import EventsPanel from "./components/panels/EventsPanel.jsx";
+import ExoplanetPanel from "./components/panels/ExoplanetPanel.jsx";
+import SatellitePanel from "./components/panels/SatellitePanel.jsx";
+import BookmarkPanel from "./components/panels/BookmarkPanel.jsx";
+import NightSkyPanel from "./components/panels/NightSkyPanel.jsx";
+import SearchPanel from "./components/panels/SearchPanel.jsx";
+import MoonCalendarPanel from "./components/panels/MoonCalendarPanel.jsx";
+import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -482,113 +490,17 @@ export default function App(){
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>ズーム ⠿</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Event calendar panel */}
-      {cleanView===0&&!landing&&panels.showEvents&&<DragPanel style={Object.assign({},pn,{top:80,left:10,width:260,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,220,80,0.95)"}}>📅 天文イベント（2年先まで）</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"showEvents",value:false});}}>✕</button>
-        </div>
-        <div style={{overflowY:"auto",flex:1}}>
-          {eventsRef.current.length===0&&<div style={{color:"rgba(255,255,255,0.4)",fontSize:9}}>イベントが見つかりません</div>}
-          {eventsRef.current.map(function(ev,ei){return <div key={ei} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 0",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
-            <span style={{fontSize:12,flexShrink:0}}>{ev.ic}</span>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.9)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.n}</div>
-              <div style={{fontSize:8,color:"rgba(180,200,255,0.6)"}}>{ev.date}</div>
-            </div>
-            <button style={Object.assign({},bF,{padding:"2px 5px",fontSize:8,flexShrink:0})} onClick={function(){S.current.t=ev.t;dispatchPanel({type:"SET",key:"showEvents",value:false});}}>→移動</button>
-          </div>;})}
-        </div>
-      </DragPanel>}
+      {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} pn={pn} bF={bF}/>}
 
-      {/* Exoplanet panel */}
-      {cleanView===0&&!landing&&panels.exoOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,180,120,0.95)"}}>🪐 系外惑星 → 着陸</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"exoOpen",value:false});}}>✕</button>
-        </div>
-        <div style={{fontSize:9,color:"rgba(255,210,170,0.6)",marginBottom:6}}>近隣の系外惑星地表へ瞬間移動</div>
-        {EXOPLANETS.map(function(ex){return <button key={ex.n} style={Object.assign({},bF,{width:"100%",textAlign:"left",marginBottom:4,padding:"5px 8px",lineHeight:1.4})} onClick={function(){doLanding(ex.n);dispatchPanel({type:"SET",key:"exoOpen",value:false});}}>
-          <div style={{color:"rgba(255,200,160,0.95)",fontWeight:"bold"}}>{ex.j}</div>
-          <div style={{fontSize:8,color:"rgba(220,200,180,0.65)"}}>{ex.e}</div>
-          <div style={{fontSize:8,color:"rgba(200,180,160,0.55)"}}>{ex.starInfo} · {ex.temp}</div>
-        </button>;})}
-      </DragPanel>}
+      {cleanView===0&&!landing&&<ExoplanetPanel visible={panels.exoOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {/* Satellite/Small-body landing panel */}
-      {cleanView===0&&!landing&&panels.satOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:240,maxWidth:"calc(100vw - 20px)",padding:"10px 12px",maxHeight:"70vh",display:"flex",flexDirection:"column"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,210,255,0.95)"}}>🛰 衛星・小天体 → 着陸</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"satOpen",value:false});}}>✕</button>
-        </div>
-        <div style={{overflowY:"auto",flex:1}}>
-          {[
-            {grp:"地球系",col:"180,210,255",items:[{k:"Moon",j:"月",e:"Moon"}]},
-            {grp:"木星のガリレオ衛星",col:"220,200,100",items:[{k:"Io",j:"イオ"},{k:"Europa",j:"エウロパ"},{k:"Ganymede",j:"ガニメデ"},{k:"Callisto",j:"カリスト"}]},
-            {grp:"土星系",col:"218,168,88",items:[{k:"Titan",j:"タイタン"}]},
-            {grp:"海王星系",col:"205,190,178",items:[{k:"Triton",j:"トリトン"}]},
-            {grp:"冥王星系",col:"195,175,150",items:[{k:"Charon",j:"カロン"}]},
-            {grp:"小惑星",col:"168,140,108",items:[{k:"Itokawa",j:"イトカワ"},{k:"Ryugu",j:"リュウグウ"}]},
-            {grp:"彗星核",col:"140,190,255",items:[{k:"HalleyCore",j:"ハレー彗星核"}]},
-          ].map(function(g){return <div key={g.grp} style={{marginBottom:6}}>
-            <div style={{fontSize:9,color:"rgba("+g.col+",0.7)",marginBottom:3}}>{g.grp}</div>
-            <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{g.items.map(function(it){return <button key={it.k} style={Object.assign({},bF,{fontSize:9,padding:"3px 7px",border:"1px solid rgba("+g.col+",0.45)",color:"rgba("+g.col+",1)"})} onClick={function(){doLanding(it.k);dispatchPanel({type:"SET",key:"satOpen",value:false});}}>{it.j}</button>;})}</div>
-          </div>;})}
-        </div>
-      </DragPanel>}
+      {cleanView===0&&!landing&&<SatellitePanel visible={panels.satOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {/* Bookmarks panel */}
-      {cleanView===0&&!landing&&panels.bookOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:10,width:220,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,220,120,0.95)"}}>🔖 ブックマーク</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"bookOpen",value:false});}}>✕</button>
-        </div>
-        <div style={{display:"flex",gap:3,marginBottom:6}}>
-          <input type="text" placeholder="名前..." value={bookmarkName} onChange={function(e){setBookmarkName(e.target.value);}} style={{flex:1,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"3px 5px",outline:"none",fontFamily:"system-ui"}}/>
-          <button style={bN} onClick={function(){saveBM(bookmarkName||simDaysToDate(S.current.t));setBookmarkName("");}}>保存</button>
-        </div>
-        <div style={{maxHeight:180,overflowY:"auto"}}>
-          {bookmarks.length===0&&<div style={{fontSize:9,color:"rgba(255,255,255,0.3)",padding:"4px 0"}}>保存されたブックマークなし</div>}
-          {bookmarks.map(function(bm,bi){return <div key={bi} style={{display:"flex",alignItems:"center",gap:3,padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.06)"}}>
-            <button style={Object.assign({},bF,{flex:1,textAlign:"left",fontSize:9,padding:"3px 5px",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"})} onClick={function(){importState(bm.code);dispatchPanel({type:"SET",key:"bookOpen",value:false});}}>{bm.name}</button>
-            <button style={Object.assign({},bF,{padding:"2px 5px",fontSize:8,color:"rgba(255,100,100,0.7)",flexShrink:0})} onClick={function(){delBM(bi);}}>✕</button>
-          </div>;})}
-        </div>
-      </DragPanel>}
+      {cleanView===0&&!landing&&<BookmarkPanel visible={panels.bookOpen} dispatchPanel={dispatchPanel} bookmarks={bookmarks} bookmarkName={bookmarkName} setBookmarkName={setBookmarkName} saveBM={saveBM} delBM={delBM} importState={importState} S={S} pn={pn} bF={bF} bN={bN}/>}
 
-      {/* Tonight's Sky panel */}
-      {cleanView===0&&!landing&&panels.nightSkyOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:isPhone?10:240,width:230,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(255,220,80,0.95)"}}>🌙 今夜の空</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"nightSkyOpen",value:false});}}>✕</button>
-        </div>
-        <div style={{display:"flex",gap:4,alignItems:"center",marginBottom:6,flexWrap:"wrap"}}>
-          <span style={{fontSize:9,color:"rgba(255,255,255,0.45)"}}>緯度</span>
-          <input type="number" min="-90" max="90" value={nightSkyLat} onChange={function(e){setNightSkyLat(+e.target.value);}} style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 4px",outline:"none",fontFamily:"system-ui"}}/>
-          <span style={{fontSize:9,color:"rgba(255,255,255,0.45)"}}>° 経度</span>
-          <input type="number" min="-180" max="180" value={nightSkyLng} onChange={function(e){setNightSkyLng(+e.target.value);}} style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 4px",outline:"none",fontFamily:"system-ui"}}/>
-          <button style={Object.assign({},bF,{fontSize:8,padding:"2px 5px"})} onClick={function(){if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(pos){setNightSkyLat(Math.round(pos.coords.latitude));setNightSkyLng(Math.round(pos.coords.longitude));},function(){});}}>📍</button>
-        </div>
-        {(function(){var nsd=computeNightSky(S.current.t,nightSkyLat,nightSkyLng);return <div>
-          <div style={{fontSize:9,color:nsd.isNight?"rgba(100,180,255,0.85)":"rgba(255,200,80,0.8)",marginBottom:5}}>{nsd.isNight?"🌙 夜間観測適":"☀ 昼間 (太陽 "+nsd.sunAlt+"°)"}</div>
-          {nsd.items.filter(function(x){return x.name!=="地球";}).map(function(item){return <div key={item.name} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"2px 0",borderBottom:"1px solid rgba(255,255,255,0.05)",opacity:item.vis?1:0.38}}>
-            <span style={{fontSize:9,color:"rgba(255,255,255,0.88)"}}>{item.vis?"✓ ":""}{item.name}</span>
-            <span style={{fontSize:8,color:"rgba(180,200,255,0.6)"}}>{item.alt}° / {item.mag}等</span>
-          </div>;})}
-        </div>;}())}
-      </DragPanel>}
+      {cleanView===0&&!landing&&<NightSkyPanel visible={panels.nightSkyOpen} dispatchPanel={dispatchPanel} nightSkyLat={nightSkyLat} setNightSkyLat={setNightSkyLat} nightSkyLng={nightSkyLng} setNightSkyLng={setNightSkyLng} S={S} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {/* Search panel */}
-      {cleanView===0&&!landing&&panels.searchOpen&&<DragPanel style={Object.assign({},pn,{top:80,left:10,width:220,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(100,210,255,0.95)"}}>🔍 天体検索</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"searchOpen",value:false});}}>✕</button>
-        </div>
-        <input autoFocus type="text" placeholder="惑星名・彗星名..." value={searchQ} onChange={function(e){setSearchQ(e.target.value);}}
-          style={{width:"100%",boxSizing:"border-box",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(255,255,255,0.2)",borderRadius:4,color:"rgba(255,255,255,0.9)",fontSize:10,padding:"4px 6px",fontFamily:"system-ui",outline:"none",marginBottom:6}}/>
-        <div style={{maxHeight:160,overflowY:"auto"}}>
-          {(function(){var q=searchQ.toLowerCase();var results=[];FL.forEach(function(f){var nm=(f.l||"")+(f.e?(" "+f.e):"");if(!q||nm.toLowerCase().indexOf(q)>=0)results.push({k:f.k,label:lang==="en"?(f.e||f.l):f.l});});return results.map(function(r){return <button key={r.k} style={Object.assign({},bF,{width:"100%",textAlign:"left",marginBottom:3,padding:"4px 7px"})} onClick={function(){focusOn(r.k);dispatchPanel({type:"SET",key:"searchOpen",value:false});}}>{r.label}</button>;});}())}
-        </div>
-      </DragPanel>}
+      {cleanView===0&&!landing&&<SearchPanel visible={panels.searchOpen} dispatchPanel={dispatchPanel} searchQ={searchQ} setSearchQ={setSearchQ} focusOn={focusOn} lang={lang} pn={pn} bF={bF}/>}
 
       {/* Info panel */}
       {cleanView===0&&!landing&&<InfoPanel visible={info!==null} info={info} lang={lang} touring={touring} doLanding={doLanding} setInfo={setInfo} moonGeoData={moonGeoData} planetGeoData={planetGeoData} pn={pn} bF={bF} bT={bT} bD={bD} isPhone={isPhone}/>}
@@ -648,47 +560,11 @@ export default function App(){
       </div>}
 
       {cleanView===0&&!landing&&!isPhone&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能</div>}
-      {/* Moon Phase Calendar panel */}
-      {cleanView===0&&!landing&&panels.moonCal&&<DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:isPhone?10:200,width:200,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(200,180,255,0.95)"}}>🌙 月相カレンダー</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"moonCal",value:false});}}>✕</button>
-        </div>
-        <div style={{maxHeight:240,overflowY:"auto"}}>
-          {(function(){var phases=computeMoonPhases(S.current.t),now=S.current.t;return phases.filter(function(ph){return ph.t>=now-5&&ph.t<=now+65;}).map(function(ph,pi){var daysFromNow=ph.t-now;var isFut=daysFromNow>=0;return <div key={pi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:"1px solid rgba(255,255,255,0.06)",opacity:isFut?1:0.45}}>
-            <span style={{fontSize:13}}>{ph.name.slice(0,2)}</span>
-            <div style={{flex:1,marginLeft:6}}>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.85)"}}>{ph.name.slice(3)}</div>
-              <div style={{fontSize:8,color:"rgba(180,200,255,0.55)"}}>{simDaysToDate(ph.t)}</div>
-            </div>
-            <span style={{fontSize:8,color:isFut?"rgba(200,220,255,0.7)":"rgba(255,255,255,0.3)"}}>{isFut?"+"+Math.round(daysFromNow)+"d":Math.round(daysFromNow)+"d"}</span>
-          </div>;})}())}
-        </div>
-      </DragPanel>}
+      {cleanView===0&&!landing&&<MoonCalendarPanel visible={panels.moonCal} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {/* Orbital Elements panel */}
-      {cleanView===0&&!landing&&panels.orbElemOpen&&info&&info.type==="planet"&&<DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:isPhone?10:200,width:185,maxWidth:"calc(100vw - 20px)",padding:"10px 12px"})}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-          <span style={{fontSize:11,fontWeight:"bold",color:"rgba(180,220,255,0.95)"}}>📊 軌道要素</span>
-          <button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"orbElemOpen",value:false});}}>✕</button>
-        </div>
-        {(function(){var oe=computeOrbElem(info.pl,S.current.t);return <div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.75)"}}>
-          <div style={{color:"rgba(200,220,255,0.6)",marginBottom:3,fontSize:8}}>{lang==="en"?info.pl.n:info.pl.j}</div>
-          <div>a (長半径): {oe.a.toFixed(3)} AU</div>
-          <div>e (離心率): {oe.e.toFixed(4)}</div>
-          <div>i (軌道傾斜): {oe.i.toFixed(1)}°</div>
-          <div>T (公転周期): {oe.T.toFixed(2)} 日</div>
-          <div>M (平均近点角): {oe.M.toFixed(1)}°</div>
-          <div>ν (真近点角): {oe.nu.toFixed(1)}°</div>
-          <div>r (太陽距離): {oe.r.toFixed(4)} AU</div>
-          <div>v (速度): {oe.v.toFixed(2)} km/s</div>
-          <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,color:"rgba(180,220,255,0.85)"}}>🔭 地学検算</div>
-          <div title="ケプラー第3法則: a³/T²＝1（AU・年）">K₃ a³/T²＝{(Math.pow(oe.a,3)/Math.pow(oe.T/365.25,2)).toFixed(3)} <span style={{color:"rgba(255,255,255,0.35)"}}>AU³/年²</span></div>
-          <div>{(function(){var Te=365.25,Tp=oe.T;if(Math.abs(Tp-Te)<2)return "会合周期: ∞（基準: 地球）";if(Tp<Te)return "会合周期: "+(1/(1/Tp-1/Te)).toFixed(0)+"日（内惑星）";return "会合周期: "+(1/(1/Te-1/Tp)).toFixed(0)+"日（外惑星）";})()}</div>
-        </div>;}())}
-      </DragPanel>}
+      {cleanView===0&&!landing&&<OrbitalElementsPanel visible={panels.orbElemOpen} dispatchPanel={dispatchPanel} info={info} S={S} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.22.1</div>
+      <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v2.23.0</div>
 
       {/* Clean view mode for native screenshot */}
       {cleanView>0&&<div style={{position:"absolute",inset:0,zIndex:200}} onClick={function(){setCleanView(0);}}>
