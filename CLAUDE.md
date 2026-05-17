@@ -45,11 +45,25 @@ public/
 ## 開発コマンド
 
 ```bash
-npm install       # 依存関係インストール
-npm run dev       # 開発サーバー起動 (http://localhost:5173)
-npm run build     # 本番ビルド（出力 ~298KB / gzip 99KB）
-npm run preview   # ビルド結果をプレビュー
+npm install            # 依存関係インストール
+npm run dev            # 開発サーバー起動 (http://localhost:5173)
+npm run build          # 本番ビルド（出力 ~370KB / gzip 124KB）
+npm run preview        # ビルド結果をプレビュー
+npm run test:unit      # Vitest ユニットテスト実行
+npm run test:unit:watch # Vitest ウォッチモード
+npm run typecheck      # JSDoc + // @ts-check の静的型チェック
+npm test               # Playwright ビジュアル回帰テスト
 ```
+
+### 型チェック方針
+
+ES モジュール内の未定義変数アクセスは strict mode 下で `ReferenceError` を発生させる
+（実例: v2.17.1 で修正した `sunDir` 問題）。これを静的検出するため:
+
+- `tsconfig.json` で `allowJs:true, checkJs:false` (オプトイン方式)
+- ファイル先頭に `// @ts-check` を付けたファイルのみ `tsc --noEmit` が検査
+- 検査対象: `drawLanding.js` 系3ファイル
+- JSDoc `@typedef` を `drawLanding.js` で集中定義し、子ファイルは `import("./drawLanding.js").LandingSkyState` 形式で参照
 
 ## アーキテクチャ
 
