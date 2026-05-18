@@ -34,4 +34,30 @@ describe("panelReducer", function(){
     expect(PANEL_INIT.exoOpen).toBe(false);
     expect(s).not.toBe(PANEL_INIT);
   });
+
+  it("TOGGLE_EX は他の排他パネルを閉じて対象を開く", function(){
+    var open=panelReducer(PANEL_INIT,{type:"SET",key:"exoOpen",value:true});
+    open=panelReducer(open,{type:"SET",key:"bookOpen",value:true});
+    var s=panelReducer(open,{type:"TOGGLE_EX",key:"searchOpen"});
+    expect(s.searchOpen).toBe(true);
+    expect(s.exoOpen).toBe(false);
+    expect(s.bookOpen).toBe(false);
+  });
+
+  it("TOGGLE_EX は同じキーを2度呼ぶと閉じる", function(){
+    var s1=panelReducer(PANEL_INIT,{type:"TOGGLE_EX",key:"compareTable"});
+    expect(s1.compareTable).toBe(true);
+    var s2=panelReducer(s1,{type:"TOGGLE_EX",key:"compareTable"});
+    expect(s2.compareTable).toBe(false);
+  });
+
+  it("CLOSE_ALL は全ての排他パネルを閉じる", function(){
+    var open=panelReducer(PANEL_INIT,{type:"SET",key:"exoOpen",value:true});
+    open=panelReducer(open,{type:"SET",key:"satOpen",value:true});
+    open=panelReducer(open,{type:"SET",key:"tourPick",value:true});
+    var s=panelReducer(open,{type:"CLOSE_ALL"});
+    expect(s.exoOpen).toBe(false);
+    expect(s.satOpen).toBe(false);
+    expect(s.tourPick).toBe(false);
+  });
 });

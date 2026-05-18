@@ -6,9 +6,9 @@ var bD=Object.assign({},bF,{opacity:0.35,cursor:"default"});
 var lb={fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:4,textTransform:"uppercase",letterSpacing:1};
 var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",border:"1px solid rgba("+c+",0.5)",color:"rgba(255,255,255,0.9)"});};
 
-var isMob=typeof window!=="undefined"&&window.innerWidth<640;
-var bFM=Object.assign({},bF,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
-var bNM=Object.assign({},bN,isMob?{padding:"7px 12px",fontSize:11,minHeight:32}:{});
+/* bFM/bNM are only rendered inside isPhone-gated UI in App.jsx, so always carry the mobile sizing */
+var bFM=Object.assign({},bF,{padding:"7px 12px",fontSize:11,minHeight:32});
+var bNM=Object.assign({},bN,{padding:"7px 12px",fontSize:11,minHeight:32});
 
 /* Phone: render sub-panels as a bottom sheet anchored above the focus bar (~52px tall).
    Desktop: keep the panel's own positioning (caller provides top/left/right). */
