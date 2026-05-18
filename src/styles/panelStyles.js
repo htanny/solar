@@ -3,6 +3,7 @@ var bF={background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0
 var bN=Object.assign({},bF,{background:"rgba(70,140,255,0.25)",border:"1px solid rgba(70,140,255,0.45)",color:"rgba(170,210,255,1)"});
 var bU=Object.assign({},bF,{background:"rgba(255,170,50,0.25)",border:"1px solid rgba(255,170,50,0.5)",color:"rgba(255,210,140,1)"});
 var bD=Object.assign({},bF,{opacity:0.35,cursor:"default"});
+var bClose=Object.assign({},bF,{padding:"2px 6px",fontSize:9});
 var lb={fontSize:9,color:"rgba(255,255,255,0.4)",marginBottom:4,textTransform:"uppercase",letterSpacing:1};
 var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",border:"1px solid rgba("+c+",0.5)",color:"rgba(255,255,255,0.9)"});};
 
@@ -17,4 +18,4 @@ function mobileSheet(isPhone){
   return{position:"fixed",top:"auto",left:8,right:8,bottom:62,maxWidth:"none",width:"auto",maxHeight:"calc(100dvh - 130px)",overflowY:"auto",zIndex:25};
 }
 
-export { pn, bF, bN, bU, bD, lb, bT, bFM, bNM, mobileSheet };
+export { pn, bF, bN, bU, bD, bClose, lb, bT, bFM, bNM, mobileSheet };

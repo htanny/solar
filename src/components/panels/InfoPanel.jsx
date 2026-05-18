@@ -1,5 +1,6 @@
 import { DragPanel } from "../DragPanel.jsx";
 import { SUNINFO } from "../../data/solarData.js";
+import { bClose } from "../../styles/panelStyles.js";
 
 export default function InfoPanel({visible,info,lang,touring,doLanding,setInfo,moonGeoData,planetGeoData,pn,bF,bT,bD,isPhone}){
   if(!visible||!info)return null;
@@ -53,7 +54,7 @@ export default function InfoPanel({visible,info,lang,touring,doLanding,setInfo,m
   return <DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:10,width:isPhone?170:180,maxWidth:"calc(100vw - 20px)",maxHeight:isPhone?"calc(100vh - 240px)":"none",overflowY:isPhone?"auto":"visible",padding:"10px 12px"})}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
       <span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{title}</span>
-      <button aria-label={en?"Close":"閉じる"} style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button>
+      <button aria-label={en?"Close":"閉じる"} style={bClose} onClick={function(){setInfo(null);}}>✕</button>
     </div>
     {info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}>
       <div>{L.mass}: {SUNINFO.mass}</div>

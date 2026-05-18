@@ -1,4 +1,5 @@
 import { DragPanel } from "../DragPanel.jsx";
+import { bClose } from "../../styles/panelStyles.js";
 
 export default function TourPickerPanel({visible,dispatchPanel,startTourLv,lang,pn,bF}){
   if(!visible)return null;
@@ -11,7 +12,7 @@ export default function TourPickerPanel({visible,dispatchPanel,startTourLv,lang,
   return <DragPanel style={Object.assign({},pn,{top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:340,maxWidth:"calc(100vw - 20px)",padding:"14px 16px",zIndex:30})}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
       <span style={{fontSize:12,fontWeight:"bold",color:"rgba(200,100,255,0.95)"}}>{en?"🎓 Pick Tour Level":"🎓 学習ツアー · レベル選択"}</span>
-      <button aria-label={en?"Close":"閉じる"} style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){dispatchPanel({type:"SET",key:"tourPick",value:false});}}>✕</button>
+      <button aria-label={en?"Close":"閉じる"} style={bClose} onClick={function(){dispatchPanel({type:"SET",key:"tourPick",value:false});}}>✕</button>
     </div>
     <div style={{display:"flex",flexDirection:"column",gap:6}}>{levels.map(function(L){return <button key={L.k} style={Object.assign({},bF,{background:"rgba("+L.col+",0.18)",border:"1px solid rgba("+L.col+",0.45)",textAlign:"left",padding:"8px 12px",fontSize:11})} onClick={function(){startTourLv(L.k);dispatchPanel({type:"SET",key:"tourPick",value:false});}}>
       <div style={{fontWeight:"bold",fontSize:11,color:"rgba("+L.col+",1)"}}>{en?L.e:L.j}</div>
