@@ -25,7 +25,12 @@ src/
   render/
     utils.js               # 3D数学・描画ユーティリティ（pj・RX/RY・fillCirc等）
     drawBodies.js          # 軌道ビュー描画（惑星テクスチャ・リング・銀河・星）
-    drawLanding.js         # 着陸モード描画（地表・空・HUD）
+    drawLanding.js         # 着陸モード描画コーディネーター
+    drawLandingSky.js      # 着陸空：太陽・日食・黄道光・オーロラ・大気
+    drawLandingStars.js    # 着陸空：星・命名恒星・星座線・流星群
+    drawLandingSkyBodies.js # 着陸空：他天体（月・惑星）の描画
+    drawLandingTerrain.js  # 着陸地表
+    drawLandingHUD.js      # 着陸HUD
   audio/
     landAudio.js           # 惑星別環境音（Web Audio API）
   hooks/
@@ -40,7 +45,7 @@ public/
   deploy.yml               # GitHub Pages自動デプロイ
 ```
 
-**行数目安**: App.jsx ~700行 / drawLanding.js ~680行 / drawBodies.js ~340行 / 合計 ~2100行
+**行数目安**: App.jsx ~640行 / 着陸描画系 ~1500行（5ファイル分割済）/ drawBodies.js ~210行 / 合計 ~3700行
 
 ## 開発コマンド
 
