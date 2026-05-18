@@ -3,5 +3,112 @@ import { SUNINFO } from "../../data/solarData.js";
 
 export default function InfoPanel({visible,info,lang,touring,doLanding,setInfo,moonGeoData,planetGeoData,pn,bF,bT,bD,isPhone}){
   if(!visible||!info)return null;
-  return <DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:10,width:isPhone?170:180,maxWidth:"calc(100vw - 20px)",maxHeight:isPhone?"calc(100vh - 240px)":"none",overflowY:isPhone?"auto":"visible",padding:"10px 12px"})}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{info.type==="sun"?(lang==="en"?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(lang==="en"?info.pl.n:info.pl.j)}</span><button style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button></div>{info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {SUNINFO.mass}</div><div>半径: {SUNINFO.r}</div><div>表面温度: {SUNINFO.temp}</div><div>分類: {SUNINFO.type}</div><div>年齢: {SUNINFO.age}</div></div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:info.pl.n==="Moon"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>太陽日: {info.pl.day}</div><div>恒星月: {info.pl.year}</div><div>朔望月: {info.pl.synPeriod}</div><div>地球からの平均距離: {info.pl.distEarth}</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°（公転面に対し1.54°）</div><div style={{fontSize:8,color:"rgba(255,255,255,0.45)",marginTop:3,lineHeight:"13px"}}>有人着陸: {info.pl.landingsInfo}</div>{(function(){var m=moonGeoData();return <><div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(220,220,180,0.85)"}}>{lang==="en"?"Live data":"現在のデータ"}</div><div>月相: {m.phaseName}</div><div>月齢: {m.age.toFixed(1)}日</div><div>輝面比: {(m.phaseFrac*100).toFixed(0)}%</div><div>距離: {(m.distKm/10000).toFixed(2)}万km</div><div>視直径: {m.angSizeDeg.toFixed(3)}°</div><div>等級: {m.mag.toFixed(1)}等</div></>;})()}<button style={Object.assign({},touring?bD:bT("180,180,200"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding("Moon");}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land on Moon":"🚀 月面に着陸")}</button></div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}><div>質量: {info.pl.mass}</div><div>半径: {(info.pl.r*1000).toLocaleString()} km</div><div>重力: {info.pl.grav}</div><div>自転: {info.pl.day}</div><div>公転: {info.pl.year}</div><div>衛星: {info.pl.moons}個</div><div>大気: {info.pl.atm}</div><div>気温: {info.pl.temp}</div><div>地軸傾斜: {info.pl.t}°</div><div>太陽距離: {info.pl.d}百万km</div>{info.pl.dens&&<><div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(150,220,180,0.8)"}}>地学データ</div><div>密度: {info.pl.dens} g/cm³</div><div>脱出速度: {info.pl.esc} km/s</div><div>アルベド: {(info.pl.alb*100).toFixed(0)}%</div></>}{(function(){var g=planetGeoData(info.pl);return <><div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(255,220,140,0.8)"}}>{lang==="en"?"From Earth (live)":"地球から（現在）"}</div><div>距離: {g.au.toFixed(2)} AU ({g.d.toFixed(0)}百万km)</div><div>光の到達: {g.lt<60?g.lt.toFixed(0)+"秒":g.lt<3600?(g.lt/60).toFixed(1)+"分":(g.lt/3600).toFixed(1)+"時間"}</div><div>視直径: {g.ang.toFixed(1)}″</div><div>等級: {g.mag.toFixed(1)}等</div>{(info.pl.n==="Mercury"||info.pl.n==="Venus")&&<div>位相: {(g.phaseFrac*100).toFixed(0)}%（位相角{g.phaseDeg.toFixed(0)}°）</div>}</>;})()}<button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?(lang==="en"?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可"):(lang==="en"?"🚀 Land":"🚀 着陸")}</button></div>}</DragPanel>;
+  var en=lang==="en";
+  var L={
+    mass:en?"Mass":"質量",
+    radius:en?"Radius":"半径",
+    temp:en?"Surface temp":"表面温度",
+    type:en?"Class":"分類",
+    age:en?"Age":"年齢",
+    grav:en?"Gravity":"重力",
+    solDay:en?"Solar day":"太陽日",
+    sidMonth:en?"Sidereal month":"恒星月",
+    synMonth:en?"Synodic month":"朔望月",
+    distEarth:en?"Avg dist from Earth":"地球からの平均距離",
+    atm:en?"Atmosphere":"大気",
+    airTemp:en?"Temperature":"気温",
+    tilt:en?"Axial tilt":"地軸傾斜",
+    ecl:en?"1.54° to ecliptic":"公転面に対し1.54°",
+    landings:en?"Crewed landings":"有人着陸",
+    live:en?"Live data":"現在のデータ",
+    phase:en?"Phase":"月相",
+    moonAge:en?"Moon age":"月齢",
+    illum:en?"Illumination":"輝面比",
+    dist:en?"Distance":"距離",
+    angSize:en?"Angular diameter":"視直径",
+    mag:en?"Magnitude":"等級",
+    rot:en?"Rotation":"自転",
+    orbit:en?"Orbital period":"公転",
+    moons:en?"Moons":"衛星",
+    sunDist:en?"Sun distance":"太陽距離",
+    physical:en?"Physical data":"地学データ",
+    dens:en?"Density":"密度",
+    esc:en?"Escape velocity":"脱出速度",
+    alb:en?"Albedo":"アルベド",
+    fromEarth:en?"From Earth (live)":"地球から（現在）",
+    ltt:en?"Light travel":"光の到達",
+    ph:en?"Phase":"位相",
+    phAng:en?"phase angle":"位相角",
+    stopTour:en?"🚀 Stop Tour First":"🚀 ツアー停止後に着陸可",
+    landMoon:en?"🚀 Land on Moon":"🚀 月面に着陸",
+    land:en?"🚀 Land":"🚀 着陸",
+  };
+  var unitMoons=en?"":"個";
+  var unitMkm=en?" Mkm":"百万km";
+  function fmtLtt(s){
+    if(en){if(s<60)return s.toFixed(0)+" s";if(s<3600)return (s/60).toFixed(1)+" min";return (s/3600).toFixed(1)+" h";}
+    if(s<60)return s.toFixed(0)+"秒";if(s<3600)return (s/60).toFixed(1)+"分";return (s/3600).toFixed(1)+"時間";
+  }
+  var title=info.type==="sun"?(en?"Sun":SUNINFO.j):info.type==="comet"?info.cm.name:(en?info.pl.n:info.pl.j);
+  return <DragPanel style={Object.assign({},pn,{top:isPhone?160:80,right:10,width:isPhone?170:180,maxWidth:"calc(100vw - 20px)",maxHeight:isPhone?"calc(100vh - 240px)":"none",overflowY:isPhone?"auto":"visible",padding:"10px 12px"})}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+      <span style={{fontSize:13,fontWeight:"bold",color:"rgba(255,255,255,0.95)"}}>{title}</span>
+      <button aria-label={en?"Close":"閉じる"} style={Object.assign({},bF,{padding:"2px 6px",fontSize:9})} onClick={function(){setInfo(null);}}>✕</button>
+    </div>
+    {info.type==="sun"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}>
+      <div>{L.mass}: {SUNINFO.mass}</div>
+      <div>{L.radius}: {SUNINFO.r}</div>
+      <div>{L.temp}: {SUNINFO.temp}</div>
+      <div>{L.type}: {SUNINFO.type}</div>
+      <div>{L.age}: {SUNINFO.age}</div>
+    </div>:info.type==="comet"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)",whiteSpace:"pre-line"}}>{info.cm.info}</div>:info.pl.n==="Moon"?<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}>
+      <div>{L.mass}: {info.pl.mass}</div>
+      <div>{L.radius}: {(info.pl.r*1000).toLocaleString()} km</div>
+      <div>{L.grav}: {info.pl.grav}</div>
+      <div>{L.solDay}: {info.pl.day}</div>
+      <div>{L.sidMonth}: {info.pl.year}</div>
+      <div>{L.synMonth}: {info.pl.synPeriod}</div>
+      <div>{L.distEarth}: {info.pl.distEarth}</div>
+      <div>{L.atm}: {info.pl.atm}</div>
+      <div>{L.airTemp}: {info.pl.temp}</div>
+      <div>{L.tilt}: {info.pl.t}°（{L.ecl}）</div>
+      <div style={{fontSize:8,color:"rgba(255,255,255,0.45)",marginTop:3,lineHeight:"13px"}}>{L.landings}: {info.pl.landingsInfo}</div>
+      {(function(){var m=moonGeoData();return <>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(220,220,180,0.85)"}}>{L.live}</div>
+        <div>{L.phase}: {m.phaseName}</div>
+        <div>{L.moonAge}: {m.age.toFixed(1)}{en?" d":"日"}</div>
+        <div>{L.illum}: {(m.phaseFrac*100).toFixed(0)}%</div>
+        <div>{L.dist}: {(m.distKm/10000).toFixed(2)}{en?"×10⁴ km":"万km"}</div>
+        <div>{L.angSize}: {m.angSizeDeg.toFixed(3)}°</div>
+        <div>{L.mag}: {m.mag.toFixed(1)}{en?" mag":"等"}</div>
+      </>;})()}
+      <button style={Object.assign({},touring?bD:bT("180,180,200"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding("Moon");}}>{touring?L.stopTour:L.landMoon}</button>
+    </div>:<div style={{fontSize:9,lineHeight:"16px",color:"rgba(255,255,255,0.7)"}}>
+      <div>{L.mass}: {info.pl.mass}</div>
+      <div>{L.radius}: {(info.pl.r*1000).toLocaleString()} km</div>
+      <div>{L.grav}: {info.pl.grav}</div>
+      <div>{L.rot}: {info.pl.day}</div>
+      <div>{L.orbit}: {info.pl.year}</div>
+      <div>{L.moons}: {info.pl.moons}{unitMoons}</div>
+      <div>{L.atm}: {info.pl.atm}</div>
+      <div>{L.airTemp}: {info.pl.temp}</div>
+      <div>{L.tilt}: {info.pl.t}°</div>
+      <div>{L.sunDist}: {info.pl.d}{unitMkm}</div>
+      {info.pl.dens&&<>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(150,220,180,0.8)"}}>{L.physical}</div>
+        <div>{L.dens}: {info.pl.dens} g/cm³</div>
+        <div>{L.esc}: {info.pl.esc} km/s</div>
+        <div>{L.alb}: {(info.pl.alb*100).toFixed(0)}%</div>
+      </>}
+      {(function(){var g=planetGeoData(info.pl);return <>
+        <div style={{borderTop:"1px solid rgba(255,255,255,0.1)",margin:"6px 0 4px",paddingTop:6,fontSize:9,color:"rgba(255,220,140,0.8)"}}>{L.fromEarth}</div>
+        <div>{L.dist}: {g.au.toFixed(2)} AU ({g.d.toFixed(0)}{unitMkm})</div>
+        <div>{L.ltt}: {fmtLtt(g.lt)}</div>
+        <div>{L.angSize}: {g.ang.toFixed(1)}″</div>
+        <div>{L.mag}: {g.mag.toFixed(1)}{en?" mag":"等"}</div>
+        {(info.pl.n==="Mercury"||info.pl.n==="Venus")&&<div>{L.ph}: {(g.phaseFrac*100).toFixed(0)}%（{L.phAng} {g.phaseDeg.toFixed(0)}°）</div>}
+      </>;})()}
+      <button style={Object.assign({},touring?bD:bT("100,180,255"),{marginTop:8,width:"100%",fontSize:11,padding:"6px"})} disabled={touring} onClick={function(){if(!touring)doLanding(info.pl.n);}}>{touring?L.stopTour:L.land}</button>
+    </div>}
+  </DragPanel>;
 }
