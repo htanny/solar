@@ -3,8 +3,10 @@ import { version as APP_VERSION } from "../package.json";
 import { useRefSync } from "./hooks/useRefSync.js";
 import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
-import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, GAL, GAL_COLS, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
+import { drawGalaxyView, drawGalaxyInfo } from "./render/drawGalaxyView.js";
+import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps } from "./render/drawScreenHUD.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
@@ -223,49 +225,7 @@ export default function App(){
 
       /* ===== GALAXY VIEW (when zoomed out far enough) ===== */
       var galFade=cam.zm<0.03?Math.min(1,(0.03-cam.zm)/0.02):0;
-      if(galFade>0){
-        var galScale=Math.max(cam.zm*30000,W*0.006);
-        var sunGX=SUN_GAL_R*Math.cos(SUN_GAL_ANG),sunGZ=SUN_GAL_R*Math.sin(SUN_GAL_ANG);
-        /* Galaxy projection: particles in XZ plane, apply camera rotation, no focus offset */
-        /* galPj: galaxy coords (gx,gy,gz) -> screen (x,y,z) with depth */
-        var crx=cam.rx,cry=cam.ry;
-        var cryC=Math.cos(cry),cryS=Math.sin(cry),crxC=Math.cos(crx),crxS=Math.sin(crx);
-        function galPj(gx,gy,gz){
-          var dx=gx-sunGX,dy=gy,dz=gz-sunGZ;
-          /* RY */var rx=dx*cryC+dz*cryS,rz=-dx*cryS+dz*cryC;
-          /* RX */var ry=dy*crxC-rz*crxS,rz2=dy*crxS+rz*crxC;
-          return{x:rx*galScale,y:ry*galScale,z:rz2};
-        }
-        /* Bulge thickness for 3D: bulge is ellipsoidal, disk is thin */
-        /* Dust lanes */
-        ctx.globalAlpha=galFade*0.12;
-        for(var gdi=0;gdi<GAL.dust.length;gdi++){var gd2=GAL.dust[gdi];var gp=galPj(gd2.x,0,gd2.y);if(Math.abs(gp.x)>W||Math.abs(gp.y)>H)continue;var dsz=gd2.sz*galScale;ctx.fillStyle="rgba(5,3,15,1)";ctx.fillRect(gp.x-dsz*0.5,gp.y-dsz*0.5,dsz,dsz);}
-        /* Central bulge glow */
-        var bp=galPj(0,0,0);var bulgeR=8*galScale;
-        if(Math.abs(bp.x)<W+bulgeR&&Math.abs(bp.y)<H+bulgeR){
-          ctx.globalAlpha=galFade*0.4;
-          var bg2=ctx.createRadialGradient(bp.x,bp.y,0,bp.x,bp.y,bulgeR);bg2.addColorStop(0,"rgba(255,240,180,0.6)");bg2.addColorStop(0.3,"rgba(255,220,140,0.2)");bg2.addColorStop(1,"rgba(255,200,100,0)");ctx.fillStyle=bg2;ctx.fillRect(bp.x-bulgeR,bp.y-bulgeR,bulgeR*2,bulgeR*2);
-        }
-        /* Bulge stars (have vertical extent) */
-        ctx.globalAlpha=galFade*0.5;
-        for(var gbi=0;gbi<GAL.bulge.length;gbi++){var gb=GAL.bulge[gbi];var gbp=galPj(gb.x,gb.y*0.5,gb.y);if(Math.abs(gbp.x)>W||Math.abs(gbp.y)>H)continue;ctx.fillStyle="rgba(255,235,180,"+gb.b.toFixed(2)+")";ctx.fillRect(gbp.x-gb.s*0.5,gbp.y-gb.s*0.5,gb.s,gb.s);}
-        /* Spiral arm stars */
-        ctx.globalAlpha=galFade;
-        for(var gai=0;gai<GAL.arms.length;gai++){var ga2=GAL.arms[gai];var gap2=galPj(ga2.x,0,ga2.y);if(Math.abs(gap2.x)>W||Math.abs(gap2.y)>H)continue;ctx.fillStyle="rgba("+GAL_COLS[ga2.ci]+","+(ga2.b*galFade).toFixed(2)+")";var gsz=ga2.s*(galScale>5?1.5:1);ctx.fillRect(gap2.x-gsz*0.5,gap2.y-gsz*0.5,gsz,gsz);}
-        /* Nearby named stars */
-        if(galScale>20){
-          for(var nsi=0;nsi<NEAR_STARS.length;nsi++){var ns2=NEAR_STARS[nsi];var nsp2=galPj(ns2.x,0,ns2.y);if(Math.abs(nsp2.x)>W||Math.abs(nsp2.y)>H)continue;ctx.globalAlpha=galFade*ns2.b;var nsc2=ns2.sc?"rgba("+ns2.sc+",1)":"rgba(255,255,255,1)";ctx.fillStyle=nsc2;var ndot=ns2.name?1.5:1;ctx.fillRect(nsp2.x-ndot,nsp2.y-ndot,ndot*2,ndot*2);if(ns2.name&&galScale>60){ctx.fillStyle="rgba(200,220,255,"+(galFade*0.65).toFixed(2)+")";ctx.font=(galScale>100?"9px":"7px")+" sans-serif";ctx.textAlign="center";ctx.fillText(ns2.name,nsp2.x,nsp2.y-6);if(ns2.sp&&galScale>100){ctx.fillStyle="rgba("+ns2.sc+","+(galFade*0.4).toFixed(2)+")";ctx.font="7px sans-serif";ctx.fillText(ns2.sp,nsp2.x,nsp2.y-14);}}}}
-        /* Sun marker at origin (camera centered on Sun) */
-        ctx.globalAlpha=galFade;
-        var smR=Math.max(2,Math.min(6,galScale*0.3));
-        fillCirc(ctx,0,0,smR,"rgba(255,220,50,1)");
-        var smGlow=ctx.createRadialGradient(0,0,smR,0,0,smR*4);smGlow.addColorStop(0,"rgba(255,200,50,0.3)");smGlow.addColorStop(1,"rgba(255,200,50,0)");ctx.fillStyle=smGlow;ctx.fillRect(-smR*4,-smR*4,smR*8,smR*8);
-        if(galScale<50){ctx.fillStyle="rgba(255,220,100,"+(galFade*0.8).toFixed(2)+")";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText("☀ 太陽系",0,smR+14);}
-        /* Galaxy center label */
-        if(galScale<30){ctx.fillStyle="rgba(255,230,160,"+(galFade*0.5).toFixed(2)+")";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("銀河中心 ▸ いて座A*",bp.x,bp.y+bulgeR*0.3+12);}
-        /* Galaxy info overlay (fixed on screen, outside translate) */
-        ctx.globalAlpha=1;
-      }
+      drawGalaxyView(ctx,W,H,cam,galFade);
       /* Info text drawn after ctx.restore, in screen space */
       var galInfoFade=cam.zm<0.005?Math.min(1,(0.005-cam.zm)/0.004):0;
       /* Solar system fade when galaxy visible */
@@ -394,17 +354,11 @@ export default function App(){
       if(show.distbar&&!cmpR.current&&fc==="all"){var dbY=H-78,dbW=Math.min(W-40,520),dbX=(W-dbW)/2,minAU=0.3,maxAU=50,lnMin=Math.log(minAU),lnRange=Math.log(maxAU)-lnMin;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(dbX-6,dbY-14,dbW+12,28);ctx.strokeStyle="rgba(255,255,255,0.18)";ctx.lineWidth=0.6;ctx.beginPath();ctx.moveTo(dbX,dbY);ctx.lineTo(dbX+dbW,dbY);ctx.stroke();var ticks=[1,5,10,30];ctx.fillStyle="rgba(255,255,255,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";for(var dti=0;dti<ticks.length;dti++){var fx=dbX+(Math.log(ticks[dti])-lnMin)/lnRange*dbW;ctx.beginPath();ctx.moveTo(fx,dbY-3);ctx.lineTo(fx,dbY+3);ctx.stroke();ctx.fillText(ticks[dti]+"AU",fx,dbY+11);}for(var dbi=0;dbi<pd.length;dbi++){var dbau=Math.sqrt(pd[dbi].wx*pd[dbi].wx+pd[dbi].wz*pd[dbi].wz)/150;if(dbau<minAU||dbau>maxAU)continue;var dbpos=dbX+(Math.log(dbau)-lnMin)/lnRange*dbW;ctx.fillStyle=pd[dbi].pl.c;ctx.beginPath();ctx.arc(dbpos,dbY,3,0,TAU);ctx.fill();}}
 
       /* Galaxy info in screen space */
-      if(galInfoFade>0){
-        ctx.fillStyle="rgba(255,255,255,"+(galInfoFade*0.35).toFixed(2)+")";ctx.font="12px sans-serif";ctx.textAlign="center";
-        ctx.fillText("天の川銀河  Milky Way",W/2,32);ctx.font="9px sans-serif";ctx.fillText("直径: 約10万光年　恒星数: 約1000〜4000億　太陽位置: 中心から約2.6万光年",W/2,48);
-        var galSc2=Math.max(cam.zm*30000,W*0.006);var sclLy=10000,sclPx=sclLy/1000*galSc2;
-        if(sclPx>20&&sclPx<W*0.4){ctx.strokeStyle="rgba(255,255,255,"+(galInfoFade*0.3).toFixed(2)+")";ctx.lineWidth=1;var sbx2=W/2-sclPx/2,sby2=H-32;ctx.beginPath();ctx.moveTo(sbx2,sby2);ctx.lineTo(sbx2+sclPx,sby2);ctx.moveTo(sbx2,sby2-3);ctx.lineTo(sbx2,sby2+3);ctx.moveTo(sbx2+sclPx,sby2-3);ctx.lineTo(sbx2+sclPx,sby2+3);ctx.stroke();ctx.fillText("1万光年",W/2,sby2-6);}
-      }
+      drawGalaxyInfo(ctx,W,H,galInfoFade,cam);
 
-      var _cl=cleanR.current;var days=Math.floor(t),yrs=t/365.25;var curDate=simDaysToDate(t);if(!_cl){ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="10px sans-serif";ctx.textAlign="right";ctx.fillText(curDate+"  ("+(yrs>=1?(yrs.toFixed(1)+"年 / "):"")+days+"日)",W-16,26);}
-      if(_un||_rd){var bPx=80,bW=bPx/cam.zm/DK,bx=W-120,by=H-40;ctx.strokeStyle="rgba(255,255,255,0.35)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(bx,by);ctx.lineTo(bx+bPx,by);ctx.moveTo(bx,by-4);ctx.lineTo(bx,by+4);ctx.moveTo(bx+bPx,by-4);ctx.lineTo(bx+bPx,by+4);ctx.stroke();ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";ctx.textAlign="center";var lbl2;if(bW>=1e6)lbl2=(bW/1e6).toFixed(1)+"億km";else if(bW>=1e4)lbl2=(bW/1e4).toFixed(bW>=1e5?0:1)+"万km";else if(bW>=1)lbl2=Math.round(bW).toLocaleString()+"km";else lbl2=Math.round(bW*1000)+"m";ctx.fillText(lbl2,bx+bPx/2,by-8);}
-
-      if(fc!=="all"){var mmSz=90,mmX=W-mmSz-55,mmY=H-mmSz-55;ctx.fillStyle="rgba(5,5,15,0.75)";ctx.fillRect(mmX-2,mmY-2,mmSz+4,mmSz+4);ctx.strokeStyle="rgba(255,255,255,0.15)";ctx.lineWidth=1;ctx.strokeRect(mmX-2,mmY-2,mmSz+4,mmSz+4);var mmCx=mmX+mmSz/2,mmCy=mmY+mmSz/2,mmScale=(mmSz*0.45)/oR(PL[7],false,false);ctx.fillStyle="rgba(255,200,50,0.8)";ctx.fillRect(mmCx-1.5,mmCy-1.5,3,3);for(var mmi=0;mmi<pd.length;mmi++){var mmOr=oR(pd[mmi].pl,false,false),mmAng2=(t/pd[mmi].pl.p)*TAU,mmPx=mmCx+Math.cos(mmAng2)*mmOr*mmScale,mmPy=mmCy+Math.sin(mmAng2)*mmOr*mmScale;ctx.fillStyle=pd[mmi].pl.c;var mmDot=pd[mmi].pl.n===fc?2.5:1.2;ctx.fillRect(mmPx-mmDot,mmPy-mmDot,mmDot*2,mmDot*2);if(pd[mmi].pl.n===fc){ctx.strokeStyle="rgba(255,255,255,0.6)";ctx.lineWidth=0.8;ctx.beginPath();ctx.moveTo(mmPx-4,mmPy);ctx.lineTo(mmPx+4,mmPy);ctx.moveTo(mmPx,mmPy-4);ctx.lineTo(mmPx,mmPy+4);ctx.stroke();}}}
+      if(!cleanR.current)drawDateReadout(ctx,W,t,simDaysToDate(t));
+      if(_un||_rd)drawScaleBar(ctx,W,H,cam.zm);
+      drawMiniMap(ctx,W,H,t,fc,pd);
 
       var tr2=tourRef.current;if(tr2.active){var tBarW=300,tBarX=(W-tBarW)/2,tBarY=H-20;if(tr2.trans){tr2.transT=Math.min(1,(tr2.transT||0)+dt/(tr2.transDur||1.8));var ease=tr2.transT<1?tr2.transT*tr2.transT*(3-2*tr2.transT):1;cam.fx=tr2.fromFx+(tr2.toFx-tr2.fromFx)*ease;cam.fz=tr2.fromFz+(tr2.toFz-tr2.fromFz)*ease;var tdx=tr2.toFx-tr2.fromFx,tdz=tr2.toFz-tr2.fromFz,tdist=Math.sqrt(tdx*tdx+tdz*tdz);var midZm=tdist>0.5?Math.min(W,H)*0.35/tdist:Math.max(1,Math.min(tr2.fromZm,tr2.toZm)*0.5);midZm=Math.max(1,midZm);if(ease<0.5){cam.zm=tr2.fromZm+(midZm-tr2.fromZm)*(ease*2);}else{cam.zm=midZm+(tr2.toZm-midZm)*((ease-0.5)*2);}if(tr2.transT>=1){tr2.trans=false;cam.fx=tr2.toFx;cam.fz=tr2.toFz;cam.zm=tr2.toZm;}var tPanProg=ease;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,22);ctx.fillStyle="rgba(255,255,255,0.1)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(255,160,50,0.85)";ctx.fillRect(tBarX,tBarY,tBarW*tPanProg,4);ctx.fillStyle="rgba(255,200,100,0.75)";ctx.font="10px sans-serif";ctx.textAlign="center";var tD=tourData(tr2.lv,langR.current==="en");ctx.fillText("→ "+tD.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-2);}else{tr2.timer+=dt;if(tr2.timer>=TOUR_HOLD){tr2.timer=0;var nextIdx=(tr2.idx+1)%TOUR_SEQ.length;if(nextIdx===0){tr2.active=false;setTouring(false);setFoc("all");setInfo(null);}else{tr2.fromFx=cam.fx;tr2.fromFz=cam.fz;tr2.fromZm=cam.zm;var tk2=TOUR_SEQ[nextIdx];var toTarget=null;for(var tfi=0;tfi<pd.length;tfi++){if(pd[tfi].pl.n===tk2){toTarget=pd[tfi];break;}}if(!toTarget){for(var tci=0;tci<cd.length;tci++){if(cd[tci].cm.key===tk2){toTarget=cd[tci];break;}}}tr2.toFx=toTarget?toTarget.wx:0;tr2.toFz=toTarget?toTarget.wz:0;tr2.toZm=cam.zm;tr2.idx=nextIdx;tr2.transT=0;tr2.transDur=1.8;tr2.trans=true;setFoc(tk2);setInfo(findInfo(tk2));}}var tD2=tourData(tr2.lv,langR.current==="en"),tProg=tr2.timer/TOUR_HOLD,panH=96,exFacts=tD2.exam[tr2.idx];ctx.fillStyle="rgba(8,10,20,0.88)";ctx.fillRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.strokeStyle="rgba(100,150,255,0.18)";ctx.lineWidth=1;ctx.strokeRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.fillStyle="rgba(255,255,255,0.95)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(tD2.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-panH+12);ctx.fillStyle="rgba(255,220,120,0.88)";ctx.font="11px sans-serif";ctx.fillText(tD2.desc[tr2.idx],W/2,tBarY-panH+28);ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tBarX,tBarY-panH+35);ctx.lineTo(tBarX+tBarW,tBarY-panH+35);ctx.stroke();ctx.fillStyle="rgba(100,220,180,0.85)";ctx.font="9.5px sans-serif";ctx.textAlign="left";for(var efi=0;efi<exFacts.length;efi++){ctx.fillText("★ "+exFacts[efi],tBarX+4,tBarY-panH+50+efi*14);}ctx.fillStyle="rgba(255,255,255,0.12)";ctx.fillRect(tBarX,tBarY-8,tBarW,4);ctx.fillStyle="rgba(100,180,255,0.82)";ctx.fillRect(tBarX,tBarY-8,tBarW*tProg,4);var nextI2=(tr2.idx+1)%TOUR_SEQ.length;if(nextI2>0){ctx.fillStyle="rgba(255,255,255,0.38)";ctx.font="8px sans-serif";ctx.textAlign="right";ctx.fillText((langR.current==="en"?"Next: ":"次: ")+tD2.names[nextI2],tBarX+tBarW,tBarY-11);}}}
 
@@ -414,7 +368,7 @@ export default function App(){
       if(cmpR.current)drawCompareMode(ctx,cmpStateRef.current,W,H,t);
 
       /* FPS display */
-      if(showFpsR.current){var fps=fpsFrames.current.length;ctx.save();ctx.fillStyle="rgba(0,0,0,0.65)";ctx.fillRect(4,H-22,60,18);ctx.fillStyle=fps>=55?"rgba(100,255,100,0.9)":fps>=30?"rgba(255,220,80,0.9)":"rgba(255,80,80,0.9)";ctx.font="10px monospace";ctx.textAlign="left";ctx.fillText("FPS: "+fps,8,H-8);ctx.restore();}
+      if(showFpsR.current)drawFps(ctx,H,fpsFrames.current.length);
       fR.current=requestAnimationFrame(frame);
     }
     fR.current=requestAnimationFrame(frame);
