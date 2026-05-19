@@ -54,6 +54,14 @@ test.describe("interactions — panels", () => {
     await page.getByRole("button", { name: /📊 比較表/ }).click();
     await expect(page.getByText("📊 惑星比較表")).toBeVisible();
   });
+
+  test("? キーでヘルプパネル開閉", async ({ page }) => {
+    await load(page);
+    await page.keyboard.press("?");
+    await expect(page.getByText("⌨ ショートカット一覧")).toBeVisible();
+    await page.keyboard.press("?");
+    await expect(page.getByText("⌨ ショートカット一覧")).not.toBeVisible();
+  });
 });
 
 test.describe("interactions — focus selection", () => {
@@ -68,6 +76,13 @@ test.describe("interactions — focus selection", () => {
     await load(page, "state=SS%7C0%7C0.22%7C0.3%7C17%7CMars&paused=1");
     /* フォーカスが火星に設定されている: 情報パネルに「火星」表示 */
     await expect(page.locator("text=火星").first()).toBeVisible();
+  });
+
+  test("初期URLで着陸モード復元 (SL形式)", async ({ page }) => {
+    /* SL|t|plName|lat|lng|yaw|fov|tilt — 地球の北緯35度・東経135度に着陸 */
+    await load(page, "state=SL%7C0%7CEarth%7C35%7C135%7C0%7C1%7C0&paused=1");
+    /* 着陸モード時のみ表示される「離陸」ボタンの存在で確認 */
+    await expect(page.getByRole("button", { name: /🚀 離陸/ })).toBeVisible();
   });
 });
 

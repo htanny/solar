@@ -48,8 +48,18 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         ctx.beginPath();ctx.arc(0,0,moonRad,0,TAU);ctx.clip();
         ctx.fillStyle="rgba(15,18,35,1)";ctx.fillRect(-moonRad,-moonRad,moonRad*2,moonRad*2);
         if(moonPh>0.02&&moonPh<0.98){
-          var moonCol=eclLand==='lunar'?"rgba(200,60,20,":moonPh>0.45&&moonPh<0.55&&eclStrength>0.3?"rgba(180,80,30,":"rgba(235,235,210,";
-          ctx.fillStyle=moonCol+mA.toFixed(2)+")";ctx.beginPath();
+          /* Lunar eclipse: blend white→coppery red proportional to eclStrength */
+          var moonCol;
+          if(eclLand==='lunar'){
+            var ls=eclStrength;
+            var rC=Math.round(235-(235-185)*ls),gC=Math.round(235-(235-70)*ls),bC=Math.round(210-(210-25)*ls);
+            moonCol="rgba("+rC+","+gC+","+bC+",";
+          }else{
+            moonCol="rgba(235,235,210,";
+          }
+          /* Dim alpha proportionally during deep eclipse (total eclipse ≈ -2 mag vs normal full moon) */
+          var moonA=eclLand==='lunar'?mA*(1-eclStrength*0.35):mA;
+          ctx.fillStyle=moonCol+moonA.toFixed(2)+")";ctx.beginPath();
           if(moonPh<0.5){
             ctx.arc(0,0,moonRad,-Math.PI/2,Math.PI/2,false);
             ctx.bezierCurveTo(mkx,moonRad,mkx,-moonRad,0,-moonRad);
@@ -65,8 +75,18 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
           var lg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
           lg.addColorStop(0,"rgba(200,50,0,1)");lg.addColorStop(1,"rgba(200,50,0,0)");
           ctx.fillStyle=lg;ctx.fillRect(moonX-moonRad*3,moonY-moonRad*3,moonRad*6,moonRad*6);ctx.globalAlpha=1;
-          ctx.fillStyle="rgba(255,150,80,"+(0.7*lstr).toFixed(2)+")";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
-          ctx.fillText(lstr>0.85?"🌕 皆既月食":"🌕 月食",W/2,hrzY*0.08);
+          /* Partial eclipses: show Earth shadow arc encroaching from the sun-opposite side */
+          if(lstr<0.85){
+            var shAng=Math.atan2(-dySun2,-dxSun2);/* direction away from sun */
+            var shOff=(1-lstr)*moonRad*1.4;
+            var shCx=moonX+Math.cos(shAng)*shOff,shCy=moonY+Math.sin(shAng)*shOff;
+            ctx.save();ctx.beginPath();ctx.arc(moonX,moonY,moonRad,0,TAU);ctx.clip();
+            ctx.fillStyle="rgba(40,15,5,"+(0.55+lstr*0.3).toFixed(2)+")";
+            ctx.beginPath();ctx.arc(shCx,shCy,moonRad*1.1,0,TAU);ctx.fill();
+            ctx.restore();
+          }
+          ctx.fillStyle="rgba(255,150,80,"+(0.7*Math.max(lstr,0.4)).toFixed(2)+")";ctx.font="bold 10px sans-serif";ctx.textAlign="center";
+          ctx.fillText(lstr>0.85?"🌕 皆既月食":lstr>0.4?"🌖 部分月食":"🌗 半影月食",W/2,hrzY*0.08);
         }
         var mg=ctx.createRadialGradient(moonX,moonY,moonRad,moonX,moonY,moonRad*3);
         mg.addColorStop(0,"rgba(255,255,220,"+(0.12*nightAlpha).toFixed(2)+")");mg.addColorStop(1,"rgba(0,0,0,0)");

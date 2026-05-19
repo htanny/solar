@@ -6,7 +6,8 @@ import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from ".
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
 import { drawGalaxyView, drawGalaxyInfo } from "./render/drawGalaxyView.js";
-import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps } from "./render/drawScreenHUD.js";
+import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, drawConjunctionAlert } from "./render/drawScreenHUD.js";
+import { drawTourHUD } from "./render/drawTourHUD.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
@@ -27,6 +28,7 @@ import NightSkyPanel from "./components/panels/NightSkyPanel.jsx";
 import SearchPanel from "./components/panels/SearchPanel.jsx";
 import MoonCalendarPanel from "./components/panels/MoonCalendarPanel.jsx";
 import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
+import HelpPanel from "./components/panels/HelpPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -149,15 +151,37 @@ export default function App(){
   var[shareText,setShareText]=useState(null);
   var[importText,setImportText]=useState("");
   var shareURL=useCallback(function(){
-    var s=S.current,c=s.cam;
-    var code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;
+    var s=S.current,c=s.cam,code;
+    if(landR.current){
+      /* SL = Solar Landing: t|plName|lat|lng|yaw|fov|tilt */
+      code="SL|"+s.t.toFixed(1)+"|"+landR.current+"|"+landLatR.current.toFixed(2)+"|"+landLngR.current.toFixed(2)+"|"+landYR.current.toFixed(3)+"|"+landFovR.current.toFixed(2)+"|"+landTiltR.current.toFixed(2);
+    }else{
+      code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;
+    }
     setShareText(code);
   },[zi,foc]);
   var importState=useCallback(function(code){
     try{
-      var p=code.split("|");if(p[0]!=="SS"||p.length<6)return false;
+      var p=code.split("|");if(p.length<6)return false;
       /* Exit any special modes first */
-      setLanding(null);setCompare(false);stopTour();
+      setCompare(false);stopTour();
+      if(p[0]==="SL"){
+        /* Landing state restore: t|plName|lat|lng|yaw|fov|tilt */
+        if(p.length<8)return false;
+        var plName=p[2];if(!PL_MAP[plName]&&!DWARF_MAP[plName])return false;
+        S.current.t=parseFloat(p[1]);
+        var lat2=parseFloat(p[3]),lng2=parseFloat(p[4]),yaw2=parseFloat(p[5]),fov2=parseFloat(p[6]),tilt2=parseFloat(p[7]);
+        landLatR.current=lat2;setLandLat(lat2);
+        landLngR.current=lng2;setLandLng(lng2);
+        landYR.current=yaw2;setLandYaw(yaw2);
+        landFovR.current=fov2;setLandFov(fov2);
+        landTiltR.current=tilt2;setLandTilt(tilt2);
+        setFoc(plName);setInfo(findInfo(plName));
+        setLanding(plName);
+        return true;
+      }
+      if(p[0]!=="SS")return false;
+      setLanding(null);
       S.current.t=parseFloat(p[1]);
       S.current.cam.rx=parseFloat(p[2]);S.current.cam.ry=parseFloat(p[3]);
       var zv=parseInt(p[4]);if(zv>=0&&zv<ZS.length){setZi(zv);S.current.cam.zm=ZS[zv];}
@@ -198,7 +222,8 @@ export default function App(){
     function kd(e){var k=e.key;if(k===" "){e.preventDefault();setPaused(function(p){return!p;});}else if(k==="0"){focusOn("all");}else if(k.toLowerCase()==="s"){focusOn("sun");}else if(k>="1"&&k<="8"){focusOn(PL[parseInt(k)-1].n);}else if(k==="9"){focusOn("Halley");}else if(k.toLowerCase()==="e"){focusOn("Encke");}else if(k==="+"||k==="="){e.preventDefault();if(landR.current){var fi=Math.max(0.3,landFovR.current*0.9);landFovR.current=fi;setLandFov(fi);}else zIn();}else if(k==="-"||k==="_"){e.preventDefault();if(landR.current){var fo=Math.min(3,landFovR.current*1.1);landFovR.current=fo;setLandFov(fo);}else zOut();}else if(k==="ArrowRight"){var ci2=SP.indexOf(spR.current);if(ci2<SP.length-1){setSpd(SP[ci2+1]);setPaused(false);}}else if(k==="ArrowLeft"){var ci3=SP.indexOf(spR.current);if(ci3>0){setSpd(SP[ci3-1]);setPaused(false);}}else if(k.toLowerCase()==="c"){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}else if(k.toLowerCase()==="t"){if(tourRef.current.active){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"int"};setFoc("sun");setInfo({type:"sun"});}}else if(k.toLowerCase()==="m"){setBgm(function(p){return!p;});}
       else if(k.toLowerCase()==="g"){var galIdx=2;var ssIdx=17;if(ziR.current>9){dz(galIdx);ziR.current=galIdx;setZi(galIdx);setFoc("all");setInfo(null);}else{dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}}
       else if(k.toLowerCase()==="l"){if(landR.current){setLanding(null);}else if(foR.current!=="all"&&foR.current!=="sun"){var lpl=PL_MAP[foR.current];if(lpl){doLanding(foR.current);}}}
-      else if(k==="Escape"){if(landR.current)setLanding(null);}}
+      else if(k==="Escape"){if(landR.current)setLanding(null);}
+      else if(k==="?"||(k==="/"&&e.shiftKey)){e.preventDefault();dispatchPanel({type:isPhone?"TOGGLE_EX":"TOGGLE",key:"helpOpen"});}}
     cv.addEventListener("mousedown",md);window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);cv.addEventListener("wheel",wl,{passive:false});cv.addEventListener("touchstart",tst,{passive:false});cv.addEventListener("touchmove",tmv,{passive:false});cv.addEventListener("touchend",ten);window.addEventListener("keydown",kd);
     var sArr=SD.s,sCols=SD.c,nArr=NB;
 
@@ -346,10 +371,10 @@ export default function App(){
       if(measMR.current&&mPair.length===2){var lookup=function(n){if(n==="sun")return{x:0,y:0,z:0};for(var li=0;li<pd.length;li++)if(pd[li].pl.n===n)return{x:pd[li].wx,y:0,z:pd[li].wz};for(var lj=0;lj<cd.length;lj++)if(cd[lj].cm.key===n)return{x:cd[lj].wx,y:0,z:cd[lj].wz};if(n.indexOf("lag:")===0&&pd[2]){var ea=Math.atan2(pd[2].wz,pd[2].wx),nm=n.slice(4);if(nm==="L1")return{x:pd[2].wx*0.99,y:0,z:pd[2].wz*0.99};if(nm==="L2")return{x:pd[2].wx*1.01,y:0,z:pd[2].wz*1.01};if(nm==="L3")return{x:-pd[2].wx,y:0,z:-pd[2].wz};if(nm==="L4")return{x:pd[2].oR*Math.cos(ea+TAU/6),y:0,z:pd[2].oR*Math.sin(ea+TAU/6)};if(nm==="L5")return{x:pd[2].oR*Math.cos(ea-TAU/6),y:0,z:pd[2].oR*Math.sin(ea-TAU/6)};}return null;};var b1=lookup(mPair[0]),b2=lookup(mPair[1]);if(b1&&b2){var mdx=b2.x-b1.x,mdy=b2.y-b1.y,mdz=b2.z-b1.z,distM=Math.sqrt(mdx*mdx+mdy*mdy+mdz*mdz),distAU=distM/150,distLT=distM*1e6/299792.458;var p1pj=pj(b1.x,b1.y,b1.z,cam),p2pj=pj(b2.x,b2.y,b2.z,cam);ctx.strokeStyle="rgba(255,180,80,0.75)";ctx.lineWidth=1.2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.moveTo(p1pj.x,p1pj.y);ctx.lineTo(p2pj.x,p2pj.y);ctx.stroke();ctx.setLineDash([]);var midX=(p1pj.x+p2pj.x)/2,midY=(p1pj.y+p2pj.y)/2;ctx.fillStyle="rgba(0,0,0,0.65)";ctx.fillRect(midX-44,midY-9,88,22);ctx.fillStyle="rgba(255,200,120,1)";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText(distAU.toFixed(2)+" AU",midX,midY+1);ctx.fillStyle="rgba(255,220,160,0.85)";ctx.font="9px sans-serif";ctx.fillText(distLT<60?distLT.toFixed(1)+"秒":distLT<3600?(distLT/60).toFixed(1)+"分":(distLT/3600).toFixed(1)+"時",midX,midY+11);}}
 
       sim.hitAreas=hits;if(ssFade<1)ctx.globalAlpha=1;ctx.restore();
-      if(eclipseType&&!cmpR.current){var eTxt=langR.current==="en"?(eclipseType==="solar"?"🌑 Solar Eclipse":"🌕 Lunar Eclipse"):(eclipseType==="solar"?"🌑 日食":"🌕 月食");ctx.save();ctx.font="bold 13px system-ui,sans-serif";ctx.textAlign="center";var etW=ctx.measureText(eTxt).width+24;ctx.fillStyle="rgba(0,0,0,0.72)";ctx.fillRect(W/2-etW/2,H-72,etW,30);ctx.fillStyle=eclipseType==="solar"?"rgba(255,210,80,1)":"rgba(200,150,255,1)";ctx.fillText(eTxt,W/2,H-51);if(eclipseEarPj){ctx.strokeStyle=eclipseType==="solar"?"rgba(255,180,0,0.7)":"rgba(180,120,255,0.7)";ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(eclipseEarPj.x,eclipseEarPj.y,eclipseEarRr+10,0,TAU);ctx.stroke();ctx.setLineDash([]);}ctx.restore();}
+      if(eclipseType&&!cmpR.current)drawEclipseAlert(ctx,W,H,eclipseType,eclipseEarPj,eclipseEarRr,langR.current==="en");
 
       /* Conjunction/opposition alert */
-      if(!cmpR.current&&!_un&&cam.zm>0.08&&cam.zm<50){if(earthPdIdx>=0){var aex=pd[earthPdIdx].wx,aez=pd[earthPdIdx].wz,aeSL=Math.sqrt(aex*aex+aez*aez);var alertMsg=null,alertIsOpp=false;for(var ali=0;ali<pd.length;ali++){if(ali===earthPdIdx)continue;var tpx2=pd[ali].wx-aex,tpz2=pd[ali].wz-aez,tpL=Math.sqrt(tpx2*tpx2+tpz2*tpz2);if(tpL<0.1||aeSL<0.1)continue;var elongDot=(-aex*tpx2-aez*tpz2)/(aeSL*tpL);var elongDeg=Math.acos(Math.max(-1,Math.min(1,elongDot)))*180/Math.PI;if(elongDeg>174&&!alertIsOpp){alertMsg="🌟 "+pd[ali].pl.j+"が衝 (Opposition)";alertIsOpp=true;}else if(elongDeg<4&&!alertMsg){alertMsg="☀ "+pd[ali].pl.j+"が合 (Conjunction)";}}if(alertMsg){ctx.save();ctx.font="bold 12px system-ui,sans-serif";ctx.textAlign="center";var alW=ctx.measureText(alertMsg).width+24;ctx.fillStyle="rgba(0,0,0,0.75)";ctx.fillRect(W/2-alW/2,8,alW,26);ctx.fillStyle=alertIsOpp?"rgba(100,210,255,1)":"rgba(255,230,80,1)";ctx.fillText(alertMsg,W/2,26);ctx.restore();}}}
+      if(!cmpR.current&&!_un&&cam.zm>0.08&&cam.zm<50)drawConjunctionAlert(ctx,W,pd,earthPdIdx);
       /* Distance comparison bar (log-scale planet distances from Sun) */
       if(show.distbar&&!cmpR.current&&fc==="all"){var dbY=H-78,dbW=Math.min(W-40,520),dbX=(W-dbW)/2,minAU=0.3,maxAU=50,lnMin=Math.log(minAU),lnRange=Math.log(maxAU)-lnMin;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(dbX-6,dbY-14,dbW+12,28);ctx.strokeStyle="rgba(255,255,255,0.18)";ctx.lineWidth=0.6;ctx.beginPath();ctx.moveTo(dbX,dbY);ctx.lineTo(dbX+dbW,dbY);ctx.stroke();var ticks=[1,5,10,30];ctx.fillStyle="rgba(255,255,255,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";for(var dti=0;dti<ticks.length;dti++){var fx=dbX+(Math.log(ticks[dti])-lnMin)/lnRange*dbW;ctx.beginPath();ctx.moveTo(fx,dbY-3);ctx.lineTo(fx,dbY+3);ctx.stroke();ctx.fillText(ticks[dti]+"AU",fx,dbY+11);}for(var dbi=0;dbi<pd.length;dbi++){var dbau=Math.sqrt(pd[dbi].wx*pd[dbi].wx+pd[dbi].wz*pd[dbi].wz)/150;if(dbau<minAU||dbau>maxAU)continue;var dbpos=dbX+(Math.log(dbau)-lnMin)/lnRange*dbW;ctx.fillStyle=pd[dbi].pl.c;ctx.beginPath();ctx.arc(dbpos,dbY,3,0,TAU);ctx.fill();}}
 
@@ -360,7 +385,15 @@ export default function App(){
       if(_un||_rd)drawScaleBar(ctx,W,H,cam.zm);
       drawMiniMap(ctx,W,H,t,fc,pd);
 
-      var tr2=tourRef.current;if(tr2.active){var tBarW=300,tBarX=(W-tBarW)/2,tBarY=H-20;if(tr2.trans){tr2.transT=Math.min(1,(tr2.transT||0)+dt/(tr2.transDur||1.8));var ease=tr2.transT<1?tr2.transT*tr2.transT*(3-2*tr2.transT):1;cam.fx=tr2.fromFx+(tr2.toFx-tr2.fromFx)*ease;cam.fz=tr2.fromFz+(tr2.toFz-tr2.fromFz)*ease;var tdx=tr2.toFx-tr2.fromFx,tdz=tr2.toFz-tr2.fromFz,tdist=Math.sqrt(tdx*tdx+tdz*tdz);var midZm=tdist>0.5?Math.min(W,H)*0.35/tdist:Math.max(1,Math.min(tr2.fromZm,tr2.toZm)*0.5);midZm=Math.max(1,midZm);if(ease<0.5){cam.zm=tr2.fromZm+(midZm-tr2.fromZm)*(ease*2);}else{cam.zm=midZm+(tr2.toZm-midZm)*((ease-0.5)*2);}if(tr2.transT>=1){tr2.trans=false;cam.fx=tr2.toFx;cam.fz=tr2.toFz;cam.zm=tr2.toZm;}var tPanProg=ease;ctx.fillStyle="rgba(8,10,20,0.78)";ctx.fillRect(tBarX-8,tBarY-14,tBarW+16,22);ctx.fillStyle="rgba(255,255,255,0.1)";ctx.fillRect(tBarX,tBarY,tBarW,4);ctx.fillStyle="rgba(255,160,50,0.85)";ctx.fillRect(tBarX,tBarY,tBarW*tPanProg,4);ctx.fillStyle="rgba(255,200,100,0.75)";ctx.font="10px sans-serif";ctx.textAlign="center";var tD=tourData(tr2.lv,langR.current==="en");ctx.fillText("→ "+tD.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-2);}else{tr2.timer+=dt;if(tr2.timer>=TOUR_HOLD){tr2.timer=0;var nextIdx=(tr2.idx+1)%TOUR_SEQ.length;if(nextIdx===0){tr2.active=false;setTouring(false);setFoc("all");setInfo(null);}else{tr2.fromFx=cam.fx;tr2.fromFz=cam.fz;tr2.fromZm=cam.zm;var tk2=TOUR_SEQ[nextIdx];var toTarget=null;for(var tfi=0;tfi<pd.length;tfi++){if(pd[tfi].pl.n===tk2){toTarget=pd[tfi];break;}}if(!toTarget){for(var tci=0;tci<cd.length;tci++){if(cd[tci].cm.key===tk2){toTarget=cd[tci];break;}}}tr2.toFx=toTarget?toTarget.wx:0;tr2.toFz=toTarget?toTarget.wz:0;tr2.toZm=cam.zm;tr2.idx=nextIdx;tr2.transT=0;tr2.transDur=1.8;tr2.trans=true;setFoc(tk2);setInfo(findInfo(tk2));}}var tD2=tourData(tr2.lv,langR.current==="en"),tProg=tr2.timer/TOUR_HOLD,panH=96,exFacts=tD2.exam[tr2.idx];ctx.fillStyle="rgba(8,10,20,0.88)";ctx.fillRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.strokeStyle="rgba(100,150,255,0.18)";ctx.lineWidth=1;ctx.strokeRect(tBarX-12,tBarY-panH-4,tBarW+24,panH+12);ctx.fillStyle="rgba(255,255,255,0.95)";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(tD2.names[tr2.idx]+" ("+(tr2.idx+1)+"/"+TOUR_SEQ.length+")",W/2,tBarY-panH+12);ctx.fillStyle="rgba(255,220,120,0.88)";ctx.font="11px sans-serif";ctx.fillText(tD2.desc[tr2.idx],W/2,tBarY-panH+28);ctx.strokeStyle="rgba(255,255,255,0.1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tBarX,tBarY-panH+35);ctx.lineTo(tBarX+tBarW,tBarY-panH+35);ctx.stroke();ctx.fillStyle="rgba(100,220,180,0.85)";ctx.font="9.5px sans-serif";ctx.textAlign="left";for(var efi=0;efi<exFacts.length;efi++){ctx.fillText("★ "+exFacts[efi],tBarX+4,tBarY-panH+50+efi*14);}ctx.fillStyle="rgba(255,255,255,0.12)";ctx.fillRect(tBarX,tBarY-8,tBarW,4);ctx.fillStyle="rgba(100,180,255,0.82)";ctx.fillRect(tBarX,tBarY-8,tBarW*tProg,4);var nextI2=(tr2.idx+1)%TOUR_SEQ.length;if(nextI2>0){ctx.fillStyle="rgba(255,255,255,0.38)";ctx.font="8px sans-serif";ctx.textAlign="right";ctx.fillText((langR.current==="en"?"Next: ":"次: ")+tD2.names[nextI2],tBarX+tBarW,tBarY-11);}}}
+      if(tourRef.current.active){
+        drawTourHUD(ctx,W,H,{
+          tr:tourRef.current,cam:cam,dt:dt,pd:pd,cd:cd,
+          tourData:tourData(tourRef.current.lv,langR.current==="en"),
+          isEn:langR.current==="en",
+          onTourEnd:function(){setTouring(false);setFoc("all");setInfo(null);},
+          onAdvance:function(_,tk){setFoc(tk);setInfo(findInfo(tk));}
+        });
+      }
 
       /* ======== VISUALIZATION OVERLAYS (Hill / Shadow Cone / Tidal / Telescope) ======== */
       drawOverlays(ctx,{pd:pd,pjArr:pjArr,cam:cam,W:W,H:H,earthPd:earthPd,earthPdIdx:earthPdIdx,eclipseType:eclipseType,eclipseEarPj:eclipseEarPj,eclipseEarRr:eclipseEarRr,compare:cmpR.current,_rd:_rd,_un:_un,t:t,fc:fc,zmStr:zmStr,srScr:srScr,sunPj:sunPj,showHill:hillR.current,showShadow:shadowR.current,showTidal:tidalR.current,showTelescope:teleR.current});
@@ -417,6 +450,7 @@ export default function App(){
           <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){togglePanel("nightSkyOpen");}}>{lang==="en"?"🌙 Tonight":"🌙 今夜の空"}</button>
           <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){togglePanel("bookOpen");setBookmarkName("");}}>{lang==="en"?"🔖 Bookmarks":"🔖 ブックマーク"}</button>
           <button style={bF} onClick={function(){setOnboardStep(0);}}>{lang==="en"?"❓ Guide":"❓ ガイド"}</button>
+          <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
           <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
         </div>
@@ -539,6 +573,8 @@ export default function App(){
       {cleanView===0&&!landing&&<MoonCalendarPanel visible={panels.moonCal} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<OrbitalElementsPanel visible={panels.orbElemOpen} dispatchPanel={dispatchPanel} info={info} S={S} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
+
+      {cleanView===0&&<HelpPanel visible={panels.helpOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       <div style={{position:"absolute",top:4,left:4,color:"rgba(255,255,255,0.35)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:20}}>v{APP_VERSION}</div>
 
