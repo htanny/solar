@@ -54,6 +54,14 @@ test.describe("interactions — panels", () => {
     await page.getByRole("button", { name: /📊 比較表/ }).click();
     await expect(page.getByText("📊 惑星比較表")).toBeVisible();
   });
+
+  test("? キーでヘルプパネル開閉", async ({ page }) => {
+    await load(page);
+    await page.keyboard.press("?");
+    await expect(page.getByText("⌨ ショートカット一覧")).toBeVisible();
+    await page.keyboard.press("?");
+    await expect(page.getByText("⌨ ショートカット一覧")).not.toBeVisible();
+  });
 });
 
 test.describe("interactions — focus selection", () => {
