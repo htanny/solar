@@ -1,3 +1,4 @@
+// @ts-check
 export var TAU=6.2832;
 export var SRR=695,DK=0.08,SK=0.18,TRAIL_LEN=200;
 export var J2000=946728000000;/* ms */
