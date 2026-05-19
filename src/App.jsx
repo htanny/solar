@@ -150,15 +150,37 @@ export default function App(){
   var[shareText,setShareText]=useState(null);
   var[importText,setImportText]=useState("");
   var shareURL=useCallback(function(){
-    var s=S.current,c=s.cam;
-    var code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;
+    var s=S.current,c=s.cam,code;
+    if(landR.current){
+      /* SL = Solar Landing: t|plName|lat|lng|yaw|fov|tilt */
+      code="SL|"+s.t.toFixed(1)+"|"+landR.current+"|"+landLatR.current.toFixed(2)+"|"+landLngR.current.toFixed(2)+"|"+landYR.current.toFixed(3)+"|"+landFovR.current.toFixed(2)+"|"+landTiltR.current.toFixed(2);
+    }else{
+      code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;
+    }
     setShareText(code);
   },[zi,foc]);
   var importState=useCallback(function(code){
     try{
-      var p=code.split("|");if(p[0]!=="SS"||p.length<6)return false;
+      var p=code.split("|");if(p.length<6)return false;
       /* Exit any special modes first */
-      setLanding(null);setCompare(false);stopTour();
+      setCompare(false);stopTour();
+      if(p[0]==="SL"){
+        /* Landing state restore: t|plName|lat|lng|yaw|fov|tilt */
+        if(p.length<8)return false;
+        var plName=p[2];if(!PL_MAP[plName]&&!DWARF_MAP[plName])return false;
+        S.current.t=parseFloat(p[1]);
+        var lat2=parseFloat(p[3]),lng2=parseFloat(p[4]),yaw2=parseFloat(p[5]),fov2=parseFloat(p[6]),tilt2=parseFloat(p[7]);
+        landLatR.current=lat2;setLandLat(lat2);
+        landLngR.current=lng2;setLandLng(lng2);
+        landYR.current=yaw2;setLandYaw(yaw2);
+        landFovR.current=fov2;setLandFov(fov2);
+        landTiltR.current=tilt2;setLandTilt(tilt2);
+        setFoc(plName);setInfo(findInfo(plName));
+        setLanding(plName);
+        return true;
+      }
+      if(p[0]!=="SS")return false;
+      setLanding(null);
       S.current.t=parseFloat(p[1]);
       S.current.cam.rx=parseFloat(p[2]);S.current.cam.ry=parseFloat(p[3]);
       var zv=parseInt(p[4]);if(zv>=0&&zv<ZS.length){setZi(zv);S.current.cam.zm=ZS[zv];}
