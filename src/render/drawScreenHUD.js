@@ -3,6 +3,60 @@ import { PL, TAU, DK } from "../data/solarData.js";
 import { oR } from "./utils.js";
 
 /**
+ * Eclipse alert: label box near the bottom + dashed ring around Earth.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W
+ * @param {number} H
+ * @param {string} eclipseType - "solar" | "lunar"
+ * @param {{x:number,y:number}|null} earthPj
+ * @param {number} earthRr
+ * @param {boolean} isEn
+ */
+function drawEclipseAlert(ctx,W,H,eclipseType,earthPj,earthRr,isEn){
+  var eTxt=isEn?(eclipseType==="solar"?"🌑 Solar Eclipse":"🌕 Lunar Eclipse"):(eclipseType==="solar"?"🌑 日食":"🌕 月食");
+  ctx.save();ctx.font="bold 13px system-ui,sans-serif";ctx.textAlign="center";
+  var etW=ctx.measureText(eTxt).width+24;
+  ctx.fillStyle="rgba(0,0,0,0.72)";ctx.fillRect(W/2-etW/2,H-72,etW,30);
+  ctx.fillStyle=eclipseType==="solar"?"rgba(255,210,80,1)":"rgba(200,150,255,1)";
+  ctx.fillText(eTxt,W/2,H-51);
+  if(earthPj){
+    ctx.strokeStyle=eclipseType==="solar"?"rgba(255,180,0,0.7)":"rgba(180,120,255,0.7)";
+    ctx.lineWidth=2;ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.arc(earthPj.x,earthPj.y,earthRr+10,0,TAU);ctx.stroke();ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+/**
+ * Conjunction (合) or opposition (衝) alert: top-center label when a planet's
+ * elongation from Earth approaches 0° or 180°.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} W
+ * @param {Array<{pl:{j:string,n:string},wx:number,wz:number}>} pd
+ * @param {number} earthIdx
+ */
+function drawConjunctionAlert(ctx,W,pd,earthIdx){
+  if(earthIdx<0)return;
+  var aex=pd[earthIdx].wx,aez=pd[earthIdx].wz,aeSL=Math.sqrt(aex*aex+aez*aez);
+  var msg=null,isOpp=false;
+  for(var i=0;i<pd.length;i++){
+    if(i===earthIdx)continue;
+    var dx=pd[i].wx-aex,dz=pd[i].wz-aez,L=Math.sqrt(dx*dx+dz*dz);
+    if(L<0.1||aeSL<0.1)continue;
+    var dot=(-aex*dx-aez*dz)/(aeSL*L);
+    var deg=Math.acos(Math.max(-1,Math.min(1,dot)))*180/Math.PI;
+    if(deg>174&&!isOpp){msg="🌟 "+pd[i].pl.j+"が衝 (Opposition)";isOpp=true;}
+    else if(deg<4&&!msg)msg="☀ "+pd[i].pl.j+"が合 (Conjunction)";
+  }
+  if(!msg)return;
+  ctx.save();ctx.font="bold 12px system-ui,sans-serif";ctx.textAlign="center";
+  var alW=ctx.measureText(msg).width+24;
+  ctx.fillStyle="rgba(0,0,0,0.75)";ctx.fillRect(W/2-alW/2,8,alW,26);
+  ctx.fillStyle=isOpp?"rgba(100,210,255,1)":"rgba(255,230,80,1)";
+  ctx.fillText(msg,W/2,26);ctx.restore();
+}
+
+/**
  * Date readout (top right).
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} W
@@ -82,4 +136,4 @@ function drawFps(ctx,H,fps){
   ctx.restore();
 }
 
-export { drawDateReadout, drawScaleBar, drawMiniMap, drawFps };
+export { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, drawConjunctionAlert };
