@@ -276,10 +276,26 @@ export var HAYABUSA_SITES=[
 
 /* Exoplanets - rendered only in landing mode (not in solar view) */
 export var EXOPLANETS=[
-  {n:"ProximaB",j:"プロキシマb",e:"Proxima Centauri b",d:0,r:7.0,p:11.2,c:"rgba(165,90,55,1)",t:0,rot:11.2,type:"rock",mass:"≈1.07 地球",grav:"≈11 m/s²",moons:0,day:"潮汐固定",year:"11.2日",atm:"未確認",temp:"−39℃ (推定)",starInfo:"M型赤色矮星 (4.24 ly)"},
-  {n:"Trappist1e",j:"トラピスト1e",e:"TRAPPIST-1e",d:0,r:5.8,p:6.1,c:"rgba(125,80,65,1)",t:0,rot:6.1,type:"rock",mass:"0.69 地球",grav:"≈9.1 m/s²",moons:0,day:"潮汐固定",year:"6.1日",atm:"水検出可能性",temp:"−21℃ (推定)",starInfo:"M型超低温矮星 (40 ly)"},
-  {n:"Kepler22b",j:"ケプラー22b",e:"Kepler-22b",d:0,r:15.4,p:289.9,c:"rgba(60,110,140,1)",t:0,rot:24,type:"rock",mass:"≈9 地球",grav:"未確認",moons:0,day:"未確認",year:"289.9日",atm:"未確認",temp:"22℃ (推定)",starInfo:"G型恒星 (600 ly)"},
-  {n:"HD189733b",j:"HD189733b",e:"HD 189733 b",d:0,r:80.5,p:2.2,c:"rgba(50,40,110,1)",t:0,rot:2.2,type:"hotgas",mass:"1.13 木星",grav:"≈22 m/s²",moons:0,day:"潮汐固定",year:"2.2日",atm:"H₂・シリケート粒子（ガラスの雨）",temp:"930℃",starInfo:"K型 (64.5 ly)"},
+  {n:"ProximaB",j:"プロキシマb",e:"Proxima Centauri b",d:0,r:7.0,p:11.2,c:"rgba(165,90,55,1)",t:0,rot:11.2,type:"rock",
+   mass:"≈1.07 地球",masse:"≈1.07 Earth",grav:"≈11 m/s²",moons:0,
+   day:"潮汐固定",daye:"Tidally locked",year:"11.2日",yeare:"11.2 days",
+   atm:"未確認",atme:"Unconfirmed",temp:"−39℃ (推定)",
+   starInfo:"M型赤色矮星 (4.24 ly)",starInfoE:"M-type red dwarf (4.24 ly)",hab:true},
+  {n:"Trappist1e",j:"トラピスト1e",e:"TRAPPIST-1e",d:0,r:5.8,p:6.1,c:"rgba(125,80,65,1)",t:0,rot:6.1,type:"rock",
+   mass:"0.69 地球",masse:"0.69 Earth",grav:"≈9.1 m/s²",moons:0,
+   day:"潮汐固定",daye:"Tidally locked",year:"6.1日",yeare:"6.1 days",
+   atm:"水検出可能性",atme:"Possible water",temp:"−21℃ (推定)",
+   starInfo:"M型超低温矮星 (40 ly)",starInfoE:"Ultra-cool M dwarf (40 ly)",hab:true},
+  {n:"Kepler22b",j:"ケプラー22b",e:"Kepler-22b",d:0,r:15.4,p:289.9,c:"rgba(60,110,140,1)",t:0,rot:24,type:"rock",
+   mass:"≈9 地球",masse:"≈9 Earth",grav:"未確認",moons:0,
+   day:"未確認",daye:"Unknown",year:"289.9日",yeare:"289.9 days",
+   atm:"未確認",atme:"Unknown",temp:"22℃ (推定)",
+   starInfo:"G型恒星 (600 ly)",starInfoE:"G-type star (600 ly)",hab:true},
+  {n:"HD189733b",j:"HD189733b",e:"HD 189733 b",d:0,r:80.5,p:2.2,c:"rgba(50,40,110,1)",t:0,rot:2.2,type:"hotgas",
+   mass:"1.13 木星",masse:"1.13 Jupiter",grav:"≈22 m/s²",moons:0,
+   day:"潮汐固定",daye:"Tidally locked",year:"2.2日",yeare:"2.2 days",
+   atm:"H₂・シリケート粒子（ガラスの雨）",atme:"H₂, silicate rain",temp:"930℃",
+   starInfo:"K型 (64.5 ly)",starInfoE:"K-type (64.5 ly)",hab:false},
 ];
 export var EXO_MAP={};EXOPLANETS.forEach(function(p){EXO_MAP[p.n]=p;PL_MAP[p.n]=p;});
 /* Register Galilean moons + Titan + asteroids as landing targets */

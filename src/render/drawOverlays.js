@@ -1,3 +1,4 @@
+// @ts-check
 /* ===== VISUALIZATION OVERLAYS ===== */
 /* Hill spheres, eclipse shadow cone, tidal vectors, telescope mode */
 import { pj, mOf, clipCirc } from "./utils.js";

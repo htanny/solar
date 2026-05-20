@@ -1,3 +1,4 @@
+// @ts-check
 /* Pure helpers for landing mode — no canvas side-effects */
 
 function terrainH(x,seed){return(Math.sin(x*0.02+seed)*0.4+Math.sin(x*0.057+seed*2.3)*0.3+Math.sin(x*0.13+seed*5.1)*0.2+Math.sin(x*0.31+seed*11)*0.1)*0.5+0.5;}

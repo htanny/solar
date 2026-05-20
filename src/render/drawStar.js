@@ -1,3 +1,4 @@
+// @ts-check
 import { TAU } from "../data/solarData.js";
 import { seedR, fillCirc } from "./utils.js";
 

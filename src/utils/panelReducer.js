@@ -1,6 +1,6 @@
-var PANEL_INIT={showEvents:false,showDate:false,searchOpen:false,dispColl:false,exoOpen:false,nightSkyOpen:false,bookOpen:false,moonCal:false,orbElemOpen:false,importMode:false,compareTable:false,satOpen:false,tourPick:false,helpOpen:false};
+var PANEL_INIT={showEvents:false,showDate:false,searchOpen:false,dispColl:false,exoOpen:false,nightSkyOpen:false,bookOpen:false,moonCal:false,meteorOpen:false,orbElemOpen:false,importMode:false,compareTable:false,satOpen:false,tourPick:false,helpOpen:false};
 /* Mutually-exclusive panel set: only one open at a time (used on phone) */
-var EXCLUSIVE_KEYS=["showEvents","searchOpen","exoOpen","nightSkyOpen","bookOpen","moonCal","orbElemOpen","compareTable","satOpen","tourPick","helpOpen"];
+var EXCLUSIVE_KEYS=["showEvents","searchOpen","exoOpen","nightSkyOpen","bookOpen","moonCal","meteorOpen","orbElemOpen","compareTable","satOpen","tourPick","helpOpen"];
 function panelReducer(state,action){
   if(action.type==="TOGGLE")return Object.assign({},state,{[action.key]:!state[action.key]});
   if(action.type==="SET")return Object.assign({},state,{[action.key]:action.value});
