@@ -1,3 +1,4 @@
+// @ts-check
 import { TAU } from "../data/solarData.js";
 import { fillCirc, sphereShade, limbDarken, atmosGlow, seedR, pj, RX, RY } from "./utils.js";
 import { dRi, dRiUranus } from "./drawRings.js";

@@ -1,3 +1,4 @@
+// @ts-check
 import { TAU, SURF, PL_MAP, DWARF_MAP, EXO_SURF } from "../data/solarData.js";
 import { seedR, lerpColor } from "./utils.js";
 import { earthIsLand, getEarthBiome, BIOME_CONF } from "./landingUtils.js";

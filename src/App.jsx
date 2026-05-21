@@ -27,14 +27,16 @@ import BookmarkPanel from "./components/panels/BookmarkPanel.jsx";
 import NightSkyPanel from "./components/panels/NightSkyPanel.jsx";
 import SearchPanel from "./components/panels/SearchPanel.jsx";
 import MoonCalendarPanel from "./components/panels/MoonCalendarPanel.jsx";
+import MeteorShowerPanel from "./components/panels/MeteorShowerPanel.jsx";
 import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
 import HelpPanel from "./components/panels/HelpPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
   var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:0.22,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
-  var[sh,setSh,shR]=useRefSync({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true,lagrange:false,spacecraft:false,nasteroid:true,cme:false,distbar:false});
-  var[spd,setSpd,spR]=useRefSync(1);
+  var[initCfg]=useState(function(){try{var s=localStorage.getItem("solar_cfg");return s?JSON.parse(s):{};}catch(e){return{};}});
+  var[sh,setSh,shR]=useRefSync(Object.assign({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true,lagrange:false,spacecraft:false,nasteroid:true,cme:false,distbar:false},initCfg.sh||{}));
+  var[spd,setSpd,spR]=useRefSync(initCfg.spd||1);
   var[rSn,setRSn,rsR]=useRefSync(false);var[rPl,setRPl,rpR]=useRefSync(false);var[rDi,setRDi,rdR]=useRefSync(false);var[uni,setUni,unR]=useRefSync(false);
   var[foc,setFoc,foR]=useRefSync("all");var[zi,setZi,ziR]=useRefSync(17);
   var[paused,setPaused,pausR]=useRefSync(false);var[info,setInfo]=useState(null);var[compare,setCompare,cmpR]=useRefSync(false);
@@ -60,7 +62,7 @@ export default function App(){
   var[landFov,setLandFov,landFovR]=useRefSync(1);
   var[landSpd,setLandSpd,landSpdR]=useRefSync(3600/86400);
   var[landTilt,setLandTilt,landTiltR]=useRefSync(0);
-  var[lang,setLang,langR]=useRefSync("ja");
+  var[lang,setLang,langR]=useRefSync(initCfg.lang||"ja");
   var[quizState,setQuizState]=useState(null);
   var[cmpSort,setCmpSort]=useState({col:"d",asc:true});
   var[winW,setWinW]=useState(typeof window!=="undefined"?window.innerWidth:1280);
@@ -86,6 +88,7 @@ export default function App(){
   var[showFps,setShowFps,showFpsR]=useRefSync(false);var fpsFrames=useRef([]);
 
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
+  useEffect(function(){try{localStorage.setItem("solar_cfg",JSON.stringify({lang:lang,sh:sh,spd:spd}));}catch(e){};},[lang,sh,spd]);
   useEffect(function(){if(!bgm)return;var ctx2;try{ctx2=new(window.AudioContext||window.webkitAudioContext)();var m=ctx2.createGain();m.gain.value=0;m.connect(ctx2.destination);m.gain.linearRampToValueAtTime(0.22,ctx2.currentTime+2);var b=ctx2.createOscillator();b.type="sine";b.frequency.value=55;var bg=ctx2.createGain();bg.gain.value=0.18;b.connect(bg);bg.connect(m);b.start();var p1=ctx2.createOscillator();p1.type="sine";p1.frequency.value=110;var pg=ctx2.createGain();pg.gain.value=0.06;p1.connect(pg);pg.connect(m);p1.start();var p2=ctx2.createOscillator();p2.type="sine";p2.frequency.value=164.81;var p2g=ctx2.createGain();p2g.gain.value=0.04;p2.connect(p2g);p2g.connect(m);p2.start();var p3=ctx2.createOscillator();p3.type="sine";p3.frequency.value=329.63;var p3g=ctx2.createGain();p3g.gain.value=0.02;p3.connect(p3g);p3g.connect(m);p3.start();var notes=[523.25,659.25,783.99,1046.5,1318.5,1567.98];var si2=setInterval(function(){if(ctx2.state==="closed")return;var o=ctx2.createOscillator();o.type="sine";o.frequency.value=notes[Math.floor(Math.random()*notes.length)];var g2=ctx2.createGain();g2.gain.value=0.02+Math.random()*0.02;o.connect(g2);g2.connect(m);o.start();g2.gain.exponentialRampToValueAtTime(0.001,ctx2.currentTime+3);o.stop(ctx2.currentTime+4);},2500+Math.random()*3000);audioRef.current={ctx:ctx2,master:m,si:si2};}catch(e){}return function(){if(audioRef.current){clearInterval(audioRef.current.si);try{audioRef.current.master.gain.linearRampToValueAtTime(0,audioRef.current.ctx.currentTime+0.5);setTimeout(function(){try{audioRef.current.ctx.close();}catch(e2){}audioRef.current=null;},600);}catch(e3){}};};},[bgm]);
 
   var dz=useCallback(function(i){var c=Math.max(0,Math.min(ZS.length-1,i));S.current.cam.zm=ZS[c];return c;},[]);
@@ -359,7 +362,37 @@ export default function App(){
       if(show.nasteroid&&!_un){for(var nai=0;nai<NAMED_ASTEROIDS.length;nai++){var na=NAMED_ASTEROIDS[nai];var naOrbR=_rd?(na.a*150)*DK:(160+(na.a*150-330)/200*60);var naM=(t/na.p)*TAU;var naE=naM;for(var nk=0;nk<6;nk++)naE=naM+na.e*Math.sin(naE);var naV=2*Math.atan2(Math.sqrt(1+na.e)*Math.sin(naE/2),Math.sqrt(1-na.e)*Math.cos(naE/2));var naR=naOrbR*(1-na.e*na.e)/(1+na.e*Math.cos(naV));var naX=Math.cos(naV+na.inc)*naR,naZ=Math.sin(naV+na.inc)*naR;var naPj=pj(naX,0,naZ,cam);var naSz=Math.max(1.5,2*Math.min(cam.zm,1));fillCirc(ctx,naPj.x,naPj.y,naSz,na.col);if(show.labels){ctx.fillStyle="rgba(255,220,180,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(na.j,naPj.x,naPj.y-naSz-3);}hits.push({n:"a:"+na.n,x:naPj.x,y:naPj.y,r:Math.max(naSz*2,10)});}}
 
       /* Spacecraft trajectories */
-      if(show.spacecraft){for(var sci=0;sci<SPACECRAFT.length;sci++){var sc=SPACECRAFT[sci],scX,scY,scZ,scOK=true;if(sc.type==="linear"){var sct=t-sc.launchD;if(sct<0){scOK=false;}else{scX=sc.dx*sc.speed*sct;scY=sc.dy*sc.speed*sct;scZ=sc.dz*sc.speed*sct;}}else{var scM=((t-sc.launchD)/sc.p)*TAU;var scE=scM;for(var sk=0;sk<6;sk++)scE=scM+sc.e*Math.sin(scE);var scV=2*Math.atan2(Math.sqrt(1+sc.e)*Math.sin(scE/2),Math.sqrt(1-sc.e)*Math.cos(scE/2));var scR=sc.a*(1-sc.e*sc.e)/(1+sc.e*Math.cos(scV));scX=Math.cos(scV+sc.inc)*scR;scY=0;scZ=Math.sin(scV+sc.inc)*scR;}if(scOK){var scPj=pj(scX,scY,scZ,cam);var scSz=Math.max(2,3*Math.min(cam.zm,1));ctx.fillStyle=sc.col;ctx.beginPath();ctx.moveTo(scPj.x,scPj.y-scSz);ctx.lineTo(scPj.x-scSz*0.86,scPj.y+scSz*0.5);ctx.lineTo(scPj.x+scSz*0.86,scPj.y+scSz*0.5);ctx.closePath();ctx.fill();if(show.labels){ctx.fillStyle="rgba(255,255,255,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(sc.name,scPj.x,scPj.y-scSz-3);}hits.push({n:"sc:"+sc.key,x:scPj.x,y:scPj.y,r:Math.max(scSz*2,12)});}}}
+      if(show.spacecraft){
+        /* Gravity assist trails — piecewise waypoints at historical flybys (sim units = AU×150) */
+        var _scTrData=[
+          {key:"Voyager1",col:"rgba(255,200,80,",pts:[
+            {t:-8154,x:0,z:0,lbl:null},
+            {t:-7608,x:-241,z:742,lbl:(langR.current==="en"?"Jupiter '79":"木星 '79")},
+            {t:-7007,x:-1409,z:-222,lbl:(langR.current==="en"?"Saturn '80":"土星 '80")},
+          ]},
+          {key:"Voyager2",col:"rgba(255,180,100,",pts:[
+            {t:-8170,x:0,z:0,lbl:null},
+            {t:-7470,x:-340,z:700,lbl:(langR.current==="en"?"Jupiter '79":"木星 '79")},
+            {t:-6880,x:-1354,z:-438,lbl:(langR.current==="en"?"Saturn '81":"土星 '81")},
+            {t:-5105,x:-2002,z:-2071,lbl:(langR.current==="en"?"Uranus '86":"天王星 '86")},
+            {t:-3786,x:784,z:-4447,lbl:(langR.current==="en"?"Neptune '89":"海王星 '89")},
+          ]},
+        ];
+        for(var tri_=0;tri_<_scTrData.length;tri_++){
+          var _scTr=_scTrData[tri_],_scDat=null;
+          for(var tsi_=0;tsi_<SPACECRAFT.length;tsi_++){if(SPACECRAFT[tsi_].key===_scTr.key){_scDat=SPACECRAFT[tsi_];break;}}
+          if(!_scDat||t<_scDat.launchD)continue;
+          var _vpts=[];for(var _tpi=0;_tpi<_scTr.pts.length;_tpi++){if(_scTr.pts[_tpi].t<=t)_vpts.push(_scTr.pts[_tpi]);}
+          var _sct2=t-_scDat.launchD;_vpts.push({x:_scDat.dx*_scDat.speed*_sct2,z:_scDat.dz*_scDat.speed*_sct2,lbl:null});
+          if(_vpts.length<2)continue;
+          ctx.save();ctx.strokeStyle=_scTr.col+"0.4)";ctx.lineWidth=1;ctx.setLineDash([3,5]);
+          ctx.beginPath();for(var _vpi=0;_vpi<_vpts.length;_vpi++){var _vpp=pj(_vpts[_vpi].x,0,_vpts[_vpi].z,cam);if(_vpi===0)ctx.moveTo(_vpp.x,_vpp.y);else ctx.lineTo(_vpp.x,_vpp.y);}
+          ctx.stroke();ctx.setLineDash([]);
+          if(show.labels){for(var _fli=0;_fli<_vpts.length;_fli++){if(!_vpts[_fli].lbl)continue;var _flpp=pj(_vpts[_fli].x,0,_vpts[_fli].z,cam);ctx.fillStyle=_scTr.col+"0.8)";ctx.beginPath();ctx.arc(_flpp.x,_flpp.y,3,0,TAU);ctx.fill();ctx.fillStyle=_scTr.col+"0.65)";ctx.font="7px sans-serif";ctx.textAlign="left";ctx.fillText(_vpts[_fli].lbl,_flpp.x+4,_flpp.y-2);}}
+          ctx.restore();
+        }
+        for(var sci=0;sci<SPACECRAFT.length;sci++){var sc=SPACECRAFT[sci],scX,scY,scZ,scOK=true;if(sc.type==="linear"){var sct=t-sc.launchD;if(sct<0){scOK=false;}else{scX=sc.dx*sc.speed*sct;scY=sc.dy*sc.speed*sct;scZ=sc.dz*sc.speed*sct;}}else{var scM=((t-sc.launchD)/sc.p)*TAU;var scE=scM;for(var sk=0;sk<6;sk++)scE=scM+sc.e*Math.sin(scE);var scV=2*Math.atan2(Math.sqrt(1+sc.e)*Math.sin(scE/2),Math.sqrt(1-sc.e)*Math.cos(scE/2));var scR=sc.a*(1-sc.e*sc.e)/(1+sc.e*Math.cos(scV));scX=Math.cos(scV+sc.inc)*scR;scY=0;scZ=Math.sin(scV+sc.inc)*scR;}if(scOK){var scPj=pj(scX,scY,scZ,cam);var scSz=Math.max(2,3*Math.min(cam.zm,1));ctx.fillStyle=sc.col;ctx.beginPath();ctx.moveTo(scPj.x,scPj.y-scSz);ctx.lineTo(scPj.x-scSz*0.86,scPj.y+scSz*0.5);ctx.lineTo(scPj.x+scSz*0.86,scPj.y+scSz*0.5);ctx.closePath();ctx.fill();if(show.labels){ctx.fillStyle="rgba(255,255,255,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText(sc.name,scPj.x,scPj.y-scSz-3);}hits.push({n:"sc:"+sc.key,x:scPj.x,y:scPj.y,r:Math.max(scSz*2,12)});}}
+      }
 
       /* Solar wind / CME particles - 8-arm spiral rotating with sun */
       if(show.cme&&!_un){var cmeRot=t*TAU/25;for(var caa=0;caa<8;caa++){var armA=caa*TAU/8+cmeRot;for(var cbb=0;cbb<14;cbb++){var cdist=3+cbb*3.2,ctw=cbb*0.18,cpx=Math.cos(armA+ctw)*cdist,cpz=Math.sin(armA+ctw)*cdist,cppj=pj(cpx,0,cpz,cam),calp=Math.max(0,1-cbb/14)*0.32;if(calp<0.02)continue;ctx.fillStyle="rgba(255,180,80,"+calp.toFixed(2)+")";ctx.fillRect(cppj.x-1,cppj.y-1,2,2);}}}
@@ -472,6 +505,7 @@ export default function App(){
         <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
           <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">{lang==="en"?"🔭 Telescope":"🔭 望遠鏡"}</button>
           <button style={panels.moonCal?bT("200,180,255"):bF} onClick={function(){togglePanel("moonCal");}} title="月相カレンダー">{lang==="en"?"🌙 Phases":"🌙 月相"}</button>
+          <button style={panels.meteorOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("meteorOpen");}} title="流星群カレンダー">{lang==="en"?"🌠 Meteors":"🌠 流星群"}</button>
           <button style={panels.orbElemOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("orbElemOpen");}} title="軌道要素（惑星選択時）">{lang==="en"?"📊 Orbit":"📊 軌道"}</button>
           <button style={showFps?bT("100,255,100"):bF} onClick={function(){setShowFps(function(p){return!p;});}} title="FPSカウンター表示">⏱ FPS</button>
         </div>
@@ -571,6 +605,7 @@ export default function App(){
 
       {cleanView===0&&!landing&&!isPhone&&<div style={{position:"absolute",bottom:10,left:"50%",transform:"translateX(-50%)",color:"rgba(255,255,255,0.2)",fontSize:9,fontFamily:"system-ui,sans-serif",pointerEvents:"none",zIndex:10,textAlign:"center"}}>{lang==="en"?"Click: select　Drag: rotate　Pinch: zoom　Panels are draggable":"クリックで選択　ドラッグ：回転　ピンチ：ズーム　パネルはドラッグ移動可能"}</div>}
       {cleanView===0&&!landing&&<MoonCalendarPanel visible={panels.moonCal} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
+      {cleanView===0&&!landing&&<MeteorShowerPanel visible={panels.meteorOpen} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<OrbitalElementsPanel visible={panels.orbElemOpen} dispatchPanel={dispatchPanel} info={info} S={S} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
