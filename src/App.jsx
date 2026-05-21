@@ -4,7 +4,7 @@ import { useRefSync } from "./hooks/useRefSync.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
-import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, TROJAN, KUIPER, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
 import { drawGalaxyView, drawGalaxyInfo } from "./render/drawGalaxyView.js";
 import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, drawConjunctionAlert } from "./render/drawScreenHUD.js";
@@ -36,7 +36,7 @@ export default function App(){
   var cR=useRef(null),fR=useRef(0);
   var S=useRef({t:dateToSimDays(new Date().toISOString().slice(0,10))||0,cam:{rx:0.22,ry:0.3,zm:1,tzm:1,fx:0,fy:0,fz:0},dr:null,pi:null,trails:PL.map(function(){return[];}),hitAreas:[],dragged:false});
   var[initCfg]=useState(function(){try{var s=localStorage.getItem("solar_cfg");return s?JSON.parse(s):{};}catch(e){return{};}});
-  var[sh,setSh,shR]=useRefSync(Object.assign({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true,lagrange:false,spacecraft:false,nasteroid:true,cme:false,distbar:false},initCfg.sh||{}));
+  var[sh,setSh,shR]=useRefSync(Object.assign({orbits:true,tilt:true,moon:true,labels:true,planets:true,trails:true,belt:true,trojan:false,kuiper:false,lagrange:false,spacecraft:false,nasteroid:true,cme:false,distbar:false},initCfg.sh||{}));
   var[spd,setSpd,spR]=useRefSync(initCfg.spd||1);
   var[rSn,setRSn,rsR]=useRefSync(false);var[rPl,setRPl,rpR]=useRefSync(false);var[rDi,setRDi,rdR]=useRefSync(false);var[uni,setUni,unR]=useRefSync(false);
   var[foc,setFoc,foR]=useRefSync("all");var[zi,setZi,ziR]=useRefSync(17);
@@ -291,6 +291,10 @@ export default function App(){
       if(show.orbits){for(var oi=0;oi<pd.length;oi++){var osr=pd[oi].oR*cam.zm;if(osr<0.5||osr>orbMaxR||sd2>=osr*osr)continue;dOb(ctx,pd[oi].oR,cam,pd[oi].pl.cRGB,false);}}
       if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
       if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
+      /* Jupiter Trojans: L4 = +60° ahead, L5 = -60° behind Jupiter */
+      if(show.trojan&&!_un){var jupAng=(t/PL[4].p)*TAU;ctx.fillStyle="rgba(180,170,140,0.55)";for(var tji=0;tji<TROJAN.length;tji++){var tj=TROJAN[tji],tjAng=jupAng+(tj.lp===1?TAU/6:-TAU/6)+tj.off,tjR=_rd?tj.rad*0.15*DK:(160+(tj.rad-330)/200*60),tjp=pj(Math.cos(tjAng)*tjR,tj.y*(_rd?0.1:1),Math.sin(tjAng)*tjR,cam),tjSz=Math.max(tj.sz*cam.zm,0.2);ctx.fillRect(tjp.x-tjSz*0.5,tjp.y-tjSz*0.5,tjSz,tjSz);}if(show.labels&&cam.zm<0.5&&cam.zm>0.005){var lpL4=pj(Math.cos(jupAng+TAU/6)*770,0,Math.sin(jupAng+TAU/6)*770,cam),lpL5=pj(Math.cos(jupAng-TAU/6)*770,0,Math.sin(jupAng-TAU/6)*770,cam);ctx.fillStyle="rgba(220,200,160,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("L4 (Greeks)",lpL4.x,lpL4.y-6);ctx.fillText("L5 (Trojans)",lpL5.x,lpL5.y-6);}}
+      /* Kuiper belt: trans-Neptunian objects at 35-50 AU */
+      if(show.kuiper&&!_un){ctx.fillStyle="rgba(140,160,180,0.42)";for(var kbi=0;kbi<KUIPER.length;kbi++){var kb=KUIPER[kbi],kbAng=kb.ang+t*kb.spd,kbR=_rd?kb.rad*0.15*DK:(160+(kb.rad-5250)/2250*60+200);if(_rd){kbR=kb.rad*0.15*DK;}else{kbR=380+(kb.rad-5250)/2250*60;}var kbp=pj(Math.cos(kbAng)*kbR,kb.y*(_rd?0.1:1),Math.sin(kbAng)*kbR,cam),kbSz=Math.max(kb.sz*cam.zm,0.2);ctx.fillRect(kbp.x-kbSz*0.5,kbp.y-kbSz*0.5,kbSz,kbSz);}}
 
       /* ======== ZODIAC RING ======== */
       if(!_un&&cam.zm<10){
@@ -400,7 +404,37 @@ export default function App(){
       }
 
       /* Solar wind / CME particles - 8-arm spiral rotating with sun */
-      if(show.cme&&!_un){var cmeRot=t*TAU/25;for(var caa=0;caa<8;caa++){var armA=caa*TAU/8+cmeRot;for(var cbb=0;cbb<14;cbb++){var cdist=3+cbb*3.2,ctw=cbb*0.18,cpx=Math.cos(armA+ctw)*cdist,cpz=Math.sin(armA+ctw)*cdist,cppj=pj(cpx,0,cpz,cam),calp=Math.max(0,1-cbb/14)*0.32;if(calp<0.02)continue;ctx.fillStyle="rgba(255,180,80,"+calp.toFixed(2)+")";ctx.fillRect(cppj.x-1,cppj.y-1,2,2);}}}
+      if(show.cme&&!_un){
+        /* Parker spiral solar wind — 12 arms, color/intensity varies per arm to suggest fast/slow wind */
+        var cmeRot=t*TAU/25;
+        for(var caa=0;caa<12;caa++){
+          var armA=caa*TAU/12+cmeRot;
+          /* Even arms = "fast" (polar) wind blueish, odd arms = "slow" (equatorial) orange */
+          var fast=caa%2===0,arBase=fast?[180,210,255]:[255,180,80];
+          /* Pulse: each arm flickers at slightly different rate */
+          var pulse=0.7+0.3*Math.sin(t*1.5+caa*0.7);
+          for(var cbb=0;cbb<18;cbb++){
+            var cdist=3+cbb*2.8,ctw=cbb*0.16,cpx=Math.cos(armA+ctw)*cdist,cpz=Math.sin(armA+ctw)*cdist;
+            var cppj=pj(cpx,0,cpz,cam),calp=Math.max(0,1-cbb/18)*0.32*pulse;
+            if(calp<0.02)continue;
+            ctx.fillStyle="rgba("+arBase[0]+","+arBase[1]+","+arBase[2]+","+calp.toFixed(2)+")";
+            var psz=fast?1:1.4;
+            ctx.fillRect(cppj.x-psz*0.5,cppj.y-psz*0.5,psz,psz);
+          }
+        }
+        /* Occasional CME burst — large blob emanating from sun */
+        var burstP=Math.sin(t*0.4)*0.5+0.5;
+        if(burstP>0.85){
+          var bAng=t*0.7,bDist=8+(burstP-0.85)*40;
+          var bpj=pj(Math.cos(bAng)*bDist,0,Math.sin(bAng)*bDist,cam);
+          var bAlpha=(1-(burstP-0.85)/0.15)*0.4;
+          var bRad=4+(burstP-0.85)*30;
+          var bGrad=ctx.createRadialGradient(bpj.x,bpj.y,0,bpj.x,bpj.y,bRad);
+          bGrad.addColorStop(0,"rgba(255,200,120,"+bAlpha.toFixed(2)+")");
+          bGrad.addColorStop(1,"rgba(255,140,60,0)");
+          ctx.fillStyle=bGrad;ctx.beginPath();ctx.arc(bpj.x,bpj.y,bRad,0,TAU);ctx.fill();
+        }
+      }
 
       if(show.orbits){for(var oi2=0;oi2<pd.length;oi2++){var osr2=pd[oi2].oR*cam.zm;if(osr2<0.5||osr2>orbMaxR||sd2>=osr2*osr2)continue;dOb(ctx,pd[oi2].oR,cam,pd[oi2].pl.cRGB,true);}}
 
@@ -470,7 +504,7 @@ export default function App(){
 
       {/* Toggles panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
-        <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>{lang==="en"?"Display ⠿":"表示 ⠿"}</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道",e:"Orbits"},{k:"trails",l:"軌跡",e:"Trails"},{k:"belt",l:"小惑星帯",e:"Belt"},{k:"nasteroid",l:"準惑星名",e:"Dwarf names"},{k:"tilt",l:"地軸",e:"Axis"},{k:"moon",l:"月",e:"Moon"},{k:"labels",l:"ラベル",e:"Labels"},{k:"planets",l:"惑星",e:"Planets"},{k:"lagrange",l:"L点",e:"L points"},{k:"spacecraft",l:"探査機",e:"Probes"},{k:"cme",l:"CME",e:"CME"},{k:"distbar",l:"距離バー",e:"Dist bar"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{lang==="en"?x.e:x.l}</button>;})}</div>
+        <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>{lang==="en"?"Display ⠿":"表示 ⠿"}</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道",e:"Orbits"},{k:"trails",l:"軌跡",e:"Trails"},{k:"belt",l:"小惑星帯",e:"Belt"},{k:"trojan",l:"トロヤ群",e:"Trojans"},{k:"kuiper",l:"カイパー帯",e:"Kuiper"},{k:"nasteroid",l:"準惑星名",e:"Dwarf names"},{k:"tilt",l:"地軸",e:"Axis"},{k:"moon",l:"月",e:"Moon"},{k:"labels",l:"ラベル",e:"Labels"},{k:"planets",l:"惑星",e:"Planets"},{k:"lagrange",l:"L点",e:"L points"},{k:"spacecraft",l:"探査機",e:"Probes"},{k:"cme",l:"CME",e:"CME"},{k:"distbar",l:"距離バー",e:"Dist bar"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{lang==="en"?x.e:x.l}</button>;})}</div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Real scale":"実スケール"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>{lang==="en"?"Sun":"太陽"}{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>{lang==="en"?"Planets":"惑星"}{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>{lang==="en"?"Distance":"距離"}{!uni&&rDi?" ●":""}</button></div>
         <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>{lang==="en"?"Unify":"統一比率"}{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>{lang==="en"?"Compare":"比較"}{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{dispatchPanel({type:"SET",key:"tourPick",value:true});}}}>{touring?(lang==="en"?"Stop Tour":"ツアー停止"):(lang==="en"?"Tour":"学習ツアー")}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?(lang==="en"?"Measuring":"計測中")+(measurePair.length===0?(lang==="en"?"(1st)":"(1つ目)"):measurePair.length===1?(lang==="en"?"(2nd)":"(2つ目)"):""):(lang==="en"?"📐 Measure":"📐計測")}</button></div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Tools":"ツール"}</div>

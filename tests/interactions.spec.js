@@ -1,20 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { CANVAS, load } from "./helpers.js";
 
 /* インタラクションE2Eテスト
    主要なUIフロー（パネル開閉・キーボード・ツアー・着陸）が壊れていないかを確認する。
    ピクセル比較ではなく DOM 状態をアサートするため、軽量で安定する。
 */
-
-const CANVAS = "canvas";
-
-async function load(page, query) {
-  /* オンボーディングオーバーレイがクリックを遮るので事前に既訪問フラグを立てる */
-  await page.goto("/");
-  await page.evaluate(() => localStorage.setItem("solar_ob", "1"));
-  await page.goto(`/?${query || "paused=1"}`);
-  await page.waitForSelector(CANVAS, { state: "visible" });
-  await page.waitForTimeout(400);
-}
 
 test.describe("interactions — panels", () => {
   test("検索パネルが開閉できる", async ({ page }) => {
