@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { CANVAS, loadAndWait } from "./helpers.js";
 
 /* 決定論的な初期状態を URL クエリで指定し、Canvas を撮影してベースライン比較する。
    状態フォーマット: SS|t|rx|ry|zoomIndex|focus
@@ -9,15 +10,6 @@ import { test, expect } from "@playwright/test";
 
    ベースライン更新が必要なら: npm run test:update
 */
-
-const CANVAS = "canvas";
-
-async function loadAndWait(page, state) {
-  await page.goto(`/?state=${encodeURIComponent(state)}&paused=1`);
-  await page.waitForSelector(CANVAS, { state: "visible" });
-  /* 1フレーム描画とフォント読込を待つ */
-  await page.waitForTimeout(800);
-}
 
 test.describe("visual regression — orbit view", () => {
   test("太陽系標準ビュー", async ({ page }) => {

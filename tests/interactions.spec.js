@@ -1,20 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { CANVAS, load } from "./helpers.js";
 
 /* インタラクションE2Eテスト
    主要なUIフロー（パネル開閉・キーボード・ツアー・着陸）が壊れていないかを確認する。
    ピクセル比較ではなく DOM 状態をアサートするため、軽量で安定する。
 */
-
-const CANVAS = "canvas";
-
-async function load(page, query) {
-  /* オンボーディングオーバーレイがクリックを遮るので事前に既訪問フラグを立てる */
-  await page.goto("/");
-  await page.evaluate(() => localStorage.setItem("solar_ob", "1"));
-  await page.goto(`/?${query || "paused=1"}`);
-  await page.waitForSelector(CANVAS, { state: "visible" });
-  await page.waitForTimeout(400);
-}
 
 test.describe("interactions — panels", () => {
   test("検索パネルが開閉できる", async ({ page }) => {
@@ -61,6 +51,51 @@ test.describe("interactions — panels", () => {
     await expect(page.getByText("⌨ ショートカット一覧")).toBeVisible();
     await page.keyboard.press("?");
     await expect(page.getByText("⌨ ショートカット一覧")).not.toBeVisible();
+  });
+
+  test("流星群カレンダーパネルが開く", async ({ page }) => {
+    await load(page);
+    await page.getByRole("button", { name: /🌠 流星群/ }).click();
+    await expect(page.getByText("🌠 流星群カレンダー")).toBeVisible();
+    /* 7つの流星群すべてが表示されている */
+    await expect(page.getByText("ペルセウス座流星群")).toBeVisible();
+    await expect(page.getByText("ふたご座流星群")).toBeVisible();
+  });
+
+  test("系外惑星パネルが詳細スペックを表示", async ({ page }) => {
+    await load(page);
+    await page.getByRole("button", { name: /🪐 系外惑星/ }).click();
+    /* 拡充された詳細フィールドが表示される */
+    await expect(page.getByText("≈1.07 地球").first()).toBeVisible();
+    /* ハビタブルゾーンバッジ */
+    await expect(page.locator("text=ＨＺ").first()).toBeVisible();
+    /* 着陸ボタン */
+    await expect(page.getByRole("button", { name: /🚀 地表に着陸/ }).first()).toBeVisible();
+  });
+});
+
+test.describe("interactions — localStorage persistence", () => {
+  test("言語設定がリロードで永続化される", async ({ page }) => {
+    await load(page);
+    /* 英語に切替 */
+    await page.getByRole("button", { name: "EN/JA" }).click();
+    await expect(page.getByRole("button", { name: /Search/ })).toBeVisible();
+    /* リロード（onboarding flag は既に立っている） */
+    await page.reload();
+    await page.waitForSelector(CANVAS, { state: "visible" });
+    await page.waitForTimeout(400);
+    /* 英語のまま */
+    await expect(page.getByRole("button", { name: /Search/ })).toBeVisible();
+  });
+
+  test("表示トグルの状態が永続化される", async ({ page }) => {
+    await load(page);
+    /* 軌道トグルをオフにする（初期はON） */
+    const orbitsBtn = page.getByRole("button", { name: "軌道", exact: true });
+    await orbitsBtn.click();
+    /* localStorage に保存されたことを確認 */
+    const cfg = await page.evaluate(() => localStorage.getItem("solar_cfg"));
+    expect(cfg).toContain('"orbits":false');
   });
 });
 

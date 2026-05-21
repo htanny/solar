@@ -2,7 +2,7 @@
 import { TAU } from "../data/solarData.js";
 import { fillCirc, sphereShade, limbDarken, atmosGlow, seedR, pj, RX, RY } from "./utils.js";
 import { dRi, dRiUranus } from "./drawRings.js";
-import { drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS } from "./drawStar.js";
+import { drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS } from "./drawStar.js";
 import { drawEarthCityLights, drawMoonDetail } from "./drawMoon.js";
 
 function dOb(ctx,rad,cam,col,frontOnly){
@@ -206,4 +206,4 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
 }
 
-export { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
+export { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };

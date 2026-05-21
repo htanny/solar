@@ -8,7 +8,12 @@ function mkNeb(){var r=seedR(77),o=[];var cs=[[80,40,120],[40,60,130],[120,50,60
 function sSP(th,ph,rx,ry,dp){var x=Math.sin(ph)*Math.cos(th),y=Math.cos(ph),z=Math.sin(ph)*Math.sin(th),px=1-dp*0.15;var c1=Math.cos(-ry*px),s1=Math.sin(-ry*px),nx=x*c1+z*s1,nz=-x*s1+z*c1;x=nx;z=nz;var c2=Math.cos(-rx*px),s2=Math.sin(-rx*px),ny=y*c2-z*s2,nz2=y*s2+z*c2;return{x:x,y:ny,z:nz2};}
 var SD=mkStars(),NB=mkNeb();
 function mkAst(){var r=seedR(123),o=[];for(var i=0;i<200;i++){o.push({ang:r()*TAU,rad:330+r()*200,y:(r()-0.5)*8,sz:0.3+r()*1.2,spd:0.0002+r()*0.0003});}return o;}
-var AST=mkAst();
+/* Trojan asteroids cluster at Jupiter's L4 (+60°) and L5 (-60°) points.
+   Angular offset is relative to Jupiter's current angle, set at render time. */
+function mkTrojans(){var r=seedR(213),o=[];for(var i=0;i<120;i++){var lp=i<60?1:-1;o.push({lp:lp,off:(r()-0.5)*0.7,rad:770+(r()-0.5)*60,y:(r()-0.5)*16,sz:0.3+r()*1.0});}return o;}
+/* Kuiper belt: 35-50 AU, scattered around the ecliptic */
+function mkKuiper(){var r=seedR(317),o=[];for(var i=0;i<250;i++){o.push({ang:r()*TAU,rad:5250+r()*2250,y:(r()-0.5)*40,sz:0.3+r()*0.9,spd:0.00001+r()*0.000015});}return o;}
+var AST=mkAst(),TROJAN=mkTrojans(),KUIPER=mkKuiper();
 
 /* ===== MILKY WAY GALAXY DATA ===== */
 /* Galaxy scale: 1 unit = ~1000 light-years. Galaxy radius ~50 units */
@@ -106,4 +111,4 @@ function drawSun(ctx,sx,sy,sr,t){
   if(sr>10){var flareCycle=t*0.07,flareIdx=Math.floor(flareCycle),flarePhase=flareCycle-flareIdx;if(flarePhase<0.18){var flareI=Math.sin(flarePhase/0.18*Math.PI);var fa2=(flareIdx*2.41)%TAU,fSx2=sx+Math.cos(fa2)*sr*0.92,fSy2=sy+Math.sin(fa2)*sr*0.92;var fLen=sr*(0.6+flareI*0.7);var fG=ctx.createRadialGradient(fSx2,fSy2,0,fSx2,fSy2,fLen);fG.addColorStop(0,"rgba(255,255,210,"+(0.85*flareI).toFixed(2)+")");fG.addColorStop(0.35,"rgba(255,200,110,"+(0.45*flareI).toFixed(2)+")");fG.addColorStop(1,"rgba(255,100,50,0)");ctx.fillStyle=fG;ctx.fillRect(fSx2-fLen,fSy2-fLen,fLen*2,fLen*2);}}
 }
 
-export { drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS };
+export { drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS };
