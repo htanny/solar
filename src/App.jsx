@@ -4,7 +4,7 @@ import { useRefSync } from "./hooks/useRefSync.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
-import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, TROJAN, KUIPER, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawEarthInteriorOverlay, drawSun, sSP, SD, NB, AST, TROJAN, KUIPER, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
 import { drawGalaxyView, drawGalaxyInfo } from "./render/drawGalaxyView.js";
 import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, drawConjunctionAlert } from "./render/drawScreenHUD.js";
@@ -30,6 +30,7 @@ import SearchPanel from "./components/panels/SearchPanel.jsx";
 import MoonCalendarPanel from "./components/panels/MoonCalendarPanel.jsx";
 import MeteorShowerPanel from "./components/panels/MeteorShowerPanel.jsx";
 import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
+import EarthInteriorPanel from "./components/panels/EarthInteriorPanel.jsx";
 import HelpPanel from "./components/panels/HelpPanel.jsx";
 
 export default function App(){
@@ -87,6 +88,7 @@ export default function App(){
   var[shadowCone,setShadowCone,shadowR]=useRefSync(false);
   var[tidalForce,setTidalForce,tidalR]=useRefSync(false);
   var[telescopeMode,setTelescopeMode,teleR]=useRefSync(false);
+  var[showEarthInt,setShowEarthInt,earthIntR]=useRefSync(false);
   var[showFps,setShowFps,showFpsR]=useRefSync(false);var fpsFrames=useRef([]);
 
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
@@ -352,6 +354,7 @@ export default function App(){
           if(pdt.pl.n==="Saturn")dRi(ctx,pdt.wx,pdt.wy,pdt.wz,pdt.vr,cam,pdt.pl.t);
           if(pdt.pl.n==="Uranus")dRiUranus(ctx,pdt.wx,pdt.wy,pdt.wz,pdt.vr,cam);
           drawPlanetBody(ctx,ppp.x,ppp.y,rr,pdt.pl,pdt.rotAng,cam);
+          if(pdt.pl.n==="Earth"&&earthIntR.current&&rr>30&&!cmpR.current){drawEarthInteriorOverlay(ctx,ppp.x,ppp.y,rr,langR.current);}
           dSh(ctx,ppp.x,ppp.y,rr,pdt.wx,pdt.wz,cam);
           if(pdt.pl.n==="Earth"&&rr>8)drawEarthCityLights(ctx,ppp.x,ppp.y,rr,pdt.rotAng,sunPj.x-ppp.x,sunPj.y-ppp.y);
           if(show.tilt)dAx(ctx,ppp.x,ppp.y,rr,pdt.pl.t,cam);
@@ -536,6 +539,7 @@ export default function App(){
         <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Physics":"物理現象"}</div>
         <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
           <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">{lang==="en"?"🌐 Magnetic":"🌐 磁気圏"}</button>
+          <button style={showEarthInt?bN:bF} onClick={function(){setShowEarthInt(function(p){return!p;});}} title={lang==="en"?"Earth interior cross-section overlay":"地球内部構造オーバーレイ"}>{lang==="en"?"🌍 Interior":"🌍 内部構造"}</button>
           <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">{lang==="en"?"⭕ Hill":"⭕ ヒル球"}</button>
           <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">{lang==="en"?"🌑 Shadow":"🌑 影錐"}</button>
           <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">{lang==="en"?"🌊 Tidal":"🌊 潮汐力"}</button>
@@ -666,6 +670,8 @@ export default function App(){
       {cleanView===0&&!landing&&<MeteorShowerPanel visible={panels.meteorOpen} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<OrbitalElementsPanel visible={panels.orbElemOpen} dispatchPanel={dispatchPanel} info={info} S={S} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
+
+      {cleanView===0&&!landing&&<EarthInteriorPanel visible={showEarthInt} onClose={function(){setShowEarthInt(false);}} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       {cleanView===0&&<HelpPanel visible={panels.helpOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
