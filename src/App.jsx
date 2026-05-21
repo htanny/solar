@@ -1,6 +1,7 @@
 import { useState, useReducer, useRef, useEffect, useCallback } from "react";
 import { version as APP_VERSION } from "../package.json";
 import { useRefSync } from "./hooks/useRefSync.js";
+import { useKeyboard } from "./hooks/useKeyboard.js";
 import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000 } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
 import { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, sSP, SD, NB, AST, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
@@ -41,6 +42,7 @@ export default function App(){
   var[foc,setFoc,foR]=useRefSync("all");var[zi,setZi,ziR]=useRefSync(17);
   var[paused,setPaused,pausR]=useRefSync(false);var[info,setInfo]=useState(null);var[compare,setCompare,cmpR]=useRefSync(false);
   var focTransRef=useRef({active:false});
+  var scrubAnchorRef=useRef(null);
   var tourRef=useRef({active:false,idx:0,timer:0,trans:false,lv:"int"});
   /* Pick TOUR_DESC/EXAM/NAMES arrays based on current level + language */
   function tourData(lv,enFlag){
@@ -135,6 +137,14 @@ export default function App(){
     setLanding(null);
   },[]);
 
+  useKeyboard({
+    setPaused:setPaused,focusOn:focusOn,landR:landR,landFovR:landFovR,setLandFov:setLandFov,
+    zIn:zIn,zOut:zOut,spR:spR,setSpd:setSpd,setCompare:setCompare,cmpStateRef:cmpStateRef,
+    tourRef:tourRef,stopTour:stopTour,setFoc:setFoc,setInfo:setInfo,setLanding:setLanding,
+    setTouring:setTouring,setBgm:setBgm,ziR:ziR,dz:dz,setZi:setZi,foR:foR,doLanding:doLanding,
+    dispatchPanel:dispatchPanel,isPhone:isPhone
+  });
+
   /* Time travel: jump to a specific date */
   var jumpToDate=useCallback(function(ds){
     var d=dateToSimDays(ds);if(d===null)return;
@@ -222,12 +232,7 @@ export default function App(){
     function tst(e){if(cmpR.current){e.preventDefault();if(e.touches.length===1){sim.cmpDrag={x:e.touches[0].clientX};sim.dragged=false;}if(e.touches.length===2){sim.cmpPinch=td3(e);sim.cmpDrag=null;}return;}if(e.touches.length===3){sim.triSwipe={x:e.touches[0].clientX};sim.dr=null;return;}if(e.touches.length===1){sim.dr={x:e.touches[0].clientX,y:e.touches[0].clientY};sim.dragged=false;}if(e.touches.length===2){sim.pi=td3(e);sim.dr=null;}}
     function tmv(e){e.preventDefault();if(e.touches.length===3&&sim.triSwipe){var dx3f=e.touches[0].clientX-sim.triSwipe.x;if(Math.abs(dx3f)>55){var foIdx=FL.findIndex(function(f){return f.k===foR.current;});var newFo=FL[(foIdx+(dx3f<0?1:foIdx>0?-1:FL.length-1)+FL.length)%FL.length];focusOn(newFo.k);sim.triSwipe={x:e.touches[0].clientX};}return;}if(cmpR.current){if(e.touches.length===1&&sim.cmpDrag){cmpStateRef.current.offX+=e.touches[0].clientX-sim.cmpDrag.x;sim.cmpDrag.x=e.touches[0].clientX;}if(e.touches.length===2&&sim.cmpPinch){var dp=td3(e),rp=dp/sim.cmpPinch;if(rp>1.01||rp<0.99){cmpStateRef.current.zm=Math.max(0.2,Math.min(5,cmpStateRef.current.zm*rp));sim.cmpPinch=dp;}}return;}if(e.touches.length===1&&sim.dr){var dx=e.touches[0].clientX-sim.dr.x,dy=e.touches[0].clientY-sim.dr.y;if(Math.abs(dx)+Math.abs(dy)>3)sim.dragged=true;if(!landR.current){sim.cam.ry+=dx*0.005;sim.cam.rx=Math.max(-1.5,Math.min(1.5,sim.cam.rx+dy*0.005));}sim.dr.x=e.touches[0].clientX;sim.dr.y=e.touches[0].clientY;}if(e.touches.length===2&&sim.pi){var d3=td3(e),ratio=d3/sim.pi;if(landR.current){var newFov=Math.max(0.3,Math.min(3,landFovR.current/ratio));landFovR.current=newFov;setLandFov(newFov);sim.pi=d3;}else if(ratio>1.06||ratio<0.94){var dir=ratio>1?1:-1,c3=ziR.current,n2=Math.max(0,Math.min(ZS.length-1,c3+dir));if(n2!==c3){dz(n2);ziR.current=n2;setZi(n2);sim.cam.tzm=ZS[n2];}sim.pi=d3;}}}
     function ten(e){if(e.touches.length<2){sim.pi=null;sim.cmpPinch=null;}if(e.touches.length===0){sim.dr=null;sim.cmpDrag=null;}}
-    function kd(e){var k=e.key;if(k===" "){e.preventDefault();setPaused(function(p){return!p;});}else if(k==="0"){focusOn("all");}else if(k.toLowerCase()==="s"){focusOn("sun");}else if(k>="1"&&k<="8"){focusOn(PL[parseInt(k)-1].n);}else if(k==="9"){focusOn("Halley");}else if(k.toLowerCase()==="e"){focusOn("Encke");}else if(k==="+"||k==="="){e.preventDefault();if(landR.current){var fi=Math.max(0.3,landFovR.current*0.9);landFovR.current=fi;setLandFov(fi);}else zIn();}else if(k==="-"||k==="_"){e.preventDefault();if(landR.current){var fo=Math.min(3,landFovR.current*1.1);landFovR.current=fo;setLandFov(fo);}else zOut();}else if(k==="ArrowRight"){var ci2=SP.indexOf(spR.current);if(ci2<SP.length-1){setSpd(SP[ci2+1]);setPaused(false);}}else if(k==="ArrowLeft"){var ci3=SP.indexOf(spR.current);if(ci3>0){setSpd(SP[ci3-1]);setPaused(false);}}else if(k.toLowerCase()==="c"){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}else if(k.toLowerCase()==="t"){if(tourRef.current.active){stopTour();setFoc("all");setInfo(null);}else{setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"int"};setFoc("sun");setInfo({type:"sun"});}}else if(k.toLowerCase()==="m"){setBgm(function(p){return!p;});}
-      else if(k.toLowerCase()==="g"){var galIdx=2;var ssIdx=17;if(ziR.current>9){dz(galIdx);ziR.current=galIdx;setZi(galIdx);setFoc("all");setInfo(null);}else{dz(ssIdx);ziR.current=ssIdx;setZi(ssIdx);}}
-      else if(k.toLowerCase()==="l"){if(landR.current){setLanding(null);}else if(foR.current!=="all"&&foR.current!=="sun"){var lpl=PL_MAP[foR.current];if(lpl){doLanding(foR.current);}}}
-      else if(k==="Escape"){if(landR.current)setLanding(null);}
-      else if(k==="?"||(k==="/"&&e.shiftKey)){e.preventDefault();dispatchPanel({type:isPhone?"TOGGLE_EX":"TOGGLE",key:"helpOpen"});}}
-    cv.addEventListener("mousedown",md);window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);cv.addEventListener("wheel",wl,{passive:false});cv.addEventListener("touchstart",tst,{passive:false});cv.addEventListener("touchmove",tmv,{passive:false});cv.addEventListener("touchend",ten);window.addEventListener("keydown",kd);
+    cv.addEventListener("mousedown",md);window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);cv.addEventListener("wheel",wl,{passive:false});cv.addEventListener("touchstart",tst,{passive:false});cv.addEventListener("touchmove",tmv,{passive:false});cv.addEventListener("touchend",ten);
     var sArr=SD.s,sCols=SD.c,nArr=NB;
 
     function frame(ts2){
@@ -438,7 +443,7 @@ export default function App(){
       fR.current=requestAnimationFrame(frame);
     }
     fR.current=requestAnimationFrame(frame);
-    return function(){alive=false;cancelAnimationFrame(fR.current);window.removeEventListener("resize",rsz);cv.removeEventListener("mousedown",md);window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",mu);cv.removeEventListener("wheel",wl);cv.removeEventListener("touchstart",tst);cv.removeEventListener("touchmove",tmv);cv.removeEventListener("touchend",ten);window.removeEventListener("keydown",kd);};
+    return function(){alive=false;cancelAnimationFrame(fR.current);window.removeEventListener("resize",rsz);cv.removeEventListener("mousedown",md);window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",mu);cv.removeEventListener("wheel",wl);cv.removeEventListener("touchstart",tst);cv.removeEventListener("touchmove",tmv);cv.removeEventListener("touchend",ten);};
   },[dz,focusOn,stopTour]);
 
   /* Live tick: re-render info panel each second so distance/mag stay current */
@@ -518,6 +523,25 @@ export default function App(){
           <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2035-09-02");}}>{lang==="en"?"Eclipse 2035":"日食 2035"}</button>
           <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("1969-07-20");}}>{lang==="en"?"Moon landing":"月面着陸"}</button>
           <button style={Object.assign({},bF,{fontSize:8})} onClick={function(){jumpToDate("2006-01-19");}}>{lang==="en"?"New Horizons":"NHニューホライズンズ"}</button>
+        </div>}
+        {panels.showDate&&<div style={{marginTop:6,paddingTop:4,borderTop:"1px solid rgba(255,255,255,0.08)"}}>
+          <div style={Object.assign({},lb,{fontSize:8,marginBottom:3})}>{lang==="en"?"Relative jump":"相対ジャンプ"}</div>
+          <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>{[
+            {l:"-100y",d:-36525},{l:"-10y",d:-3652},{l:"-1y",d:-365},{l:"-1m",d:-30},{l:"-1d",d:-1},
+            {l:"+1d",d:1},{l:"+1m",d:30},{l:"+1y",d:365},{l:"+10y",d:3652},{l:"+100y",d:36525}
+          ].map(function(b){return <button key={b.l} style={Object.assign({},bF,{fontSize:8,padding:"2px 4px",minWidth:30})} onClick={function(){S.current.t+=b.d;for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];setPaused(true);setInfo(function(p){return p?Object.assign({},p):p;});}}>{b.l}</button>;})}</div>
+          <div style={{marginTop:4,display:"flex",gap:4,alignItems:"center"}}>
+            <span style={{fontSize:8,color:"rgba(255,255,255,0.4)",minWidth:18}}>−1y</span>
+            <input type="range" min="-365" max="365" defaultValue="0" step="1"
+              onPointerDown={function(e){scrubAnchorRef.current=S.current.t;setPaused(true);}}
+              onInput={function(e){if(scrubAnchorRef.current!=null){S.current.t=scrubAnchorRef.current+parseInt(e.target.value);for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}}
+              onPointerUp={function(e){scrubAnchorRef.current=null;e.target.value="0";}}
+              onPointerCancel={function(e){scrubAnchorRef.current=null;e.target.value="0";}}
+              style={{flex:1,accentColor:"rgba(255,200,80,0.85)"}}
+              title={lang==="en"?"Scrub ±1 year":"±1年スクラブ"}
+            />
+            <span style={{fontSize:8,color:"rgba(255,255,255,0.4)",minWidth:18,textAlign:"right"}}>+1y</span>
+          </div>
         </div>}
       </div>
       </DragPanel>}
