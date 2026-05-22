@@ -206,4 +206,45 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
 }
 
-export { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
+/* ===== EARTH INTERIOR CUTAWAY OVERLAY ===== */
+/* Draws a right-half cross-section showing internal layers when Earth is large enough on screen. */
+function drawEarthInteriorOverlay(ctx,cx,cy,r,lang){
+  if(r<30)return;
+  var en=lang==="en";
+  /** @type {Array<{ri:number,ro:number,c:string,lbl:string}>} */
+  var L=[
+    {ri:0,      ro:0.1916,c:"rgba(255,220,30,0.93)", lbl:en?"IC":"内核"},
+    {ri:0.1916, ro:0.5468,c:"rgba(255,90,15,0.93)",  lbl:en?"OC":"外核"},
+    {ri:0.5468, ro:0.8950,c:"rgba(155,38,5,0.93)",   lbl:en?"LM":"下M"},
+    {ri:0.8950, ro:0.9953,c:"rgba(200,75,10,0.93)",  lbl:en?"UM":"上M"},
+    {ri:0.9953, ro:1.0,   c:"rgba(85,85,85,0.93)",   lbl:en?"Cr":"殻"},
+  ];
+  ctx.save();
+  /* clip to right half-circle */
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,-1.5708,1.5708);ctx.closePath();ctx.clip();
+  /* draw from outermost inward so each inner layer overwrites */
+  for(var i=L.length-1;i>=0;i--){
+    ctx.fillStyle=L[i].c;
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,L[i].ro*r,-1.5708,1.5708);ctx.closePath();ctx.fill();
+  }
+  /* boundary arcs */
+  ctx.lineWidth=0.7;
+  for(var j=0;j<L.length-1;j++){ctx.strokeStyle="rgba(255,255,255,0.28)";ctx.beginPath();ctx.arc(cx,cy,L[j].ro*r,-1.5708,1.5708);ctx.stroke();}
+  /* vertical divider */
+  ctx.strokeStyle="rgba(255,255,255,0.42)";ctx.lineWidth=1.2;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+  /* abbreviated labels */
+  if(r>50){
+    var fs=Math.max(7,Math.min(10,r*0.09));
+    ctx.font="bold "+fs+"px sans-serif";ctx.textAlign="center";
+    for(var k=0;k<L.length;k++){
+      var midR=(L[k].ri+L[k].ro)*0.5*r,layW=(L[k].ro-L[k].ri)*r;
+      if(layW<fs*1.8||midR<fs*0.5)continue;
+      ctx.fillStyle="rgba(255,255,255,0.88)";
+      ctx.fillText(L[k].lbl,cx+midR,cy+fs*0.38);
+    }
+  }
+  ctx.restore();
+}
+
+export { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
