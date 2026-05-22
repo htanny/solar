@@ -114,18 +114,42 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
   var isNight=sunAlt<-0.08;
   var dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
-  /* Moon: override generic hour-angle Sun position with orbital mechanics.
-     Sub-solar longitude: 0°=near-side (full Moon from Earth), ±180°=far-side (new Moon from Earth). */
-  if(plName==="Moon"){
-    var _mlng=(218.316+13.176396*t+360000)%360;
-    var _slng=(280.46+0.9856*t+36000)%360;
-    var _mph=((_mlng-_slng)/360+100)%1;
-    var _ssLng=(((0.5-_mph)*360)+900)%360-180;
-    var _dLng=((lngDeg||0)-_ssLng+540)%360-180;
-    var _dLat=lat||0;
-    var _dlr=_dLng*0.01745,_dlar=_dLat*0.01745;
-    sunAlt=Math.max(-0.95,Math.min(0.95,Math.cos(_dlar)*Math.cos(_dlr)));
-    sunAz=Math.atan2(Math.sin(_dlr),-Math.sin(_dlar)*Math.cos(_dlr));
+  /* Tidally-locked moons: override generic hour-angle Sun position with orbital mechanics.
+     The parent body always sits at sub-parent point (lng=0,lat=0); the Sun cycles through
+     the moon's sky at the synodic period. Sub-solar lng: 0°=near-side facing parent (full
+     parent from moon), ±180°=far-side (new/dark parent from moon). */
+  var _parentMap={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+  var _parentName=_parentMap[plName];
+  if(_parentName){
+    var _parent=PL_MAP[_parentName]||DWARF_MAP[_parentName];
+    if(_parent){
+      var _phase;
+      if(plName==="Moon"){
+        /* Empirical lunar formula (consistent with Earth-from-Moon view in drawLandingSkyBodies) */
+        var _mlng=(218.316+13.176396*t+360000)%360;
+        var _slng=(280.46+0.9856*t+36000)%360;
+        _phase=((_mlng-_slng)/360+100)%1;
+      }else{
+        /* Generic synodic phase: (1/T_moon - 1/T_parent) cycles per day */
+        var _syn=1/(1/pl.rot-1/_parent.p);
+        _phase=((t/_syn)%1+100)%1;
+      }
+      var _ssLng=(((0.5-_phase)*360)+900)%360-180;
+      var _dLng=((lngDeg||0)-_ssLng+540)%360-180;
+      var _dLat=lat||0;
+      var _dlr=_dLng*0.01745,_dlar=_dLat*0.01745;
+      sunAlt=Math.max(-0.95,Math.min(0.95,Math.cos(_dlar)*Math.cos(_dlr)));
+      sunAz=Math.atan2(Math.sin(_dlr),-Math.sin(_dlar)*Math.cos(_dlr));
+      aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
+      isNight=sunAlt<-0.08;
+      dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
+    }
+  }else if(sf.fixedSun){
+    /* Tidally-locked exoplanet (e.g. ProximaB): star fixed at sub-stellar point (lng=0,lat=0) */
+    var _exLngR=(((lngDeg||0)+540)%360-180)*0.01745;
+    var _exLatR=(lat||0)*0.01745;
+    sunAlt=Math.max(-0.95,Math.min(0.95,Math.cos(_exLatR)*Math.cos(_exLngR)));
+    sunAz=Math.atan2(Math.sin(_exLngR),-Math.sin(_exLatR)*Math.cos(_exLngR));
     aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
     isNight=sunAlt<-0.08;
     dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
