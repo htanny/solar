@@ -295,9 +295,12 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var sunLngM=(280.46+0.9856*t+36000)%360;
         var moonLngM=(218.316+13.176396*t+360000)%360;
         var moonPhFromE=((moonLngM-sunLngM)/360+100)%1;
-        /* earthPh: new Moon (phase=0) = dark Earth (0%); full Moon (phase=0.5) = full Earth (100%) */
-        var earthPh=moonPhFromE;
-        /* Sub-solar longitude on Moon surface (0=near-side/sub-Earth, ±180=far-side) */
+        /* Earth phase from Moon: new Moon → full Earth (Earth's day side faces Moon).
+           Full Moon → new Earth (Earth's night side faces Moon). */
+        var earthPh=(moonPhFromE+0.5)%1;
+        /* Sub-solar longitude on Moon surface (0=near-side/sub-Earth, ±180=far-side).
+           At new Moon (phase=0), Sun shines on far side (lng=180°).
+           At full Moon (phase=0.5), Sun shines on near side (lng=0°). */
         var ssLngD=(((0.5-moonPhFromE)*360)+900)%360-180;
         /* Sun direction from observer, consistent with libration correction applied to Earth */
         var sunLngRadM=(((lngDeg||0)-libL-ssLngD+540)%360-180)*0.01745;
