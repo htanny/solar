@@ -114,6 +114,22 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
   var isNight=sunAlt<-0.08;
   var dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
+  /* Moon: override generic hour-angle Sun position with orbital mechanics.
+     Sub-solar longitude: 0°=near-side (full Moon from Earth), ±180°=far-side (new Moon from Earth). */
+  if(plName==="Moon"){
+    var _mlng=(218.316+13.176396*t+360000)%360;
+    var _slng=(280.46+0.9856*t+36000)%360;
+    var _mph=((_mlng-_slng)/360+100)%1;
+    var _ssLng=(((0.5-_mph)*360)+900)%360-180;
+    var _dLng=((lngDeg||0)-_ssLng+540)%360-180;
+    var _dLat=lat||0;
+    var _dlr=_dLng*0.01745,_dlar=_dLat*0.01745;
+    sunAlt=Math.max(-0.95,Math.min(0.95,Math.cos(_dlar)*Math.cos(_dlr)));
+    sunAz=Math.atan2(Math.sin(_dlr),-Math.sin(_dlar)*Math.cos(_dlr));
+    aDiffSun=((sunAz-yaw)%TAU+TAU)%TAU;if(aDiffSun>Math.PI)aDiffSun-=TAU;
+    isNight=sunAlt<-0.08;
+    dayF=Math.max(0,Math.min(1,sunAlt*4+0.5));
+  }
   var hrzY=Math.max(H*0.05,Math.min(H*0.92,H*(0.58-(tilt||0)*0.01)));
   var rng=seedR(plName.length*7+31);
   var sTop=sf.skyTop,sBot=sf.skyBot;
