@@ -295,8 +295,19 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var sunLngM=(280.46+0.9856*t+36000)%360;
         var moonLngM=(218.316+13.176396*t+360000)%360;
         var moonPhFromE=((moonLngM-sunLngM)/360+100)%1;
-        var earthPh=(moonPhFromE+0.5)%1;
-        var dxSunE=sunScreenX-earthX,dySunE=sunY-earthY;
+        /* earthPh: new Moon (phase=0) = dark Earth (0%); full Moon (phase=0.5) = full Earth (100%) */
+        var earthPh=moonPhFromE;
+        /* Sub-solar longitude on Moon surface (0=near-side/sub-Earth, ±180=far-side) */
+        var ssLngD=(((0.5-moonPhFromE)*360)+900)%360-180;
+        /* Sun direction from observer, consistent with libration correction applied to Earth */
+        var sunLngRadM=(((lngDeg||0)-libL-ssLngD+540)%360-180)*0.01745;
+        var sunLatRadM=((lat||0)-libB)*0.01745;
+        var moonSunSinAlt=Math.cos(sunLatRadM)*Math.cos(sunLngRadM);
+        var moonSunAz2=Math.atan2(Math.sin(sunLngRadM),-Math.sin(sunLatRadM)*Math.cos(sunLngRadM));
+        var moonSunADiff=((moonSunAz2-yaw)%TAU+TAU)%TAU;if(moonSunADiff>Math.PI)moonSunADiff-=TAU;
+        var moonSunScrX=W/2+moonSunADiff*W*0.8/TAU;
+        var moonSunScrY=hrzY-moonSunSinAlt*hrzY*0.75;
+        var dxSunE=moonSunScrX-earthX,dySunE=moonSunScrY-earthY;
         var toSunE=Math.atan2(dxSunE,-dySunE);
         var earthTilt=earthPh<0.5?toSunE-Math.PI/2:toSunE+Math.PI/2;
         ctx.save();
