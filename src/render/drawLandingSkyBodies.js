@@ -1,6 +1,87 @@
 // @ts-check
-import { TAU, GMOONS } from "../data/solarData.js";
+import { TAU, GMOONS, PL_MAP, DWARF_MAP } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
+
+/* Parent planet lookup for tidally-locked moons; used for synodic phase calculation. */
+var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+
+/**
+ * Compute orbital phase, sub-solar longitude, and Sun screen position for a tidally-locked moon.
+ * @param {string} plName Landing body name (e.g. "Io")
+ * @param {number} t Simulation time (days)
+ * @param {number} lngDeg Observer longitude on the moon (degrees)
+ * @param {number} lat Observer latitude (degrees)
+ * @param {number} yaw Camera yaw (rad)
+ * @param {number} W Screen width
+ * @param {number} hrzY Horizon Y (px)
+ * @returns {{phase:number,parentPh:number,sunScrX:number,sunScrY:number}|null}
+ */
+function _tidalPhaseSetup(plName,t,lngDeg,lat,yaw,W,hrzY){
+  var parentName=_PARENT_OF[plName];if(!parentName)return null;
+  var moonInfo=PL_MAP[plName]||DWARF_MAP[plName];
+  var parent=PL_MAP[parentName]||DWARF_MAP[parentName];
+  if(!moonInfo||!parent)return null;
+  var phase;
+  if(plName==="Moon"){
+    var mlng=(218.316+13.176396*t+360000)%360;
+    var slng=(280.46+0.9856*t+36000)%360;
+    phase=((mlng-slng)/360+100)%1;
+  }else{
+    var syn=1/(1/moonInfo.rot-1/parent.p);
+    phase=((t/syn)%1+100)%1;
+  }
+  var ssLngD=(((0.5-phase)*360)+900)%360-180;
+  var sLngR=(((lngDeg||0)-ssLngD+540)%360-180)*0.01745;
+  var sLatR=(lat||0)*0.01745;
+  var sinAlt=Math.cos(sLatR)*Math.cos(sLngR);
+  var az=Math.atan2(Math.sin(sLngR),-Math.sin(sLatR)*Math.cos(sLngR));
+  var aDiff=((az-yaw)%TAU+TAU)%TAU;if(aDiff>Math.PI)aDiff-=TAU;
+  return {
+    phase:phase,
+    parentPh:(phase+0.5)%1,
+    sunScrX:W/2+aDiff*W*0.8/TAU,
+    sunScrY:hrzY-sinAlt*hrzY*0.75
+  };
+}
+
+/**
+ * Draw parent body's phase shadow over an already-drawn full disk. Clips to the disk,
+ * fills the dark hemisphere (with bezier terminator), then restores context.
+ * Sun direction is taken from the tidal-phase setup so the lit side always faces the Sun.
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {number} cx Parent body center X
+ * @param {number} cy Parent body center Y
+ * @param {number} r Parent body radius (px)
+ * @param {number} parentPh Phase (0=new, 0.5=full)
+ * @param {number} sunScrX Sun screen X
+ * @param {number} sunScrY Sun screen Y
+ * @param {string} shadowCol Dark side fill color "rgba(...)"
+ */
+function _drawParentPhase(ctx,cx,cy,r,parentPh,sunScrX,sunScrY,shadowCol){
+  if(parentPh>0.48&&parentPh<0.52)return;/* near full: no visible shadow */
+  var dxS=sunScrX-cx,dyS=sunScrY-cy;
+  var toSun=Math.atan2(dxS,-dyS);
+  /* Same tilt as lit-side code: rotates the body so the dark hemisphere (which is on
+     the opposite side of the bright hemisphere in local coords) faces away from Sun. */
+  var tilt=parentPh<0.5?toSun-Math.PI/2:toSun+Math.PI/2;
+  ctx.save();
+  ctx.translate(cx,cy);ctx.rotate(tilt);
+  ctx.beginPath();ctx.arc(0,0,r,0,TAU);ctx.clip();
+  ctx.fillStyle=shadowCol;
+  var ekx=r*Math.cos(parentPh*TAU);
+  ctx.beginPath();
+  if(parentPh<0.5){
+    /* waxing: lit on local +x, so dark side is on local −x → use LEFT arc */
+    ctx.arc(0,0,r,-Math.PI/2,Math.PI/2,true);
+    ctx.bezierCurveTo(ekx,r,ekx,-r,0,-r);
+  }else{
+    /* waning: lit on local −x, so dark side is on local +x → use RIGHT arc */
+    ctx.arc(0,0,r,-Math.PI/2,Math.PI/2,false);
+    ctx.bezierCurveTo(-ekx,r,-ekx,-r,0,-r);
+  }
+  ctx.fill();
+  ctx.restore();
+}
 
 /**
  * Render all "other celestial bodies" visible from the landing site's sky:
@@ -124,6 +205,9 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         for(var jbi=0;jbi<jupBands.length;jbi++){var jb=jupBands[jbi];ctx.fillStyle=jb.c;ctx.fillRect(jupX-jupRad,jupY+jb.y*jupRad,jupRad*2,jb.h*jupRad);}
         ctx.fillStyle="rgba(180,80,55,0.7)";ctx.beginPath();ctx.ellipse(jupX-jupRad*0.2,jupY+jupRad*0.12,jupRad*0.22,jupRad*0.10,0,0,TAU);ctx.fill();
         ctx.restore();
+        /* Phase shadow: Jupiter goes through phases as the Galilean moon orbits Jupiter */
+        var _jps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_jps)_drawParentPhase(ctx,jupX,jupY,jupRad,_jps.parentPh,_jps.sunScrX,_jps.sunScrY,"rgba(20,15,10,0.93)");
         if(jupY<hrzY-2&&jupRad>5){ctx.fillStyle="rgba(220,185,130,0.6)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("木星",jupX,jupY-jupRad-4);}
       }
     }
@@ -150,6 +234,8 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         ctx.fillStyle="rgba(70,110,200,0.55)";ctx.fillRect(neX-neRad,neY+neRad*0.1,neRad*2,neRad*0.18);
         ctx.fillStyle="rgba(15,25,80,0.7)";ctx.beginPath();ctx.ellipse(neX-neRad*0.15,neY-neRad*0.05,neRad*0.22,neRad*0.10,0,0,TAU);ctx.fill();
         ctx.restore();
+        var _nps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_nps)_drawParentPhase(ctx,neX,neY,neRad,_nps.parentPh,_nps.sunScrX,_nps.sunScrY,"rgba(5,8,20,0.93)");
         if(neY<hrzY-2&&neRad>5){ctx.fillStyle="rgba(120,170,240,0.65)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("海王星",neX,neY-neRad-4);}
       }
     }
@@ -174,6 +260,8 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         ctx.fillStyle="rgba(95,60,40,0.7)";
         ctx.beginPath();ctx.ellipse(puX-puRad*0.35,puY+puRad*0.25,puRad*0.35,puRad*0.18,0.2,0,TAU);ctx.fill();
         ctx.restore();
+        var _pps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_pps)_drawParentPhase(ctx,puX,puY,puRad,_pps.parentPh,_pps.sunScrX,_pps.sunScrY,"rgba(15,10,8,0.93)");
         if(puY<hrzY-2&&puRad>5){ctx.fillStyle="rgba(220,200,170,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("冥王星",puX,puY-puRad-4);}
       }
     }
@@ -196,6 +284,8 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         ctx.fillStyle="rgba(140,55,35,0.7)";
         ctx.beginPath();ctx.ellipse(caX,caY-caRad*0.7,caRad*0.65,caRad*0.3,0,0,TAU);ctx.fill();
         ctx.restore();
+        var _cps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_cps)_drawParentPhase(ctx,caX,caY,caRad,_cps.parentPh,_cps.sunScrX,_cps.sunScrY,"rgba(12,10,10,0.93)");
         if(caY<hrzY-2&&caRad>4){ctx.fillStyle="rgba(200,185,165,0.7)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("カロン",caX,caY-caRad-4);}
       }
     }
@@ -241,6 +331,8 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         ctx.strokeStyle="rgba(200,178,120,0.5)";ctx.lineWidth=satRad*0.28;
         ctx.beginPath();ctx.ellipse(satX,satY+satRad*0.12,satRad*2.2,satRad*0.55,0,Math.PI,0,false);ctx.stroke();
         ctx.globalAlpha=1;
+        var _sps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_sps)_drawParentPhase(ctx,satX,satY,satRad,_sps.parentPh,_sps.sunScrX,_sps.sunScrY,"rgba(18,12,6,0.93)");
         if(satY<hrzY-2&&satRad>3){ctx.fillStyle="rgba(220,195,148,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("土星",satX,satY-satRad-4);}
       }
     }
@@ -295,9 +387,12 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var sunLngM=(280.46+0.9856*t+36000)%360;
         var moonLngM=(218.316+13.176396*t+360000)%360;
         var moonPhFromE=((moonLngM-sunLngM)/360+100)%1;
-        /* earthPh: new Moon (phase=0) = dark Earth (0%); full Moon (phase=0.5) = full Earth (100%) */
-        var earthPh=moonPhFromE;
-        /* Sub-solar longitude on Moon surface (0=near-side/sub-Earth, ±180=far-side) */
+        /* Earth phase from Moon: new Moon → full Earth (Earth's day side faces Moon).
+           Full Moon → new Earth (Earth's night side faces Moon). */
+        var earthPh=(moonPhFromE+0.5)%1;
+        /* Sub-solar longitude on Moon surface (0=near-side/sub-Earth, ±180=far-side).
+           At new Moon (phase=0), Sun shines on far side (lng=180°).
+           At full Moon (phase=0.5), Sun shines on near side (lng=0°). */
         var ssLngD=(((0.5-moonPhFromE)*360)+900)%360-180;
         /* Sun direction from observer, consistent with libration correction applied to Earth */
         var sunLngRadM=(((lngDeg||0)-libL-ssLngD+540)%360-180)*0.01745;
