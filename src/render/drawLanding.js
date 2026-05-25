@@ -1,7 +1,7 @@
 // @ts-check
 import { TAU, SURF, PL_MAP, DWARF_MAP, EXO_SURF } from "../data/solarData.js";
 import { seedR, lerpColor } from "./utils.js";
-import { earthIsLand, getEarthBiome, BIOME_CONF } from "./landingUtils.js";
+import { getEarthBiome, BIOME_CONF } from "./landingUtils.js";
 import { drawLandingTerrain } from "./drawLandingTerrain.js";
 import { drawLandingSky } from "./drawLandingSky.js";
 import { drawLandingHUD } from "./drawLandingHUD.js";
@@ -164,4 +164,4 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   drawLandingHUD(ctx,W,H,{t:t,lat:lat,lngDeg:lngDeg,yaw:yaw,plName:plName,solarDay:solarDay,sunAlt:sunAlt,pl:pl,sf:sf,rot:rot,hrzY:hrzY,fov:fov});
 }
 
-export { drawLanding, earthIsLand, getEarthBiome };
+export { drawLanding };

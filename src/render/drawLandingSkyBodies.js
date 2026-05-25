@@ -176,11 +176,18 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var phaseNames=["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];ctx.fillText(phaseNames[Math.round(moonPh*8)%8],moonX,moonY+moonRad+9);
       }
     }
-    /* Venus as evening/morning star */
+    /* Venus as evening/morning star — placed at its true geocentric elongation from the
+       Sun (≤~47°), so it never strays to the anti-solar sky. */
     if(!isNight||sunAlt>-0.3){
-      var venX=(W*0.3+t*0.1+yaw*60)%W,venY=hrzY*0.4+Math.sin(t*0.01)*hrzY*0.1;
-      ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
-      var vglow=ctx.createRadialGradient(venX,venY,1,venX,venY,8);vglow.addColorStop(0,"rgba(255,255,200,0.3)");vglow.addColorStop(1,"rgba(255,255,200,0)");ctx.fillStyle=vglow;ctx.fillRect(venX-8,venY-8,16,16);ctx.globalAlpha=1;
+      var _vLE=(100.46+0.9856*t)*0.01745,_vLV=(181.98+1.602087*t)*0.01745;
+      var _vXe=Math.cos(_vLE),_vYe=Math.sin(_vLE),_vXv=0.723*Math.cos(_vLV),_vYv=0.723*Math.sin(_vLV);
+      var _vElong=((Math.atan2(_vYv-_vYe,_vXv-_vXe)-Math.atan2(-_vYe,-_vXe)+Math.PI)%TAU+TAU)%TAU-Math.PI;
+      var _sunADiffV=((sunAz-yaw)%TAU+TAU)%TAU;if(_sunADiffV>Math.PI)_sunADiffV-=TAU;
+      if(Math.abs(_sunADiffV+_vElong)<TAU*0.4){
+        var venX=sunScreenX+_vElong*(W*0.8/TAU),venY=sunY-Math.abs(_vElong)*hrzY*0.5;
+        ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
+        var vglow=ctx.createRadialGradient(venX,venY,1,venX,venY,8);vglow.addColorStop(0,"rgba(255,255,200,0.3)");vglow.addColorStop(1,"rgba(255,255,200,0)");ctx.fillStyle=vglow;ctx.fillRect(venX-8,venY-8,16,16);ctx.globalAlpha=1;
+      }
     }
   }else if(plName==="Io"||plName==="Europa"||plName==="Ganymede"||plName==="Callisto"){
     /* Jupiter dominates the sky — tidally locked (sub-Jovian point = lat:0 lng:0) */
