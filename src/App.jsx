@@ -470,7 +470,8 @@ export default function App(){
       }
 
       /* ======== VISUALIZATION OVERLAYS (Hill / Shadow Cone / Tidal / Telescope) ======== */
-      drawOverlays(ctx,{pd:pd,pjArr:pjArr,cam:cam,W:W,H:H,earthPd:earthPd,earthPdIdx:earthPdIdx,eclipseType:eclipseType,eclipseEarPj:eclipseEarPj,eclipseEarRr:eclipseEarRr,compare:cmpR.current,_rd:_rd,_un:_un,t:t,fc:fc,zmStr:zmStr,srScr:srScr,sunPj:sunPj,showHill:hillR.current,showShadow:shadowR.current,showTidal:tidalR.current,showTelescope:teleR.current});
+      var _zmLive=ZS[ziR.current]||1,_zmStr=_zmLive>=10?_zmLive.toFixed(0)+"x":_zmLive>=1?_zmLive.toFixed(1)+"x":_zmLive>=0.01?_zmLive.toFixed(2)+"x":_zmLive.toFixed(5)+"x";
+      drawOverlays(ctx,{pd:pd,pjArr:pjArr,cam:cam,W:W,H:H,earthPd:earthPd,earthPdIdx:earthPdIdx,eclipseType:eclipseType,eclipseEarPj:eclipseEarPj,eclipseEarRr:eclipseEarRr,compare:cmpR.current,_rd:_rd,_un:_un,t:t,fc:fc,zmStr:_zmStr,srScr:srScr,sunPj:sunPj,showHill:hillR.current,showShadow:shadowR.current,showTidal:tidalR.current,showTelescope:teleR.current});
 
       if(cmpR.current)drawCompareMode(ctx,cmpStateRef.current,W,H,t);
 
