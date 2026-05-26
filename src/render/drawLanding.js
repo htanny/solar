@@ -104,10 +104,13 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
   var sunDir=rot<0?-1:1;
   var sunHourAng=(dayPh+(lngDeg||0)/360)*TAU*sunDir;
   var effTilt=pl.t>90?(180-pl.t):pl.t;
-  var season=Math.sin((t/pl.p)*TAU);
   var effTR=effTilt*0.01745;
   var latRad=(lat||0)*0.01745;
-  var decl=effTR*season;
+  /* Solar declination = arcsin(sin(obliquity)·sin(λ)), where λ is the Sun's ecliptic
+     longitude from the planet's vernal equinox. For Earth the equinox is aligned to
+     day 79.5 of each J2000 year so the seasons match scanEvents (timeUtils.js). */
+  var sunEclLng=plName==="Earth"?((t-79.5)/365.25)*TAU:(t/pl.p)*TAU;
+  var decl=Math.asin(Math.sin(effTR)*Math.sin(sunEclLng));
   var sinAlt=Math.sin(latRad)*Math.sin(decl)+Math.cos(latRad)*Math.cos(decl)*Math.sin(sunHourAng);
   var sunAlt=Math.max(-0.95,Math.min(0.95,sinAlt));
   var sunAz=Math.atan2(Math.cos(sunHourAng)*Math.cos(decl),Math.sin(decl)*Math.cos(latRad)-Math.cos(decl)*Math.sin(latRad)*Math.sin(sunHourAng));

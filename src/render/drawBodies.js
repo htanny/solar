@@ -1,13 +1,15 @@
 // @ts-check
 import { TAU } from "../data/solarData.js";
 import { fillCirc, sphereShade, limbDarken, atmosGlow, seedR, pj, RX, RY } from "./utils.js";
-import { dRi, dRiUranus } from "./drawRings.js";
+import { dRi, dRiUranus, dRingShadow } from "./drawRings.js";
 import { drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS } from "./drawStar.js";
 import { drawEarthCityLights, drawMoonDetail } from "./drawMoon.js";
 
-function dOb(ctx,rad,cam,col,frontOnly){
+function dOb(ctx,rad,cam,col,frontOnly,ecc,peri){
   var n=Math.max(80,Math.min(360,Math.floor(rad*cam.zm*0.3)));
-  var pts=[];for(var i=0;i<=n;i++){var a=(i/n)*TAU,pp=pj(Math.cos(a)*rad,0,Math.sin(a)*rad,cam);pts.push(pp);}
+  var e=ecc||0,pr=(peri||0)*0.0174533;
+  /* Trace by true anomaly so the ellipse has the Sun at one focus (rad = semi-major axis). */
+  var pts=[];for(var i=0;i<=n;i++){var nu=(i/n)*TAU,r=e>0?rad*(1-e*e)/(1+e*Math.cos(nu)):rad,th=nu+pr,pp=pj(Math.cos(th)*r,0,Math.sin(th)*r,cam);pts.push(pp);}
   var bc=col||"255,255,255";
   if(!frontOnly){
     /* Back arc (z≥0, far from viewer): dim dashed — draw BEFORE sun */
@@ -54,6 +56,14 @@ function dSh(ctx,px,py,r,wx,wz,cam){if(r<0.8)return;
   for(var k=0;k<=seg;k++){var a2=1.5708-(k/seg)*3.1416;ctx.lineTo(termW*r*Math.cos(a2),r*Math.sin(a2));}
   ctx.closePath();ctx.fillStyle="rgba(0,0,0,0.5)";ctx.fill();
   ctx.restore();}
+/* Tidal-lock marker: a bright tick on the parent-facing hemisphere of a locked moon,
+   showing the face that is permanently turned toward (px,py = parent screen centre). */
+function dTidalMark(ctx,mx,my,mr,px,py){
+  if(mr<3.5)return;
+  var dx=px-mx,dy=py-my,dl=Math.sqrt(dx*dx+dy*dy)||1;dx/=dl;dy/=dl;
+  ctx.strokeStyle="rgba(255,225,130,0.85)";ctx.lineWidth=Math.max(0.8,mr*0.14);
+  ctx.beginPath();ctx.moveTo(mx+dx*mr*0.5,my+dy*mr*0.5);ctx.lineTo(mx+dx*mr*1.3,my+dy*mr*1.3);ctx.stroke();
+}
 function dAx(ctx,px,py,r,td,cam){if(r<2)return;var tr=td*0.01745,len=r+Math.min(14,r*0.8);var ap=RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx);var dx=ap[0]*len,dy=ap[1]*len;ctx.beginPath();ctx.moveTo(px-dx,py+dy);ctx.lineTo(px+dx,py-dy);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);var ax=px+dx,ay=py-dy,ad=Math.atan2(-dy,dx);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad-0.4)*5,ay-Math.sin(ad-0.4)*5);ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad+0.4)*5,ay-Math.sin(ad+0.4)*5);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.stroke();}
 
 /* ===== PLANET TEXTURES — TRUE SPHERICAL PROJECTION ===== */
@@ -66,6 +76,9 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   var cry=cam?cam.ry:0,crx=cam?cam.rx:0;
   /* Spherical surface projection: lonFrac+phase=0.5 → center-of-disk at cam.ry=0 */
   function sp3d(lf,yf){var u=((lf+phase)%1+1)%1,lon=u*TAU+Math.PI*0.5;var sL=-yf,cL=Math.sqrt(Math.max(0,1-sL*sL)),cLon=cL*Math.cos(lon);return RX(RY([cLon*cosTr+sL*sinTr,-cLon*sinTr+sL*cosTr,cL*Math.sin(lon)],cry),crx);}
+  /* Polar flattening: squash the whole disk along the (tilted) rotation axis. */
+  var obl={Jupiter:0.065,Saturn:0.098,Uranus:0.023,Neptune:0.017}[pl.n]||0;
+  if(obl>0){ctx.save();ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.scale(1,1-obl);ctx.rotate(-screenTilt);ctx.translate(-cx,-cy);}
   ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
 
   if(tp==="rock"){
@@ -203,6 +216,7 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   }
   sphereShade(ctx,cx,cy,r);
   ctx.restore();
+  if(obl>0)ctx.restore();
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
 }
 
@@ -247,4 +261,4 @@ function drawEarthInteriorOverlay(ctx,cx,cy,r,lang){
   ctx.restore();
 }
 
-export { dOb, dRi, dRiUranus, dSh, dAx, drawPlanetBody, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
+export { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };

@@ -140,10 +140,13 @@ function drawLandingSky(ctx,W,H,s){
     isNight:isNight,sunAlt:sunAlt
   });
 
-  /* ======== AURORA (Earth lat>55°, Jupiter lat>45°) ======== */
+  /* ======== AURORA (Earth: solar-cycle oval; Jupiter: Io-driven, lat>40°) ======== */
   var absLat=Math.abs(lat||0);
-  if((plName==="Earth"&&absLat>55)||(plName==="Jupiter"&&absLat>40)){
-    var auroraStr=(plName==="Jupiter"?1.5:1)*Math.max(0,(absLat-(plName==="Jupiter"?40:55))/35);
+  /* ≈11-yr solar cycle: at maximum the auroral oval reaches lower latitudes (62°→46°). */
+  var solAct=0.5+0.5*Math.sin(t*TAU/4015+1.2);
+  var auThr=plName==="Jupiter"?40:(62-solAct*16);
+  if((plName==="Earth"&&absLat>auThr)||(plName==="Jupiter"&&absLat>40)){
+    var auroraStr=(plName==="Jupiter"?1.5:(0.45+solAct*0.55))*Math.max(0,(absLat-auThr)/35);
     auroraStr=Math.min(1,auroraStr)*nightAlpha;
     if(auroraStr>0.02){
       var isJup=plName==="Jupiter";

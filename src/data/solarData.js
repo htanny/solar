@@ -3,15 +3,27 @@ export var TAU=6.2832;
 export var SRR=695,DK=0.08,SK=0.18,TRAIL_LEN=200;
 export var J2000=946728000000;/* ms */
 
+/* Kepler orbit state for a body (with optional ecc/peri fields) at sim-time t (days).
+   Mean longitude L=(t/p)·2π preserves the old circular timing; for ecc=0 theta reduces
+   to L exactly. Returns true anomaly nu, radius factor rf=r/a, and ecliptic angle theta. */
+export function orbitState(pl,t){
+  var e=pl.ecc||0,peri=(pl.peri||0)*0.0174533;
+  if(e===0)return {nu:(t/pl.p)*TAU-peri,rf:1,theta:(t/pl.p)*TAU};
+  var M=(t/pl.p)*TAU-peri;
+  var E=M;for(var k=0;k<6;k++){E=M+e*Math.sin(E);}
+  var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E*0.5),Math.sqrt(1-e)*Math.cos(E*0.5));
+  return {nu:nu,rf:(1-e*e)/(1+e*Math.cos(nu)),theta:nu+peri};
+}
+
 export var PL=[
-  {n:"Mercury",j:"水星",d:58,r:2.4,p:88,c:"rgba(180,180,180,1)",t:0.03,rot:58.6,type:"rock",mass:"3.30×10²³ kg",grav:"3.7 m/s²",moons:0,day:"58.6日",year:"88日",atm:"ほぼ無し",temp:"−180〜430℃",dens:"5.43",esc:"4.3",alb:0.068},
-  {n:"Venus",j:"金星",d:108,r:6.0,p:225,c:"rgba(230,180,80,1)",t:177.4,rot:-243,type:"venus",mass:"4.87×10²⁴ kg",grav:"8.9 m/s²",moons:0,day:"243日(逆行)",year:"225日",atm:"CO₂ 96%",temp:"約462℃",dens:"5.24",esc:"10.4",alb:0.65},
-  {n:"Earth",j:"地球",d:150,r:6.4,p:365,c:"rgba(70,130,230,1)",t:23.4,rot:1,type:"earth",mass:"5.97×10²⁴ kg",grav:"9.8 m/s²",moons:1,day:"24時間",year:"365.25日",atm:"N₂ 78% O₂ 21%",temp:"平均15℃",dens:"5.51",esc:"11.2",alb:0.37},
-  {n:"Mars",j:"火星",d:228,r:3.4,p:687,c:"rgba(210,100,60,1)",t:25.2,rot:1.03,type:"mars",mass:"6.42×10²³ kg",grav:"3.7 m/s²",moons:2,day:"24.6時間",year:"687日",atm:"CO₂ 95%",temp:"平均−63℃",dens:"3.93",esc:"5.0",alb:0.15},
-  {n:"Jupiter",j:"木星",d:778,r:71.5,p:4333,c:"rgba(210,170,110,1)",t:3.1,rot:0.41,type:"gas1",mass:"1.90×10²⁷ kg",grav:"24.8 m/s²",moons:95,day:"9.9時間",year:"11.9年",atm:"H₂ 90% He 10%",temp:"−110℃",dens:"1.33",esc:"59.5",alb:0.52},
-  {n:"Saturn",j:"土星",d:1427,r:60.3,p:10759,c:"rgba(220,200,150,1)",t:26.7,rot:0.44,type:"gas2",mass:"5.68×10²⁶ kg",grav:"10.4 m/s²",moons:146,day:"10.7時間",year:"29.5年",atm:"H₂ 96% He 3%",temp:"−140℃",dens:"0.69",esc:"35.5",alb:0.47},
-  {n:"Uranus",j:"天王星",d:2871,r:25.6,p:30687,c:"rgba(150,220,230,1)",t:97.8,rot:-0.72,type:"ice1",mass:"8.68×10²⁵ kg",grav:"8.9 m/s²",moons:28,day:"17.2時間(逆行)",year:"84年",atm:"H₂ 83% He 15%",temp:"−195℃",dens:"1.27",esc:"21.3",alb:0.51},
-  {n:"Neptune",j:"海王星",d:4495,r:24.8,p:60190,c:"rgba(60,100,220,1)",t:28.3,rot:0.67,type:"ice2",mass:"1.02×10²⁶ kg",grav:"11.2 m/s²",moons:16,day:"16.1時間",year:"165年",atm:"H₂ 80% He 19%",temp:"−200℃",dens:"1.64",esc:"23.5",alb:0.41},
+  {n:"Mercury",j:"水星",d:58,r:2.4,p:88,ecc:0.206,peri:77.5,c:"rgba(180,180,180,1)",t:0.03,rot:58.6,type:"rock",mass:"3.30×10²³ kg",grav:"3.7 m/s²",moons:0,day:"58.6日",year:"88日",atm:"ほぼ無し",temp:"−180〜430℃",dens:"5.43",esc:"4.3",alb:0.068},
+  {n:"Venus",j:"金星",d:108,r:6.0,p:225,ecc:0.007,peri:131.5,c:"rgba(230,180,80,1)",t:177.4,rot:-243,type:"venus",mass:"4.87×10²⁴ kg",grav:"8.9 m/s²",moons:0,day:"243日(逆行)",year:"225日",atm:"CO₂ 96%",temp:"約462℃",dens:"5.24",esc:"10.4",alb:0.65},
+  {n:"Earth",j:"地球",d:150,r:6.4,p:365,ecc:0.017,peri:102.9,c:"rgba(70,130,230,1)",t:23.4,rot:1,type:"earth",mass:"5.97×10²⁴ kg",grav:"9.8 m/s²",moons:1,day:"24時間",year:"365.25日",atm:"N₂ 78% O₂ 21%",temp:"平均15℃",dens:"5.51",esc:"11.2",alb:0.37},
+  {n:"Mars",j:"火星",d:228,r:3.4,p:687,ecc:0.093,peri:336.0,c:"rgba(210,100,60,1)",t:25.2,rot:1.03,type:"mars",mass:"6.42×10²³ kg",grav:"3.7 m/s²",moons:2,day:"24.6時間",year:"687日",atm:"CO₂ 95%",temp:"平均−63℃",dens:"3.93",esc:"5.0",alb:0.15},
+  {n:"Jupiter",j:"木星",d:778,r:71.5,p:4333,ecc:0.048,peri:14.3,c:"rgba(210,170,110,1)",t:3.1,rot:0.41,type:"gas1",mass:"1.90×10²⁷ kg",grav:"24.8 m/s²",moons:95,day:"9.9時間",year:"11.9年",atm:"H₂ 90% He 10%",temp:"−110℃",dens:"1.33",esc:"59.5",alb:0.52},
+  {n:"Saturn",j:"土星",d:1427,r:60.3,p:10759,ecc:0.056,peri:93.1,c:"rgba(220,200,150,1)",t:26.7,rot:0.44,type:"gas2",mass:"5.68×10²⁶ kg",grav:"10.4 m/s²",moons:146,day:"10.7時間",year:"29.5年",atm:"H₂ 96% He 3%",temp:"−140℃",dens:"0.69",esc:"35.5",alb:0.47},
+  {n:"Uranus",j:"天王星",d:2871,r:25.6,p:30687,ecc:0.046,peri:173.0,c:"rgba(150,220,230,1)",t:97.8,rot:-0.72,type:"ice1",mass:"8.68×10²⁵ kg",grav:"8.9 m/s²",moons:28,day:"17.2時間(逆行)",year:"84年",atm:"H₂ 83% He 15%",temp:"−195℃",dens:"1.27",esc:"21.3",alb:0.51},
+  {n:"Neptune",j:"海王星",d:4495,r:24.8,p:60190,ecc:0.009,peri:48.1,c:"rgba(60,100,220,1)",t:28.3,rot:0.67,type:"ice2",mass:"1.02×10²⁶ kg",grav:"11.2 m/s²",moons:16,day:"16.1時間",year:"165年",atm:"H₂ 80% He 19%",temp:"−200℃",dens:"1.64",esc:"23.5",alb:0.41},
 ];
 export var SUNINFO={j:"太陽",mass:"1.99×10³⁰ kg",r:"69.6万km",temp:"表面5,500℃ / 中心1,500万℃",type:"G型主系列星",age:"約46億年",dens:"1.41",esc:"617.7"};
 export var MD={oR:18,r:2.5,p:27.3,rd:0.384,rr:1.737};
@@ -67,13 +79,14 @@ export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,2
 export var COMETS=[
   {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
   {key:"Encke",name:"エンケ彗星",a:2.22*150,e:0.848,p:1204,inc:-0.03,col:[180,220,200],sz:1,tailLen:40,phase0:0.35,info:"周期: 約3.3年\n離心率: 0.848\n近日点: 0.336 AU\n遠日点: 4.09 AU\n既知の彗星で最短周期"},
+  {key:"67P",name:"67P/チュリュモフ・ゲラシメンコ",a:3.46*150,e:0.641,p:2353,inc:0.12,col:[170,210,180],sz:1,tailLen:30,phase0:0.7,info:"周期: 約6.44年\n離心率: 0.641\n近日点: 1.24 AU\n遠日点: 5.68 AU\n発見: 1969年\nロゼッタ探査機が2014年に周回・フィラエ着陸"},
 ];
 export var PL_MAP={};PL.forEach(function(p){PL_MAP[p.n]=p;});
 export var COMET_MAP={};COMETS.forEach(function(c){COMET_MAP[c.key]=c;});
 export var DWARFS=[
-  {n:"Ceres",j:"ケレス",e:"Ceres",d:414,r:0.47,p:1682,c:"rgba(155,150,143,1)",t:4.0,rot:0.378,type:"rock",mass:"9.39×10²⁰ kg",grav:"0.28 m/s²",moons:0,day:"9.1時間",year:"4.6年",atm:"なし",temp:"約−105℃",dens:"2.16",esc:"0.51",alb:0.09},
-  {n:"Pluto",j:"冥王星",e:"Pluto",d:5906,r:1.19,p:90560,c:"rgba(200,185,165,1)",t:122.5,rot:6.39,type:"rock",mass:"1.30×10²² kg",grav:"0.62 m/s²",moons:5,day:"6.39日",year:"248年",atm:"N₂ 微量",temp:"約−230℃",dens:"1.85",esc:"1.2",alb:0.49},
-  {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃",dens:"2.43",esc:"1.4",alb:0.96},
+  {n:"Ceres",j:"ケレス",e:"Ceres",d:414,r:0.47,p:1682,ecc:0.076,peri:73.6,c:"rgba(155,150,143,1)",t:4.0,rot:0.378,type:"rock",mass:"9.39×10²⁰ kg",grav:"0.28 m/s²",moons:0,day:"9.1時間",year:"4.6年",atm:"なし",temp:"約−105℃",dens:"2.16",esc:"0.51",alb:0.09},
+  {n:"Pluto",j:"冥王星",e:"Pluto",d:5906,r:1.19,p:90560,ecc:0.249,peri:224.1,c:"rgba(200,185,165,1)",t:122.5,rot:6.39,type:"rock",mass:"1.30×10²² kg",grav:"0.62 m/s²",moons:5,day:"6.39日",year:"248年",atm:"N₂ 微量",temp:"約−230℃",dens:"1.85",esc:"1.2",alb:0.49},
+  {n:"Eris",j:"エリス",e:"Eris",d:10120,r:1.16,p:203830,ecc:0.44,peri:151.0,c:"rgba(185,185,188,1)",t:44.0,rot:1.08,type:"rock",mass:"1.66×10²² kg",grav:"0.82 m/s²",moons:1,day:"25.9時間",year:"558年",atm:"なし",temp:"約−240℃",dens:"2.43",esc:"1.4",alb:0.96},
 ];
 export var DWARF_MAP={};DWARFS.forEach(function(p){DWARF_MAP[p.n]=p;});
 /* Register Moon in PL_MAP so it works with focus/landing/info systems uniformly */
@@ -135,7 +148,7 @@ export var LAGRANGE=[
 ];
 
 
-export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Moon",l:"月",e:"Moon"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"}];
+export var FL=[{k:"all",l:"全体",e:"All"},{k:"sun",l:"太陽",e:"Sun"},{k:"Mercury",l:"水星",e:"Mercury"},{k:"Venus",l:"金星",e:"Venus"},{k:"Earth",l:"地球",e:"Earth"},{k:"Moon",l:"月",e:"Moon"},{k:"Mars",l:"火星",e:"Mars"},{k:"Jupiter",l:"木星",e:"Jupiter"},{k:"Saturn",l:"土星",e:"Saturn"},{k:"Uranus",l:"天王星",e:"Uranus"},{k:"Neptune",l:"海王星",e:"Neptune"},{k:"Ceres",l:"ケレス",e:"Ceres"},{k:"Pluto",l:"冥王星",e:"Pluto"},{k:"Eris",l:"エリス",e:"Eris"},{k:"Halley",l:"ハレー彗星",e:"Halley"},{k:"Encke",l:"エンケ彗星",e:"Encke"},{k:"67P",l:"67P彗星",e:"67P"}];
 export var SP=[0.5,1,4,15,50,100];
 export var ZS=[0.00002,0.00005,0.00012,0.0003,0.0007,0.002,0.005,0.012,0.025,0.04,0.07,0.1,0.15,0.22,0.35,0.5,0.7,1,1.5,2.2,3.5,5,8,13,22,40,70,120,200,350,600,1100,2000,4000,8000,16000,35000,70000,150000];
 export var TOUR_SEQ=["sun","Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune","Halley","Encke"];
