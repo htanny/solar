@@ -37,4 +37,38 @@ var URA_LAYERS=[{i:1.38,o:1.40,c:"rgba(60,80,90,0.30)"},{i:1.50,o:1.52,c:"rgba(6
 function dRi(ctx,wx,wy,wz,pr,cam,td){dRiPlane(ctx,wx,wy,wz,pr,cam,td,SAT_POLE_LON,SAT_LAYERS,0.6);}
 function dRiUranus(ctx,wx,wy,wz,pr,cam){dRiPlane(ctx,wx,wy,wz,pr,cam,97.8,URA_POLE_LON,URA_LAYERS,0.5);}
 
-export { dRi, dRiUranus };
+/* Cast the ring system's shadow onto the planet disk. The Sun (world origin) lights the
+   planet; the rings block a band whose width tracks how open the rings appear to the Sun
+   (sin of sub-solar ring latitude) and which sits on the hemisphere opposite the Sun. */
+function dRingShadow(ctx,wx,wy,wz,pr,rr,cx,cy,cam,tiltDeg){
+  var sx=-wx,sy=-wy,sz=-wz,sl=Math.sqrt(sx*sx+sy*sy+sz*sz)||1;sx/=sl;sy/=sl;sz/=sl;
+  var tr=tiltDeg*0.01745,cosTr=Math.cos(tr),sinTr=Math.sin(tr);
+  var sinLn=Math.sin(SAT_POLE_LON),cosLn=Math.cos(SAT_POLE_LON);
+  var u1x=sinLn,u1y=0,u1z=-cosLn;
+  var u2x=-cosTr*cosLn,u2y=sinTr,u2z=-cosTr*sinLn;
+  var nx=u1y*u2z-u1z*u2y,ny=u1z*u2x-u1x*u2z,nz=u1x*u2y-u1y*u2x;
+  var sinB=sx*nx+sy*ny+sz*nz;/* sub-solar ring latitude */
+  if(Math.abs(sinB)<0.04)return;/* edge-on: shadow collapses to a thin line, skip */
+  /* Screen direction of the ring line-of-nodes (u1) → shadow band runs parallel to it. */
+  var pA=pj(wx+u1x*pr,wy+u1y*pr,wz+u1z*pr,cam),pB=pj(wx-u1x*pr,wy-u1y*pr,wz-u1z*pr,cam);
+  var ax=pA.x-pB.x,ay=pA.y-pB.y,al=Math.sqrt(ax*ax+ay*ay)||1;ax/=al;ay/=al;
+  var perpX=-ay,perpY=ax;
+  /* Sun screen direction relative to planet centre; shadow sits opposite. */
+  var sp=pj(0,0,0,cam),sdx=sp.x-cx,sdy=sp.y-cy,sd=Math.sqrt(sdx*sdx+sdy*sdy)||1;sdx/=sd;sdy/=sd;
+  var side=(sdx*perpX+sdy*perpY)>0?-1:1;
+  var off=rr*Math.min(0.7,Math.abs(sinB)*1.3)*side;
+  var halfW=rr*Math.max(0.08,Math.abs(sinB)*0.5);
+  var bcx=cx+perpX*off,bcy=cy+perpY*off;
+  ctx.save();
+  ctx.beginPath();ctx.arc(cx,cy,rr*0.99,0,TAU);ctx.clip();
+  ctx.globalAlpha=0.32;ctx.fillStyle="rgba(10,8,4,1)";
+  ctx.beginPath();
+  ctx.moveTo(bcx+ax*rr*1.5+perpX*halfW,bcy+ay*rr*1.5+perpY*halfW);
+  ctx.lineTo(bcx-ax*rr*1.5+perpX*halfW,bcy-ay*rr*1.5+perpY*halfW);
+  ctx.lineTo(bcx-ax*rr*1.5-perpX*halfW,bcy-ay*rr*1.5-perpY*halfW);
+  ctx.lineTo(bcx+ax*rr*1.5-perpX*halfW,bcy+ay*rr*1.5-perpY*halfW);
+  ctx.closePath();ctx.fill();
+  ctx.restore();ctx.globalAlpha=1;
+}
+
+export { dRi, dRiUranus, dRingShadow };
