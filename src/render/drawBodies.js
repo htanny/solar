@@ -24,10 +24,12 @@ function dOb(ctx,rad,cam,col,frontOnly,ecc,peri){
     ctx.beginPath();var ifa=false;
     for(var i=0;i<n;i++){if(pts[i].z<0){if(!ifa){ctx.moveTo(pts[i].x,pts[i].y);ifa=true;}else ctx.lineTo(pts[i].x,pts[i].y);}else{if(ifa)ctx.lineTo(pts[i].x,pts[i].y);ifa=false;}}
     ctx.stroke();
-    /* Direction arrow on front arc — CCW on screen */
-    var aArr=cam.ry+Math.PI*1.5,p0=pj(Math.cos(aArr)*rad,0,Math.sin(aArr)*rad,cam);
+    /* Direction arrow on front arc — CCW on screen, placed on the (elliptical) orbit radius */
+    var aArr=cam.ry+Math.PI*1.5;
+    var rAt=function(th){return e>0?rad*(1-e*e)/(1+e*Math.cos(th-pr)):rad;};
+    var p0=pj(Math.cos(aArr)*rAt(aArr),0,Math.sin(aArr)*rAt(aArr),cam);
     if(p0.z<0){
-      var p1=pj(Math.cos(aArr+0.12)*rad,0,Math.sin(aArr+0.12)*rad,cam);
+      var p1=pj(Math.cos(aArr+0.12)*rAt(aArr+0.12),0,Math.sin(aArr+0.12)*rAt(aArr+0.12),cam);
       var adx=p1.x-p0.x,ady=p1.y-p0.y,al=Math.sqrt(adx*adx+ady*ady);
       if(al>1){adx/=al;ady/=al;var as=Math.min(5,Math.max(2,rad*cam.zm*0.06));
         ctx.strokeStyle="rgba("+bc+",0.45)";ctx.lineWidth=0.9;
@@ -76,7 +78,8 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   var cry=cam?cam.ry:0,crx=cam?cam.rx:0;
   /* Spherical surface projection: lonFrac+phase=0.5 → center-of-disk at cam.ry=0 */
   function sp3d(lf,yf){var u=((lf+phase)%1+1)%1,lon=u*TAU+Math.PI*0.5;var sL=-yf,cL=Math.sqrt(Math.max(0,1-sL*sL)),cLon=cL*Math.cos(lon);return RX(RY([cLon*cosTr+sL*sinTr,-cLon*sinTr+sL*cosTr,cL*Math.sin(lon)],cry),crx);}
-  /* Polar flattening: squash the whole disk along the (tilted) rotation axis. */
+  /* Polar flattening (1 − b/a, from IAU reference ellipsoids): squash the whole disk
+     along the (tilted) rotation axis. Terrestrial planets are ~spherical, so omitted. */
   var obl={Jupiter:0.065,Saturn:0.098,Uranus:0.023,Neptune:0.017}[pl.n]||0;
   if(obl>0){ctx.save();ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.scale(1,1-obl);ctx.rotate(-screenTilt);ctx.translate(-cx,-cy);}
   ctx.save();ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.clip();
@@ -216,8 +219,10 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
   }
   sphereShade(ctx,cx,cy,r);
   ctx.restore();
-  if(obl>0)ctx.restore();
+  /* Draw the atmospheric halo while still inside the oblateness squash so it tracks the
+     flattened disk instead of ringing an oblate planet with a perfect circle. */
   if(atm)atmosGlow(ctx,cx,cy,r,atm,0.1);
+  if(obl>0)ctx.restore();
 }
 
 /* ===== EARTH INTERIOR CUTAWAY OVERLAY ===== */

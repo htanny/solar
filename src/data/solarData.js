@@ -10,7 +10,9 @@ export function orbitState(pl,t){
   var e=pl.ecc||0,peri=(pl.peri||0)*0.0174533;
   if(e===0)return {nu:(t/pl.p)*TAU-peri,rf:1,theta:(t/pl.p)*TAU};
   var M=(t/pl.p)*TAU-peri;
-  var E=M;for(var k=0;k<6;k++){E=M+e*Math.sin(E);}
+  /* 8 fixed-point iterations: enough for the highest e in the dataset (Eris e=0.44),
+     and matches computeOrbElem so the orbital-element panel agrees with rendered position. */
+  var E=M;for(var k=0;k<8;k++){E=M+e*Math.sin(E);}
   var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E*0.5),Math.sqrt(1-e)*Math.cos(E*0.5));
   return {nu:nu,rf:(1-e*e)/(1+e*Math.cos(nu)),theta:nu+peri};
 }
