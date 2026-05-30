@@ -1,5 +1,6 @@
 import { DragPanel } from "../DragPanel.jsx";
 import { computeOrbElem } from "../../utils/computations.js";
+import { solveKepler } from "../../data/solarData.js";
 import { simDaysToDate } from "../../utils/timeUtils.js";
 import { mobileSheet, bClose } from "../../styles/panelStyles.js";
 
@@ -8,11 +9,12 @@ var TAU=Math.PI*2;
 /* Compute orbital state for a comet from its raw orbital constants.
    Comet objects use a in sim-units (×150 = AU), so divide back here. */
 function cometOrbState(cm,t){
-  var a=cm.a/150,e=cm.e,T=cm.p;
-  var M=(((t-cm.phase0*T)/T)*TAU%TAU+TAU)%TAU;
-  var E=M;for(var i=0;i<10;i++)E=M+e*Math.sin(E);
-  var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E/2),Math.sqrt(1-e)*Math.cos(E/2));
-  var r=a*(1-e*Math.cos(E));
+  var a=cm.a/150,e=cm.ecc,T=cm.p;
+  /* Same phase convention as the render loop (App.jsx): M=(t/T+phase0)·2π,
+     so the perihelion forecast matches the comet's drawn position. */
+  var M=(((t/T+cm.phase0)*TAU)%TAU+TAU)%TAU;
+  var sk=solveKepler(M,e),nu=sk.nu;
+  var r=a*(1-e*Math.cos(sk.E));
   var q=a*(1-e),Q=a*(1+e);
   var GMau=2.959e-4,vAuDay=Math.sqrt(GMau*(2/r-1/a));
   var vKms=vAuDay*1.496e8/86400;
