@@ -188,7 +188,10 @@ function drawLandingSky(ctx,W,H,s){
     /* Moving clouds */
     ctx.globalAlpha=0.18*dayF;ctx.fillStyle="rgba(255,255,255,1)";
     for(var ci=0;ci<12;ci++){
-      var cx2=((rng()*W*3+t*8+yaw*40)%(W*1.5))-W*0.25,cy2=hrzY*0.15+rng()*hrzY*0.45,cw=25+rng()*55;
+      var cBaseAng=ci*TAU/12+rng()*TAU/12;
+      var cDrift=((cBaseAng+(t/55)*TAU)%TAU+TAU)%TAU;
+      var cDiff=((cDrift-yaw)%TAU+TAU)%TAU;if(cDiff>Math.PI)cDiff-=TAU;
+      var cx2=W/2+cDiff*W*0.8/TAU,cy2=hrzY*0.15+rng()*hrzY*0.45,cw=25+rng()*55;
       ctx.beginPath();ctx.arc(cx2,cy2,cw*0.5,0,TAU);ctx.arc(cx2+cw*0.3,cy2-5,cw*0.35,0,TAU);ctx.arc(cx2-cw*0.15,cy2+3,cw*0.25,0,TAU);ctx.fill();
     }
     ctx.globalAlpha=1;
@@ -202,7 +205,10 @@ function drawLandingSky(ctx,W,H,s){
   }else if(plName==="Mars"){
     ctx.globalAlpha=0.1;ctx.fillStyle="rgba(200,150,90,1)";
     for(var di=0;di<50;di++){
-      var dx=(rng()*W*2+t*20+yaw*20+Math.sin(di*1.7+t*0.6)*40)%W,dy3=rng()*hrzY*0.9;
+      var dBaseAng=rng()*TAU;
+      var dDrift=((dBaseAng+(t/25)*TAU)%TAU+TAU)%TAU;
+      var dDiff=((dDrift-yaw)%TAU+TAU)%TAU;if(dDiff>Math.PI)dDiff-=TAU;
+      var dx=W/2+dDiff*W*0.8/TAU+Math.sin(di*1.7+t*0.6)*40,dy3=rng()*hrzY*0.9;
       var dsz=0.5+rng()*2;ctx.fillRect(dx,dy3,dsz,dsz*0.5);
     }
     ctx.globalAlpha=1;
@@ -216,7 +222,9 @@ function drawLandingSky(ctx,W,H,s){
       var jShift=Math.sin(t*0.4+ji*1.5)*8;ctx.fillStyle="rgba("+jCols[ji]+",0.13)";
       ctx.fillRect(jShift,hrzY*0.08+ji*hrzY*0.14,W,hrzY*0.1);
     }
-    var grsX=((0.3*W+t*1.5+yaw*30)%(W*1.2))-W*0.1;
+    var grsAng=((0.3*TAU+(t/10)*TAU)%TAU+TAU)%TAU;
+    var grsDiff=((grsAng-yaw)%TAU+TAU)%TAU;if(grsDiff>Math.PI)grsDiff-=TAU;
+    var grsX=W/2+grsDiff*W*0.8/TAU;
     ctx.globalAlpha=0.15;fillCirc(ctx,grsX,hrzY*0.33,28,"rgba(190,90,50,1)");
     ctx.globalAlpha=0.08;ctx.strokeStyle="rgba(220,120,60,1)";ctx.lineWidth=1;
     ctx.beginPath();for(var gk=0;gk<20;gk++){var ga2=gk*0.32+t*0.8,gr2=8+gk*0.8;ctx.lineTo(grsX+Math.cos(ga2)*gr2,hrzY*0.33+Math.sin(ga2)*gr2*0.6);}ctx.stroke();
