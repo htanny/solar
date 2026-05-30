@@ -3,17 +3,24 @@ export var TAU=6.2832;
 export var SRR=695,DK=0.08,SK=0.18,TRAIL_LEN=200;
 export var J2000=946728000000;/* ms */
 
+/* Canonical Kepler solver — the single source of truth for orbital position.
+   Solves M = E − e·sinE by fixed-point iteration and returns both the eccentric
+   anomaly E (needed for r = a(1−e·cosE)) and the true anomaly nu.
+   8 iterations are enough for every eccentricity in this dataset (max e=0.967 Halley);
+   all call sites (orbitState, comets, asteroids, spacecraft, orbital-element panel)
+   share this function so rendered positions and computed elements always agree. */
+export function solveKepler(M,e){
+  var E=M;for(var k=0;k<8;k++){E=M+e*Math.sin(E);}
+  return {E:E,nu:2*Math.atan2(Math.sqrt(1+e)*Math.sin(E*0.5),Math.sqrt(1-e)*Math.cos(E*0.5))};
+}
+
 /* Kepler orbit state for a body (with optional ecc/peri fields) at sim-time t (days).
    Mean longitude L=(t/p)·2π preserves the old circular timing; for ecc=0 theta reduces
    to L exactly. Returns true anomaly nu, radius factor rf=r/a, and ecliptic angle theta. */
 export function orbitState(pl,t){
   var e=pl.ecc||0,peri=(pl.peri||0)*0.0174533;
   if(e===0)return {nu:(t/pl.p)*TAU-peri,rf:1,theta:(t/pl.p)*TAU};
-  var M=(t/pl.p)*TAU-peri;
-  /* 8 fixed-point iterations: enough for the highest e in the dataset (Eris e=0.44),
-     and matches computeOrbElem so the orbital-element panel agrees with rendered position. */
-  var E=M;for(var k=0;k<8;k++){E=M+e*Math.sin(E);}
-  var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E*0.5),Math.sqrt(1-e)*Math.cos(E*0.5));
+  var nu=solveKepler((t/pl.p)*TAU-peri,e).nu;
   return {nu:nu,rf:(1-e*e)/(1+e*Math.cos(nu)),theta:nu+peri};
 }
 
@@ -79,9 +86,9 @@ export var MERCURY_SITES=[
 ];
 export var GMOONS=[{name:"イオ",sz:3,orbR:421.7,r:1821,p:1.769,col:"rgba(220,200,100,1)"},{name:"エウロパ",sz:2.5,orbR:671.0,r:1560,p:3.551,col:"rgba(180,170,150,1)"},{name:"ガニメデ",sz:4,orbR:1070.4,r:2634,p:7.155,col:"rgba(160,155,140,1)"},{name:"カリスト",sz:3.5,orbR:1882.7,r:2410,p:16.689,col:"rgba(130,125,115,1)"}];
 export var COMETS=[
-  {key:"Halley",name:"ハレー彗星",a:17.8*150,e:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
-  {key:"Encke",name:"エンケ彗星",a:2.22*150,e:0.848,p:1204,inc:-0.03,col:[180,220,200],sz:1,tailLen:40,phase0:0.35,info:"周期: 約3.3年\n離心率: 0.848\n近日点: 0.336 AU\n遠日点: 4.09 AU\n既知の彗星で最短周期"},
-  {key:"67P",name:"67P/チュリュモフ・ゲラシメンコ",a:3.46*150,e:0.641,p:2353,inc:0.12,col:[170,210,180],sz:1,tailLen:30,phase0:0.7,info:"周期: 約6.44年\n離心率: 0.641\n近日点: 1.24 AU\n遠日点: 5.68 AU\n発見: 1969年\nロゼッタ探査機が2014年に周回・フィラエ着陸"},
+  {key:"Halley",name:"ハレー彗星",a:17.8*150,ecc:0.967,p:27484,inc:0.05,col:[140,200,255],sz:1.5,tailLen:80,phase0:0.0,info:"周期: 約75.3年\n離心率: 0.967\n近日点: 0.586 AU\n遠日点: 35.1 AU\n発見: 紀元前240年（記録）\nエドモンド・ハレーが周期性を予言"},
+  {key:"Encke",name:"エンケ彗星",a:2.22*150,ecc:0.848,p:1204,inc:-0.03,col:[180,220,200],sz:1,tailLen:40,phase0:0.35,info:"周期: 約3.3年\n離心率: 0.848\n近日点: 0.336 AU\n遠日点: 4.09 AU\n既知の彗星で最短周期"},
+  {key:"67P",name:"67P/チュリュモフ・ゲラシメンコ",a:3.46*150,ecc:0.641,p:2353,inc:0.12,col:[170,210,180],sz:1,tailLen:30,phase0:0.7,info:"周期: 約6.44年\n離心率: 0.641\n近日点: 1.24 AU\n遠日点: 5.68 AU\n発見: 1969年\nロゼッタ探査機が2014年に周回・フィラエ着陸"},
 ];
 export var PL_MAP={};PL.forEach(function(p){PL_MAP[p.n]=p;});
 export var COMET_MAP={};COMETS.forEach(function(c){COMET_MAP[c.key]=c;});
@@ -125,10 +132,10 @@ export var EXTRA_MOONS={
 
 /* Named asteroids — orbital elements in AU/years, displayed as named dots in belt */
 export var NAMED_ASTEROIDS=[
-  {n:"Vesta",j:"ベスタ",a:2.36,e:0.089,p:1325,inc:0.125,col:"rgba(220,210,180,1)",info:"4 Vesta — 小惑星帯第2の大きさ・玄武岩質"},
-  {n:"Pallas",j:"パラス",a:2.77,e:0.231,p:1684,inc:0.609,col:"rgba(180,180,170,1)",info:"2 Pallas — 軌道傾斜角が大きい・氷岩質"},
-  {n:"Eros",j:"エロス",a:1.46,e:0.222,p:643,inc:0.193,col:"rgba(190,150,120,1)",info:"433 Eros — 地球近傍小惑星・NEAR探査機が着陸"},
-  {n:"Itokawa",j:"イトカワ",a:1.32,e:0.28,p:556,inc:0.030,col:"rgba(170,140,110,1)",info:"25143 Itokawa — はやぶさが試料採取した小惑星"}
+  {n:"Vesta",j:"ベスタ",a:2.36,ecc:0.089,p:1325,inc:0.125,col:"rgba(220,210,180,1)",info:"4 Vesta — 小惑星帯第2の大きさ・玄武岩質"},
+  {n:"Pallas",j:"パラス",a:2.77,ecc:0.231,p:1684,inc:0.609,col:"rgba(180,180,170,1)",info:"2 Pallas — 軌道傾斜角が大きい・氷岩質"},
+  {n:"Eros",j:"エロス",a:1.46,ecc:0.222,p:643,inc:0.193,col:"rgba(190,150,120,1)",info:"433 Eros — 地球近傍小惑星・NEAR探査機が着陸"},
+  {n:"Itokawa",j:"イトカワ",a:1.32,ecc:0.28,p:556,inc:0.030,col:"rgba(170,140,110,1)",info:"25143 Itokawa — はやぶさが試料採取した小惑星"}
 ];
 
 /* Spacecraft trajectories — simplified linear post-launch or elliptical */
@@ -137,7 +144,7 @@ export var SPACECRAFT=[
   {key:"Voyager1",name:"ボイジャー1号",launchD:-8154,col:"rgba(255,200,80,1)",type:"linear",dx:0.60,dy:0.30,dz:0.74,speed:1.46,info:"1977年打ち上げ・最も遠い人工物・地球から167 AU"},
   {key:"Voyager2",name:"ボイジャー2号",launchD:-8170,col:"rgba(255,180,100,1)",type:"linear",dx:-0.40,dy:-0.55,dz:-0.74,speed:1.22,info:"1977年打ち上げ・唯一天王星/海王星を探査"},
   {key:"NewHorizons",name:"ニュー・ホライズンズ",launchD:2210,col:"rgba(180,255,200,1)",type:"linear",dx:0.40,dy:0.0,dz:0.92,speed:1.28,info:"2006年打ち上げ・2015年冥王星接近通過"},
-  {key:"Parker",name:"パーカー・ソーラー",launchD:6798,col:"rgba(255,160,80,1)",type:"elliptical",a:58.1,e:0.893,p:88,phase0:0,inc:0.07,info:"2018年打ち上げ・太陽コロナへ最接近"}
+  {key:"Parker",name:"パーカー・ソーラー",launchD:6798,col:"rgba(255,160,80,1)",type:"elliptical",a:58.1,ecc:0.893,p:88,phase0:0,inc:0.07,info:"2018年打ち上げ・太陽コロナへ最接近"}
 ];
 
 /* Lagrange points — 5 equilibrium positions in Earth-Sun system */

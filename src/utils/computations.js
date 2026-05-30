@@ -1,4 +1,4 @@
-import { PL, TAU } from "../data/solarData.js";
+import { PL, TAU, solveKepler } from "../data/solarData.js";
 
 /* N-body: initialize planet state from Kepler positions at time t */
 function initNBody(t){var GM=2.959e-4;return PL.map(function(pl){var r=pl.d/150,ang=(t/pl.p)*TAU,v=Math.sqrt(GM/r);return{pl:pl,x:Math.cos(ang)*r,z:Math.sin(ang)*r,vx:-Math.sin(ang)*v,vz:Math.cos(ang)*v,m:{Mercury:1.65e-7,Venus:2.45e-6,Earth:3.00e-6,Mars:3.23e-7,Jupiter:9.55e-4,Saturn:2.86e-4,Uranus:4.37e-5,Neptune:5.15e-5}[pl.n]||1e-7};})}
@@ -8,6 +8,6 @@ function computeNightSky(t,lat,lng){var lstD=((280.46+360.98565*t+(lng||0))%360+
 /* Moon phase calendar: generate phases for ~2 months around current time t */
 function computeMoonPhases(t){var syn=29.53059,t0=-5.7;var curAge=((t-t0)%syn+syn)%syn;var lastNew=t-curAge;var phases=[];for(var i=-1;i<4;i++){var base=lastNew+i*syn;phases.push({t:base,age:0,name:"🌑 新月"});phases.push({t:base+syn*0.25,age:syn*0.25,name:"🌓 上弦"});phases.push({t:base+syn*0.5,age:syn*0.5,name:"🌕 満月"});phases.push({t:base+syn*0.75,age:syn*0.75,name:"🌗 下弦"});}phases.sort(function(a,b){return a.t-b.t;});return phases;}
 /* Orbital elements for a planet at time t */
-function computeOrbElem(pl,t){var iMap={Mercury:7.0,Venus:3.4,Earth:0,Mars:1.8,Jupiter:1.3,Saturn:2.5,Uranus:0.8,Neptune:1.8};var e=pl.ecc||0.01,inc=iMap[pl.n]||0,a=pl.d/150,peri=(pl.peri||0)*0.0174533;var M_=(((t/pl.p)*TAU-peri)%TAU+TAU)%TAU;var E_=M_;for(var ki=0;ki<8;ki++)E_=M_+e*Math.sin(E_);var nu=2*Math.atan2(Math.sqrt(1+e)*Math.sin(E_/2),Math.sqrt(1-e)*Math.cos(E_/2));var r_=a*(1-e*Math.cos(E_));var GM_au=2.959e-4;var v_auday=Math.sqrt(GM_au*(2/r_-1/a));var v_kms=v_auday*1.496e8/86400;return{a:a,e:e,i:inc,T:pl.p,M:M_*180/Math.PI,nu:nu*180/Math.PI,r:r_,v:v_kms};}
+function computeOrbElem(pl,t){var iMap={Mercury:7.0,Venus:3.4,Earth:0,Mars:1.8,Jupiter:1.3,Saturn:2.5,Uranus:0.8,Neptune:1.8};var e=pl.ecc||0.01,inc=iMap[pl.n]||0,a=pl.d/150,peri=(pl.peri||0)*0.0174533;var M_=(((t/pl.p)*TAU-peri)%TAU+TAU)%TAU;var sk=solveKepler(M_,e),nu=sk.nu;var r_=a*(1-e*Math.cos(sk.E));var GM_au=2.959e-4;var v_auday=Math.sqrt(GM_au*(2/r_-1/a));var v_kms=v_auday*1.496e8/86400;return{a:a,e:e,i:inc,T:pl.p,M:M_*180/Math.PI,nu:nu*180/Math.PI,r:r_,v:v_kms};}
 
 export { initNBody, computeNightSky, computeMoonPhases, computeOrbElem };
