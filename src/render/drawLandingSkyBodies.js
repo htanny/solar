@@ -3,7 +3,7 @@ import { TAU, GMOONS, PL_MAP, DWARF_MAP } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /* Parent planet lookup for tidally-locked moons; used for synodic phase calculation. */
-var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
 
 /**
  * Compute orbital phase, sub-solar longitude, and Sun screen position for a tidally-locked moon.
@@ -393,6 +393,43 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var _eps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
         if(_eps)_drawParentPhase(ctx,esX,esY,esRad,_eps.parentPh,_eps.sunScrX,_eps.sunScrY,"rgba(16,12,6,0.93)");
         if(esY<hrzY-2&&esRad>6){ctx.fillStyle="rgba(225,205,155,0.6)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("土星",esX,esY-esRad-5);}
+      }
+    }
+  }else if(plName==="Miranda"){
+    /* Uranus fills the sky — Miranda is only 5.1 Uranus-radii away, angular radius ~0.19 rad.
+       Uranus is axially tilted 97.8° so its rings appear nearly vertical from Miranda. */
+    var miLngR=((lngDeg||0)+540)%360-180;miLngR=miLngR*0.01745;
+    var miLatR=(lat||0)*0.01745;
+    var subMiCos=Math.cos(miLatR)*Math.cos(miLngR);
+    if(subMiCos>-0.05){
+      var miAlt=Math.asin(Math.max(-1,Math.min(1,subMiCos)));
+      var miAz=Math.atan2(Math.sin(miLngR),-Math.sin(miLatR)*Math.cos(miLngR));
+      var miADiff=((miAz-yaw)%TAU+TAU)%TAU;if(miADiff>Math.PI)miADiff-=TAU;
+      if(Math.abs(miADiff)<TAU*0.45){
+        var muX=W/2+miADiff*W*0.8/TAU;
+        var muY=hrzY-(miAlt/(Math.PI*0.5))*hrzY*0.85;
+        var muAngR=0.19;
+        var muRad=Math.max(7,muAngR*W*0.8/TAU/fov);
+        /* Glow */
+        var mug=ctx.createRadialGradient(muX,muY,muRad,muX,muY,muRad*2.0);
+        mug.addColorStop(0,"rgba(92,195,205,0.16)");mug.addColorStop(1,"rgba(92,195,205,0)");
+        ctx.fillStyle=mug;ctx.fillRect(muX-muRad*2.5,muY-muRad*2.5,muRad*5,muRad*5);
+        /* Globe */
+        ctx.save();ctx.beginPath();ctx.arc(muX,muY,muRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(92,196,205,1)";ctx.fillRect(muX-muRad,muY-muRad,muRad*2,muRad*2);
+        ctx.fillStyle="rgba(72,176,186,0.35)";ctx.fillRect(muX-muRad,muY-muRad*0.22,muRad*2,muRad*0.16);
+        ctx.fillStyle="rgba(108,210,218,0.30)";ctx.fillRect(muX-muRad,muY+muRad*0.15,muRad*2,muRad*0.14);
+        ctx.restore();
+        /* Rings: Uranus's 97.8° tilt means rings appear nearly vertical from equatorial orbit.
+           Draw as a thin near-vertical ellipse spanning across the disk. */
+        ctx.save();ctx.globalAlpha=0.45;
+        ctx.strokeStyle="rgba(135,205,215,0.65)";ctx.lineWidth=Math.max(1,muRad*0.07);
+        ctx.beginPath();ctx.ellipse(muX,muY,muRad*0.12,muRad*1.85,0,0,TAU);ctx.stroke();
+        ctx.globalAlpha=1;ctx.restore();
+        /* Phase shadow */
+        var _mps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_mps)_drawParentPhase(ctx,muX,muY,muRad,_mps.parentPh,_mps.sunScrX,_mps.sunScrY,"rgba(4,14,16,0.93)");
+        if(muY<hrzY-2&&muRad>5){ctx.fillStyle="rgba(148,218,225,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("天王星",muX,muY-muRad-5);}
       }
     }
   }else if(plName==="Mars"){

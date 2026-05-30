@@ -1,5 +1,5 @@
 // @ts-check
-import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 
 /* 着陸モード下部のクイックジャンプ行設定。
    各天体に対応する着陸地点リストと、ボタンに表示するキー文字列を生成する関数。 */
@@ -13,6 +13,7 @@ var QUICK_JUMP_CONFIG=[
   {match:function(l){return l==="Titan";},label:"探査機",col:"255,180,80",textCol:"255,210,140",sites:TITAN_PROBES,getKey:function(s){return s.en;}},
   {match:function(l){return l==="Triton";},label:"地形",col:"220,205,185",textCol:"240,225,205",sites:TRITON_FEATURES,getKey:function(s){return s.n;}},
   {match:function(l){return l==="Enceladus";},label:"地形",col:"200,225,250",textCol:"215,235,255",sites:ENCELADUS_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Miranda";},label:"地形",col:"160,200,215",textCol:"185,218,230",sites:MIRANDA_FEATURES,getKey:function(s){return s.n;}},
   {match:function(l){return l==="Pluto";},label:"地形",col:"255,220,180",textCol:"255,230,200",sites:PLUTO_FEATURES,getKey:function(s){return s.n;},
    extras:[{label:"NH最接近",col:"255,220,80",textCol:"255,230,120",lat:OUTER_PROBES[0].lat,lng:OUTER_PROBES[0].lng}]},
   {match:function(l){return l==="Charon";},label:"地形",col:"255,200,180",textCol:"255,215,200",sites:CHARON_FEATURES,getKey:function(s){return s.n;}},

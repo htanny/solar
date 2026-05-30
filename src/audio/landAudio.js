@@ -66,6 +66,12 @@ function startLandSound(plName){
       var fltEx=ac.createBiquadFilter();fltEx.type="bandpass";fltEx.frequency.value=350;fltEx.Q.value=1.5;bnEx.connect(fltEx);fltEx.connect(master);bnEx.start();nodes.push(bnEx);
       var oEx=ac.createOscillator();oEx.type="sine";oEx.frequency.value=40;var gEx=ac.createGain();gEx.gain.value=0.15;oEx.connect(gEx);gEx.connect(master);oEx.start();nodes.push(oEx);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[]};
+    }else if(plName==="Miranda"){
+      /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
+      var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);
+      var oMi2=ac.createOscillator();oMi2.type="sine";oMi2.frequency.value=36;var gMi2=ac.createGain();gMi2.gain.value=0.06;oMi2.connect(gMi2);gMi2.connect(master);oMi2.start();nodes.push(oMi2);
+      var iceInt=setInterval(function(){if(ac.state==="closed")return;var oi=ac.createOscillator();oi.type="triangle";oi.frequency.value=2200+Math.random()*1800;var gi=ac.createGain();gi.gain.value=0.012;oi.connect(gi);gi.connect(master);oi.start();gi.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.7);oi.stop(ac.currentTime+0.75);},8000+Math.random()*14000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[iceInt]};
     }else if(plName==="Enceladus"){
       /* Airless ice moon: faint sub-bass tremor (tidal flexing) + periodic geyser whoosh */
       var oEn=ac.createOscillator();oEn.type="sine";oEn.frequency.value=28;var gEn=ac.createGain();gEn.gain.value=0.10;oEn.connect(gEn);gEn.connect(master);oEn.start();nodes.push(oEn);

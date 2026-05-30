@@ -249,6 +249,7 @@ export var SURF={
   Callisto:{atm:0,sunSz:0.037,g:"rgba(72,68,62,1)",skyTop:"0,0,0",skyBot:"2,2,3"},
   Titan:{atm:3.5,sunSz:0.011,g:"rgba(118,92,52,1)",skyTop:"175,108,38",skyBot:"155,86,28"},
   Enceladus:{atm:0.01,sunSz:0.011,g:"rgba(230,238,246,1)",skyTop:"0,0,0",skyBot:"3,4,7"},
+  Miranda:{atm:0,sunSz:0.006,g:"rgba(105,95,88,1)",skyTop:"0,0,0",skyBot:"2,2,3"},
   Itokawa:{atm:0,sunSz:0.13,g:"rgba(132,114,90,1)",skyTop:"0,0,0",skyBot:"2,2,2"},
   Ryugu:{atm:0,sunSz:0.13,g:"rgba(20,17,14,1)",skyTop:"0,0,0",skyBot:"1,1,1"},
   Triton:{atm:0.02,sunSz:0.0011,g:"rgba(195,170,150,1)",skyTop:"0,0,0",skyBot:"3,2,4"},
@@ -266,11 +267,18 @@ export var RYUGU_INFO={n:"Ryugu",j:"リュウグウ",e:"162173 Ryugu",d:231,r:0.
 export var TRITON_INFO={n:"Triton",j:"トリトン",e:"Triton",d:4495,r:1.353,p:365.25,c:"rgba(205,190,178,1)",t:0,rot:-5.877,type:"triton",mass:"2.14×10²² kg",grav:"0.78 m/s²",moons:0,day:"5.88日(逆行・潮汐固定)",year:"海王星を5.88日",atm:"N₂ 極希薄",temp:"−235℃",dens:"2.06",esc:"1.46",alb:0.76};
 export var CHARON_INFO={n:"Charon",j:"カロン",e:"Charon",d:5906,r:0.606,p:90560,c:"rgba(155,142,130,1)",t:0,rot:6.39,type:"charon",mass:"1.52×10²¹ kg",grav:"0.29 m/s²",moons:0,day:"6.39日(潮汐固定)",year:"冥王星を6.39日",atm:"なし",temp:"−220℃",dens:"1.70",esc:"0.58",alb:0.35};
 export var ENCELADUS_INFO={n:"Enceladus",j:"エンケラドゥス",e:"Enceladus",d:1427,r:0.252,p:365.25,c:"rgba(230,238,246,1)",t:0,rot:1.370,type:"enceladus",mass:"1.08×10²⁰ kg",grav:"0.11 m/s²",moons:0,day:"1.37日(潮汐固定)",year:"土星を1.37日",atm:"ほぼ無し（間欠泉起源の水蒸気）",temp:"−201℃",dens:"1.61",esc:"0.24",alb:0.99};
+export var MIRANDA_INFO={n:"Miranda",j:"ミランダ",e:"Miranda",d:2871,r:0.236,p:365.25,c:"rgba(180,178,175,1)",t:0,rot:1.413,type:"miranda",mass:"6.59×10¹⁹ kg",grav:"0.08 m/s²",moons:0,day:"1.41日(潮汐固定)",year:"天王星を1.41日",atm:"なし",temp:"−213℃",dens:"1.20",esc:"0.19",alb:0.32};
 export var HALLEY_CORE_INFO={n:"HalleyCore",j:"ハレー彗星核",e:"1P/Halley nucleus",d:2660,r:0.011,p:27484,c:"rgba(22,18,15,1)",t:0,rot:2.2,type:"comet",mass:"2.2×10¹⁴ kg",grav:"0.0005 m/s²",moons:0,day:"52.8時間",year:"75.3年",atm:"昇華ガス(H₂O・CO)",temp:"−170〜+47℃",dens:"0.60",esc:"0.001",alb:0.04};
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
   {n:"窒素間欠泉",en:"Nitrogen Geysers",lat:-50,lng:-10,info:"高度8kmまで噴出する窒素ガスのプルーム"},
+];
+/* Miranda geological landmarks (Voyager 2) */
+export var MIRANDA_FEATURES=[
+  {n:"ベローナ断崖",en:"Verona Rupes",lat:-43,lng:167,info:"太陽系最高の断崖 高さ約20km — 低重力のため落下に約12分かかる"},
+  {n:"アーデンコロナ",en:"Arden Corona",lat:-30,lng:32,info:"直径318kmの複合地形 古い地殻が再活性化したテクトニックな特異地形"},
+  {n:"インバネスコロナ",en:"Inverness Corona",lat:18,lng:326,info:"直径246kmの滑らかな平原 クレーター密集地帯に囲まれる"},
 ];
 /* Enceladus geological landmarks (Cassini) */
 export var ENCELADUS_FEATURES=[
@@ -333,6 +341,7 @@ PL_MAP["Io"]=IO_INFO;PL_MAP["Europa"]=EUROPA_INFO;PL_MAP["Ganymede"]=GANYMEDE_IN
 PL_MAP["Titan"]=TITAN_INFO;PL_MAP["Itokawa"]=ITOKAWA_INFO;PL_MAP["Ryugu"]=RYUGU_INFO;
 PL_MAP["Triton"]=TRITON_INFO;PL_MAP["Charon"]=CHARON_INFO;PL_MAP["HalleyCore"]=HALLEY_CORE_INFO;
 PL_MAP["Enceladus"]=ENCELADUS_INFO;
+PL_MAP["Miranda"]=MIRANDA_INFO;
 /* Exoplanet surface data - merged into SURF for landing render */
 export var EXO_SURF={
   ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},
