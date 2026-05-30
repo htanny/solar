@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /**
@@ -258,6 +258,32 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
   var _p2=function(n){return n<10?"0"+n:""+n;};var _dms=new Date(946728000000+t*86400000);
   var _utc=_dms.getUTCFullYear()+"/"+_p2(_dms.getUTCMonth()+1)+"/"+_p2(_dms.getUTCDate())+" "+_p2(_dms.getUTCHours())+":"+_p2(_dms.getUTCMinutes())+":"+_p2(_dms.getUTCSeconds())+" UTC";
   ctx.fillStyle="rgba(140,200,255,0.6)";ctx.font="9px monospace";ctx.fillText(_utc,W/2,80);
+  /* ======== REAL-TIME DISTANCE READOUT (top-right): heliocentric + Earth light-time ========
+     Moons reuse their parent planet's orbital position (own offset <2 Mkm is negligible at
+     interplanetary scale). Light-time = distance(Mkm)·1e9 m / c. Skipped for exoplanets. */
+  if(!sf.exo){
+    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Triton:"Neptune",Charon:"Pluto"};
+    var _obName=_parDist[plName]||plName;
+    var _ob=PL_MAP[_obName]||DWARF_MAP[_obName];
+    var _earthB=PL_MAP.Earth;
+    if(_ob&&_earthB){
+      var _os=orbitState(_ob,t),_rB=_ob.d*_os.rf;
+      var _bx=_rB*Math.cos(_os.theta),_by=_rB*Math.sin(_os.theta);
+      var _es=orbitState(_earthB,t),_rE=_earthB.d*_es.rf;
+      var _ex=_rE*Math.cos(_es.theta),_ey=_rE*Math.sin(_es.theta);
+      var _earMkm=plName==="Moon"?0.3844:Math.sqrt((_bx-_ex)*(_bx-_ex)+(_by-_ey)*(_by-_ey));
+      var _ltStr=function(mkm){var sec=mkm*1e9/299792458;return sec<90?sec.toFixed(1)+"光秒":sec<5400?(sec/60).toFixed(1)+"光分":(sec/3600).toFixed(2)+"光時";};
+      var _auStr=function(mkm){return mkm<1?(mkm*100).toFixed(2)+"万km":(mkm/149.6).toFixed(3)+"AU";};
+      ctx.textAlign="right";ctx.font="9px sans-serif";
+      ctx.fillStyle="rgba(255,225,150,0.72)";
+      ctx.fillText("☀ "+_auStr(_rB)+" / "+_ltStr(_rB),W-8,20);
+      if(plName!=="Earth"){
+        ctx.fillStyle="rgba(150,205,255,0.72)";
+        ctx.fillText("⊕ "+_auStr(_earMkm)+" / "+_ltStr(_earMkm),W-8,33);
+      }
+      ctx.textAlign="center";
+    }
+  }
   if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.font="9px sans-serif";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,94);}
   if(plName==="Moon"){
     var _aMin=1e9,_aIdx=-1;
