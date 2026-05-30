@@ -185,8 +185,21 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
       var _sunADiffV=((sunAz-yaw)%TAU+TAU)%TAU;if(_sunADiffV>Math.PI)_sunADiffV-=TAU;
       if(Math.abs(_sunADiffV+_vElong)<TAU*0.4){
         var venX=sunScreenX+_vElong*(W*0.8/TAU),venY=sunY-Math.abs(_vElong)*hrzY*0.5;
-        ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
-        var vglow=ctx.createRadialGradient(venX,venY,1,venX,venY,8);vglow.addColorStop(0,"rgba(255,255,200,0.3)");vglow.addColorStop(1,"rgba(255,255,200,0)");ctx.fillStyle=vglow;ctx.fillRect(venX-8,venY-8,16,16);ctx.globalAlpha=1;
+        /* Transit of Venus: at inferior conjunction (Venus between Earth and Sun) the
+           elongation is near 0 and Venus is on the near side. It then appears as a black
+           dot crossing the solar disc instead of a bright star. Inferior side is detected
+           by the dot product of the geocentric Venus and Sun directions being positive. */
+        var _vToSunX=-_vXe,_vToSunY=-_vYe;/* Earth→Sun direction */
+        var _vToVenX=_vXv-_vXe,_vToVenY=_vYv-_vYe;/* Earth→Venus direction */
+        var _vInferior=(_vToSunX*_vToVenX+_vToSunY*_vToVenY)>0;
+        var _vTransit=_vInferior&&Math.abs(_vElong)<0.045&&sunAlt>-0.05;/* within ~2.6° of Sun, Sun up */
+        if(_vTransit){
+          var _vtR=Math.max(0.8,2.4*(8/fov)*0.04);/* tiny relative to the solar disc */
+          ctx.globalAlpha=0.9;fillCirc(ctx,venX,sunY,_vtR,"rgba(12,10,8,0.95)");ctx.globalAlpha=1;
+        }else{
+          ctx.globalAlpha=Math.max(0,(0.3-sunAlt)*2)*0.7;fillCirc(ctx,venX,venY,2,"rgba(255,255,200,1)");
+          var vglow=ctx.createRadialGradient(venX,venY,1,venX,venY,8);vglow.addColorStop(0,"rgba(255,255,200,0.3)");vglow.addColorStop(1,"rgba(255,255,200,0)");ctx.fillStyle=vglow;ctx.fillRect(venX-8,venY-8,16,16);ctx.globalAlpha=1;
+        }
       }
     }
   }else if(plName==="Io"||plName==="Europa"||plName==="Ganymede"||plName==="Callisto"){
