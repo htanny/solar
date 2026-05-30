@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /**
@@ -225,7 +225,7 @@ function drawLandingHUD(ctx,W,H,h){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -240,6 +240,7 @@ Titan:"窒素・メタンの濃い大気 — 液体の川と湖が存在する�
 Itokawa:"はやぶさが2005年に試料採取 — 地球に持ち帰られた最初の小惑星サンプル",
 Ryugu:"はやぶさ2が2019年着陸 — 炭素質コンドライト 太陽系初期の物質を保存",
 Triton:"海王星の逆行衛星 — 窒素間欠泉が高度8kmまで噴出 表面温度−235℃の最寒冷地",
+Enceladus:"土星の氷衛星 — 南極の虎縞から地下海の水が宇宙へ噴出 反射率99%の純白世界",
 Charon:"冥王星と二重惑星系 — 互いに常に同じ面を向ける 北極のモルドール領域は赤い有機物",
 HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ごとに太陽へ接近して尾を伸ばす",
 };
@@ -262,7 +263,7 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
      Moons reuse their parent planet's orbital position (own offset <2 Mkm is negligible at
      interplanetary scale). Light-time = distance(Mkm)·1e9 m / c. Skipped for exoplanets. */
   if(!sf.exo){
-    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Triton:"Neptune",Charon:"Pluto"};
+    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Triton:"Neptune",Charon:"Pluto"};
     var _obName=_parDist[plName]||plName;
     var _ob=PL_MAP[_obName]||DWARF_MAP[_obName];
     var _earthB=PL_MAP.Earth;
@@ -363,6 +364,18 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
     var _trKm=Math.round(_trMin*1353*Math.PI/180);
     ctx.fillStyle="rgba(220,205,185,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("最寄: "+_trSel.n+"　"+_trKm.toLocaleString()+"km",W/2,94);
+  }
+  if(plName==="Enceladus"){
+    var _enMin=1e9,_enIdx=-1;
+    for(var _enii=0;_enii<ENCELADUS_FEATURES.length;_enii++){var _enf2=ENCELADUS_FEATURES[_enii];
+      var _enDL=(_enf2.lng-(lngDeg||0))*0.01745,_enL1=(lat||0)*0.01745,_enL2=_enf2.lat*0.01745;
+      var _enCos=Math.sin(_enL1)*Math.sin(_enL2)+Math.cos(_enL1)*Math.cos(_enL2)*Math.cos(_enDL);
+      var _enD=Math.acos(Math.max(-1,Math.min(1,_enCos)))*57.2958;
+      if(_enD<_enMin){_enMin=_enD;_enIdx=_enii;}}
+    var _enSel=ENCELADUS_FEATURES[_enIdx];
+    var _enKm=Math.round(_enMin*252*Math.PI/180);
+    ctx.fillStyle="rgba(200,225,250,0.8)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_enSel.n+"　"+_enKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="Pluto"){
     var _puMin=1e9,_puIdx=-1;

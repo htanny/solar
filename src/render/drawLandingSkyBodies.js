@@ -3,7 +3,7 @@ import { TAU, GMOONS, PL_MAP, DWARF_MAP } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /* Parent planet lookup for tidally-locked moons; used for synodic phase calculation. */
-var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
 
 /**
  * Compute orbital phase, sub-solar longitude, and Sun screen position for a tidally-locked moon.
@@ -354,6 +354,45 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var _sps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
         if(_sps)_drawParentPhase(ctx,satX,satY,satRad,_sps.parentPh,_sps.sunScrX,_sps.sunScrY,"rgba(18,12,6,0.93)");
         if(satY<hrzY-2&&satRad>3){ctx.fillStyle="rgba(220,195,148,0.5)";ctx.font="8px sans-serif";ctx.textAlign="center";ctx.fillText("土星",satX,satY-satRad-4);}
+      }
+    }
+  }else if(plName==="Enceladus"){
+    /* Saturn looms enormous — Enceladus orbits at only 4 Saturn-radii, so the planet
+       and its rings fill a huge swath of the sky (angular radius ~0.22 rad). */
+    var enLngR=((lngDeg||0)+540)%360-180;enLngR=enLngR*0.01745;
+    var enLatR=(lat||0)*0.01745;
+    var subEnCos=Math.cos(enLatR)*Math.cos(enLngR);
+    if(subEnCos>-0.05){
+      var enAlt=Math.asin(Math.max(-1,Math.min(1,subEnCos)));
+      var enAz=Math.atan2(Math.sin(enLngR),-Math.sin(enLatR)*Math.cos(enLngR));
+      var enADiff=((enAz-yaw)%TAU+TAU)%TAU;if(enADiff>Math.PI)enADiff-=TAU;
+      if(Math.abs(enADiff)<TAU*0.45){
+        var esX=W/2+enADiff*W*0.8/TAU;
+        var esY=hrzY-(enAlt/(Math.PI*0.5))*hrzY*0.85;
+        var esAngR=0.22;
+        var esRad=Math.max(8,esAngR*W*0.8/TAU/fov);
+        /* back half of rings (behind globe) */
+        ctx.save();ctx.globalAlpha=0.6;
+        ctx.strokeStyle="rgba(205,185,135,0.55)";ctx.lineWidth=esRad*0.30;
+        ctx.beginPath();ctx.ellipse(esX,esY,esRad*2.3,esRad*0.5,0,Math.PI,TAU,false);ctx.stroke();
+        ctx.restore();
+        /* globe with banding */
+        ctx.save();ctx.beginPath();ctx.arc(esX,esY,esRad,0,TAU);ctx.clip();
+        ctx.fillStyle="rgba(222,202,152,1)";ctx.fillRect(esX-esRad,esY-esRad,esRad*2,esRad*2);
+        ctx.fillStyle="rgba(200,178,128,0.55)";ctx.fillRect(esX-esRad,esY-esRad*0.30,esRad*2,esRad*0.20);
+        ctx.fillStyle="rgba(235,218,170,0.5)";ctx.fillRect(esX-esRad,esY+esRad*0.10,esRad*2,esRad*0.16);
+        ctx.fillStyle="rgba(180,158,110,0.5)";ctx.fillRect(esX-esRad,esY+esRad*0.42,esRad*2,esRad*0.18);
+        ctx.restore();
+        /* front half of rings (in front of globe) + Cassini gap */
+        ctx.globalAlpha=0.65;
+        ctx.strokeStyle="rgba(210,190,140,0.6)";ctx.lineWidth=esRad*0.30;
+        ctx.beginPath();ctx.ellipse(esX,esY,esRad*2.3,esRad*0.5,0,0,Math.PI,false);ctx.stroke();
+        ctx.strokeStyle="rgba(20,18,14,0.5)";ctx.lineWidth=esRad*0.05;
+        ctx.beginPath();ctx.ellipse(esX,esY,esRad*1.95,esRad*0.42,0,0,Math.PI,false);ctx.stroke();
+        ctx.globalAlpha=1;
+        var _eps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_eps)_drawParentPhase(ctx,esX,esY,esRad,_eps.parentPh,_eps.sunScrX,_eps.sunScrY,"rgba(16,12,6,0.93)");
+        if(esY<hrzY-2&&esRad>6){ctx.fillStyle="rgba(225,205,155,0.6)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("土星",esX,esY-esRad-5);}
       }
     }
   }else if(plName==="Mars"){

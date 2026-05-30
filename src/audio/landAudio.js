@@ -66,6 +66,11 @@ function startLandSound(plName){
       var fltEx=ac.createBiquadFilter();fltEx.type="bandpass";fltEx.frequency.value=350;fltEx.Q.value=1.5;bnEx.connect(fltEx);fltEx.connect(master);bnEx.start();nodes.push(bnEx);
       var oEx=ac.createOscillator();oEx.type="sine";oEx.frequency.value=40;var gEx=ac.createGain();gEx.gain.value=0.15;oEx.connect(gEx);gEx.connect(master);oEx.start();nodes.push(oEx);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[]};
+    }else if(plName==="Enceladus"){
+      /* Airless ice moon: faint sub-bass tremor (tidal flexing) + periodic geyser whoosh */
+      var oEn=ac.createOscillator();oEn.type="sine";oEn.frequency.value=28;var gEn=ac.createGain();gEn.gain.value=0.10;oEn.connect(gEn);gEn.connect(master);oEn.start();nodes.push(oEn);
+      var geyInt=setInterval(function(){if(ac.state==="closed")return;var bg=ac.createBufferSource();var bufg=ac.createBuffer(1,Math.floor(ac.sampleRate*1.6),ac.sampleRate);var dg=bufg.getChannelData(0);for(var gn=0;gn<dg.length;gn++)dg[gn]=(Math.random()*2-1)*0.4*Math.min(1,gn/(ac.sampleRate*0.3))*Math.exp(-gn/ac.sampleRate*1.2);bg.buffer=bufg;var gg=ac.createGain();gg.gain.value=0.05;var fg=ac.createBiquadFilter();fg.type="highpass";fg.frequency.value=900;bg.connect(fg);fg.connect(gg);gg.connect(master);bg.start();},7000+Math.random()*9000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[geyInt]};
     }else{
       /* Mercury/default: silence with occasional metallic ping (thermal expansion) */
       var pingInt=setInterval(function(){if(ac.state==="closed")return;var o3=ac.createOscillator();o3.frequency.value=800+Math.random()*1200;o3.type="sine";var g3=ac.createGain();g3.gain.value=0.015;o3.connect(g3);g3.connect(master);o3.start();g3.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.5);o3.stop(ac.currentTime+0.6);},4000+Math.random()*8000);

@@ -4,7 +4,7 @@ import { mobileSheet, bClose } from "../../styles/panelStyles.js";
 var SAT_GROUPS=[
   {grp:"地球系",grpE:"Earth system",col:"180,210,255",items:[{k:"Moon",j:"月",e:"Moon"}]},
   {grp:"木星のガリレオ衛星",grpE:"Jupiter (Galilean)",col:"220,200,100",items:[{k:"Io",j:"イオ",e:"Io"},{k:"Europa",j:"エウロパ",e:"Europa"},{k:"Ganymede",j:"ガニメデ",e:"Ganymede"},{k:"Callisto",j:"カリスト",e:"Callisto"}]},
-  {grp:"土星系",grpE:"Saturn",col:"218,168,88",items:[{k:"Titan",j:"タイタン",e:"Titan"}]},
+  {grp:"土星系",grpE:"Saturn",col:"218,168,88",items:[{k:"Titan",j:"タイタン",e:"Titan"},{k:"Enceladus",j:"エンケラドゥス",e:"Enceladus"}]},
   {grp:"海王星系",grpE:"Neptune",col:"205,190,178",items:[{k:"Triton",j:"トリトン",e:"Triton"}]},
   {grp:"冥王星系",grpE:"Pluto",col:"195,175,150",items:[{k:"Charon",j:"カロン",e:"Charon"}]},
   {grp:"小惑星",grpE:"Asteroids",col:"168,140,108",items:[{k:"Itokawa",j:"イトカワ",e:"Itokawa"},{k:"Ryugu",j:"リュウグウ",e:"Ryugu"}]},
