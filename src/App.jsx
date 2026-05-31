@@ -90,8 +90,10 @@ export default function App(){
   var[telescopeMode,setTelescopeMode,teleR]=useRefSync(false);
   var[showEarthInt,setShowEarthInt,earthIntR]=useRefSync(false);
   var[showFps,setShowFps,showFpsR]=useRefSync(false);var fpsFrames=useRef([]);
+  var[landTut,setLandTut]=useState(false);
 
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
+  useEffect(function(){if(!landTut)return;var tid=setTimeout(function(){setLandTut(false);},6000);return function(){clearTimeout(tid);};},[landTut]);
   useEffect(function(){try{localStorage.setItem("solar_cfg",JSON.stringify({lang:lang,sh:sh,spd:spd}));}catch(e){};},[lang,sh,spd]);
   useEffect(function(){if(!bgm)return;var ctx2;try{ctx2=new(window.AudioContext||window.webkitAudioContext)();var m=ctx2.createGain();m.gain.value=0;m.connect(ctx2.destination);m.gain.linearRampToValueAtTime(0.22,ctx2.currentTime+2);var b=ctx2.createOscillator();b.type="sine";b.frequency.value=55;var bg=ctx2.createGain();bg.gain.value=0.18;b.connect(bg);bg.connect(m);b.start();var p1=ctx2.createOscillator();p1.type="sine";p1.frequency.value=110;var pg=ctx2.createGain();pg.gain.value=0.06;p1.connect(pg);pg.connect(m);p1.start();var p2=ctx2.createOscillator();p2.type="sine";p2.frequency.value=164.81;var p2g=ctx2.createGain();p2g.gain.value=0.04;p2.connect(p2g);p2g.connect(m);p2.start();var p3=ctx2.createOscillator();p3.type="sine";p3.frequency.value=329.63;var p3g=ctx2.createGain();p3g.gain.value=0.02;p3.connect(p3g);p3g.connect(m);p3.start();var notes=[523.25,659.25,783.99,1046.5,1318.5,1567.98];var si2=setInterval(function(){if(ctx2.state==="closed")return;var o=ctx2.createOscillator();o.type="sine";o.frequency.value=notes[Math.floor(Math.random()*notes.length)];var g2=ctx2.createGain();g2.gain.value=0.02+Math.random()*0.02;o.connect(g2);g2.connect(m);o.start();g2.gain.exponentialRampToValueAtTime(0.001,ctx2.currentTime+3);o.stop(ctx2.currentTime+4);},2500+Math.random()*3000);audioRef.current={ctx:ctx2,master:m,si:si2};}catch(e){}return function(){if(audioRef.current){clearInterval(audioRef.current.si);try{audioRef.current.master.gain.linearRampToValueAtTime(0,audioRef.current.ctx.currentTime+0.5);setTimeout(function(){try{audioRef.current.ctx.close();}catch(e2){}audioRef.current=null;},600);}catch(e3){}};};},[bgm]);
 
@@ -132,7 +134,7 @@ export default function App(){
     setCompare(false);
     landLngR.current=0;setLandLng(0);
     landTiltR.current=0;setLandTilt(0);
-    setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);
+    setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);setLandTut(true);
   },[dz,stopTour]);
 
   var doTakeoff=useCallback(function(){
@@ -294,7 +296,11 @@ export default function App(){
       if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
       if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
       /* Jupiter Trojans: L4 = +60° ahead, L5 = -60° behind Jupiter */
-      if(show.trojan&&!_un){var jupAng=Math.atan2(pd[4].wz,pd[4].wx);/* Jupiter's true longitude (elliptical) so Trojans stay ±60° from where Jupiter is drawn */ctx.fillStyle="rgba(180,170,140,0.55)";for(var tji=0;tji<TROJAN.length;tji++){var tj=TROJAN[tji],tjAng=jupAng+(tj.lp===1?TAU/6:-TAU/6)+tj.off,tjR=_rd?tj.rad*0.15*DK:(160+(tj.rad-330)/200*60),tjp=pj(Math.cos(tjAng)*tjR,tj.y*(_rd?0.1:1),Math.sin(tjAng)*tjR,cam),tjSz=Math.max(tj.sz*cam.zm,0.2);ctx.fillRect(tjp.x-tjSz*0.5,tjp.y-tjSz*0.5,tjSz,tjSz);}if(show.labels&&cam.zm<0.5&&cam.zm>0.005){var lpL4=pj(Math.cos(jupAng+TAU/6)*770,0,Math.sin(jupAng+TAU/6)*770,cam),lpL5=pj(Math.cos(jupAng-TAU/6)*770,0,Math.sin(jupAng-TAU/6)*770,cam);ctx.fillStyle="rgba(220,200,160,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("L4 (Greeks)",lpL4.x,lpL4.y-6);ctx.fillText("L5 (Trojans)",lpL5.x,lpL5.y-6);}}
+      /* Jupiter Trojans: L4 = +60° ahead, L5 = -60° behind Jupiter.
+         Use Jupiter's actual screen-space orbital radius (pd[4].oR) so the cloud
+         stays co-orbital with Jupiter regardless of zoom/distortion mode.
+         Vertical y-spread (±40 units) reveals the 3D inclination cloud when view is tilted. */
+      if(show.trojan&&!_un){var jupAng=Math.atan2(pd[4].wz,pd[4].wx),jupSR=pd[4].oR;for(var tji=0;tji<TROJAN.length;tji++){var tj=TROJAN[tji],tjAng=jupAng+(tj.lp===1?TAU/6:-TAU/6)+tj.off,tjR=_rd?tj.rad*0.15*DK:jupSR*(tj.rad/770),tjY=tj.y*(_rd?0.08:1.0),tjp=pj(Math.cos(tjAng)*tjR,tjY,Math.sin(tjAng)*tjR,cam),tjSz=Math.max(tj.sz*cam.zm,0.2);ctx.fillStyle=tj.lp===1?"rgba(192,184,165,0.58)":"rgba(172,158,130,0.58)";ctx.fillRect(tjp.x-tjSz*0.5,tjp.y-tjSz*0.5,tjSz,tjSz);}if(show.labels&&cam.zm<0.5&&cam.zm>0.005){var lpL4=pj(Math.cos(jupAng+TAU/6)*jupSR,0,Math.sin(jupAng+TAU/6)*jupSR,cam),lpL5=pj(Math.cos(jupAng-TAU/6)*jupSR,0,Math.sin(jupAng-TAU/6)*jupSR,cam);ctx.fillStyle="rgba(220,200,160,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("L4 (Greeks)",lpL4.x,lpL4.y-6);ctx.fillText("L5 (Trojans)",lpL5.x,lpL5.y-6);}}
       /* Kuiper belt: trans-Neptunian objects at 35-50 AU */
       if(show.kuiper&&!_un){ctx.fillStyle="rgba(140,160,180,0.42)";for(var kbi=0;kbi<KUIPER.length;kbi++){var kb=KUIPER[kbi],kbAng=kb.ang+t*kb.spd,kbR=_rd?kb.rad*0.15*DK:(160+(kb.rad-5250)/2250*60+200);if(_rd){kbR=kb.rad*0.15*DK;}else{kbR=380+(kb.rad-5250)/2250*60;}var kbp=pj(Math.cos(kbAng)*kbR,kb.y*(_rd?0.1:1),Math.sin(kbAng)*kbR,cam),kbSz=Math.max(kb.sz*cam.zm,0.2);ctx.fillRect(kbp.x-kbSz*0.5,kbp.y-kbSz*0.5,kbSz,kbSz);}}
 
@@ -617,6 +623,22 @@ export default function App(){
           }}>{lang==="en"?"📍 Now":"📍 今"}</button>
         </div>
         <button style={Object.assign({},bT("255,100,80"),{fontSize:12,padding:"8px 16px"})} onClick={function(){setLanding(null);}}>{lang==="en"?"🚀 Liftoff":"🚀 離陸"}</button>
+      </div>}
+
+      {landing&&landTut&&<div onClick={function(){setLandTut(false);}} style={{position:"absolute",top:0,left:0,right:0,bottom:0,zIndex:30,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif",cursor:"pointer"}}>
+        <div style={{background:"rgba(0,5,18,0.92)",border:"1px solid rgba(100,160,255,0.35)",borderRadius:10,padding:"18px 26px",maxWidth:310,pointerEvents:"none",userSelect:"none"}}>
+          <div style={{fontSize:13,fontWeight:"bold",marginBottom:11,textAlign:"center",color:"rgba(180,210,255,0.95)",letterSpacing:1}}>{lang==="en"?"Landing Mode Controls":"着陸モード 操作ガイド"}</div>
+          <table style={{fontSize:11,borderCollapse:"collapse",width:"100%"}}>
+            <tbody>
+              <tr><td style={{padding:"4px 10px 4px 0",color:"rgba(100,180,255,0.75)",whiteSpace:"nowrap"}}>{lang==="en"?"🖱 Drag":"🖱 ドラッグ"}</td><td style={{padding:"4px 0",color:"rgba(200,220,255,0.85)"}}>{lang==="en"?"Rotate view":"視点回転"}</td></tr>
+              <tr><td style={{padding:"4px 10px 4px 0",color:"rgba(100,180,255,0.75)",whiteSpace:"nowrap"}}>{lang==="en"?"🔍 Scroll / Pinch":"🔍 スクロール / ピンチ"}</td><td style={{padding:"4px 0",color:"rgba(200,220,255,0.85)"}}>{lang==="en"?"Zoom field of view":"FOVズーム"}</td></tr>
+              <tr><td style={{padding:"4px 10px 4px 0",color:"rgba(100,180,255,0.75)",whiteSpace:"nowrap"}}>{lang==="en"?"◀ Left slider":"◀ 左スライダー"}</td><td style={{padding:"4px 0",color:"rgba(200,220,255,0.85)"}}>{lang==="en"?"Latitude":"緯度"}</td></tr>
+              <tr><td style={{padding:"4px 10px 4px 0",color:"rgba(100,180,255,0.75)",whiteSpace:"nowrap"}}>{lang==="en"?"▼ Bottom sliders":"▼ 下スライダー"}</td><td style={{padding:"4px 0",color:"rgba(200,220,255,0.85)"}}>{lang==="en"?"Longitude / Azimuth / Tilt":"経度 / 方位 / 仰角"}</td></tr>
+              <tr><td style={{padding:"4px 10px 4px 0",color:"rgba(100,180,255,0.75)",whiteSpace:"nowrap"}}>{lang==="en"?"⊕ Quick Jump":"⊕ クイックジャンプ"}</td><td style={{padding:"4px 0",color:"rgba(200,220,255,0.85)"}}>{lang==="en"?"Named locations":"地名ジャンプ"}</td></tr>
+            </tbody>
+          </table>
+          <div style={{marginTop:13,textAlign:"center",fontSize:9,color:"rgba(130,170,220,0.45)"}}>{lang==="en"?"Tap anywhere to dismiss (auto-closes in 6s)":"タップで閉じる（6秒で自動消去）"}</div>
+        </div>
       </div>}
 
       {isPhone&&cleanView===0&&!landing&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:20,background:"rgba(8,10,20,0.92)",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 8px",display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{FL.map(function(f){return <button key={f.k} style={Object.assign({},foc===f.k?bNM:bFM,{flexShrink:0,padding:"6px 10px",fontSize:11})} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div>}

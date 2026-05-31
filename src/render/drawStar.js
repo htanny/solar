@@ -10,7 +10,7 @@ var SD=mkStars(),NB=mkNeb();
 function mkAst(){var r=seedR(123),o=[];for(var i=0;i<200;i++){o.push({ang:r()*TAU,rad:330+r()*200,y:(r()-0.5)*8,sz:0.3+r()*1.2,spd:0.0002+r()*0.0003});}return o;}
 /* Trojan asteroids cluster at Jupiter's L4 (+60°) and L5 (-60°) points.
    Angular offset is relative to Jupiter's current angle, set at render time. */
-function mkTrojans(){var r=seedR(213),o=[];for(var i=0;i<120;i++){var lp=i<60?1:-1;o.push({lp:lp,off:(r()-0.5)*0.7,rad:770+(r()-0.5)*60,y:(r()-0.5)*16,sz:0.3+r()*1.0});}return o;}
+function mkTrojans(){var r=seedR(213),o=[];for(var i=0;i<150;i++){var lp=i<75?1:-1;o.push({lp:lp,off:(r()-0.5)*1.05,rad:770+(r()-0.5)*70,y:(r()-0.5)*80,sz:0.3+r()*0.9});}return o;}
 /* Kuiper belt: 35-50 AU, scattered around the ecliptic */
 function mkKuiper(){var r=seedR(317),o=[];for(var i=0;i<250;i++){o.push({ang:r()*TAU,rad:5250+r()*2250,y:(r()-0.5)*40,sz:0.3+r()*0.9,spd:0.00001+r()*0.000015});}return o;}
 var AST=mkAst(),TROJAN=mkTrojans(),KUIPER=mkKuiper();

@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -338,6 +338,61 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       var _trda=Math.acos(Math.max(-1,Math.min(1,_trcos)))*57.2958;
       if(_trda<6){ctx.fillStyle="rgba(255,210,140,0.85)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_trf.n,W*0.72,H-42);
         ctx.fillStyle="rgba(220,200,170,0.65)";ctx.font="7px sans-serif";ctx.fillText(_trf.info.split(" ")[0],W*0.72,H-30);break;}}
+  }else if(plName==="Enceladus"){
+    /* Pristine fresh-snow ice + bluish tiger-stripe fractures + towering bright water geysers */
+    var enr=seedR(637);
+    ctx.globalAlpha=0.10;ctx.fillStyle="rgba(210,228,245,1)";ctx.fillRect(0,hrzY,W,H-hrzY);/* blue-white frost tint */
+    ctx.globalAlpha=1;
+    /* Bluish fracture cracks (tiger-stripe sulci) */
+    ctx.strokeStyle="rgba(120,165,210,0.5)";
+    for(var enfi=0;enfi<7;enfi++){var enfy=hrzY+10+enr()*(H-hrzY-16),enfx=enr()*W,enfL=40+enr()*120;
+      ctx.lineWidth=0.8+enr()*1.4;ctx.beginPath();ctx.moveTo(enfx,enfy);
+      for(var enfk=1;enfk<=5;enfk++){ctx.lineTo(enfx+enfk*enfL/5,enfy+(enr()-0.5)*8);}ctx.stroke();}
+    /* Ice-crystal sparkle */
+    ctx.globalAlpha=0.5;ctx.fillStyle="rgba(255,255,255,1)";
+    for(var ensi=0;ensi<40;ensi++){var ensx=enr()*W,ensy=hrzY+4+enr()*(H-hrzY-8),enss=0.5+enr()*1.4;ctx.fillRect(ensx,ensy,enss,enss);}
+    ctx.globalAlpha=1;
+    /* Towering water-vapor geyser plumes — bright, tall, rising from the surface */
+    for(var engi=0;engi<4;engi++){var engx=((enr()*W*1.5+yaw*20)%(W*1.1))-W*0.05,engw=3+enr()*4,engh=90+enr()*110;
+      var engG=ctx.createLinearGradient(engx,hrzY,engx,hrzY-engh);
+      engG.addColorStop(0,"rgba(235,245,255,0.6)");engG.addColorStop(0.5,"rgba(205,225,245,0.28)");engG.addColorStop(1,"rgba(205,225,245,0)");
+      ctx.fillStyle=engG;
+      ctx.beginPath();ctx.moveTo(engx-engw*0.5,hrzY);ctx.lineTo(engx-engw*1.8,hrzY-engh);ctx.lineTo(engx+engw*1.8,hrzY-engh);ctx.lineTo(engx+engw*0.5,hrzY);ctx.closePath();ctx.fill();}
+    /* Feature site marker */
+    for(var _eni=0;_eni<ENCELADUS_FEATURES.length;_eni++){var _enf=ENCELADUS_FEATURES[_eni];
+      var _endl=(_enf.lng-(lngDeg||0))*0.01745,_enl1=(lat||0)*0.01745,_enl2=_enf.lat*0.01745;
+      var _encos=Math.sin(_enl1)*Math.sin(_enl2)+Math.cos(_enl1)*Math.cos(_enl2)*Math.cos(_endl);
+      var _enda=Math.acos(Math.max(-1,Math.min(1,_encos)))*57.2958;
+      if(_enda<7){ctx.fillStyle="rgba(190,225,255,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_enf.n,W*0.72,H-42);
+        ctx.fillStyle="rgba(205,225,245,0.7)";ctx.font="7px sans-serif";ctx.fillText(_enf.info.split(" ")[0],W*0.72,H-30);break;}}
+  }else if(plName==="Miranda"){
+    /* Chaotic patchwork: ancient cratered highlands + smooth corona plains + Verona Rupes cliff */
+    var mnr=seedR(743);
+    /* Ancient impact craters (darker, rough terrain) */
+    ctx.globalAlpha=0.28;
+    for(var mnci=0;mnci<18;mnci++){var mncx=mnr()*W,mncy=hrzY+8+mnr()*(H-hrzY-14),mncD=(mncy-hrzY)/(H-hrzY),mncsz=3+mncD*10;
+      ctx.fillStyle="rgba(80,72,66,1)";ctx.beginPath();ctx.ellipse(mncx,mncy,mncsz,mncsz*0.7,0,0,TAU);ctx.fill();
+      ctx.strokeStyle="rgba(130,118,108,1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.ellipse(mncx,mncy,mncsz*1.2,mncsz*0.85,0,0,TAU);ctx.stroke();}
+    ctx.globalAlpha=1;
+    /* Corona smooth patches (lighter, younger terrain) */
+    ctx.globalAlpha=0.14;ctx.fillStyle="rgba(175,168,160,1)";
+    for(var mnpi=0;mnpi<5;mnpi++){var mnpx=mnr()*W,mnpy=hrzY+4+mnr()*(H-hrzY-8),mnpsz=30+mnr()*55;
+      ctx.beginPath();ctx.ellipse(mnpx,mnpy,mnpsz,mnpsz*0.6,0,0,TAU);ctx.fill();}
+    ctx.globalAlpha=1;
+    /* Cliff-like ridges (visible as dark horizontal banding — Verona Rupes impression) */
+    ctx.globalAlpha=0.35;
+    for(var mnri=0;mnri<3;mnri++){
+      var mnry=hrzY+20+mnri*((H-hrzY)*0.28),mnrW=mnr()*W;
+      ctx.strokeStyle="rgba(55,48,44,1)";ctx.lineWidth=1.5+mnr()*2.5;
+      ctx.beginPath();ctx.moveTo(mnrW,mnry);ctx.bezierCurveTo(mnrW+W*0.15,mnry+(mnr()-0.5)*6,mnrW+W*0.35,mnry+(mnr()-0.5)*6,mnrW+W*0.5,mnry);ctx.stroke();}
+    ctx.globalAlpha=1;
+    /* Feature site marker */
+    for(var _mni=0;_mni<MIRANDA_FEATURES.length;_mni++){var _mnf=MIRANDA_FEATURES[_mni];
+      var _mndl=(_mnf.lng-(lngDeg||0))*0.01745,_mnl1=(lat||0)*0.01745,_mnl2=_mnf.lat*0.01745;
+      var _mncos=Math.sin(_mnl1)*Math.sin(_mnl2)+Math.cos(_mnl1)*Math.cos(_mnl2)*Math.cos(_mndl);
+      var _mnda=Math.acos(Math.max(-1,Math.min(1,_mncos)))*57.2958;
+      if(_mnda<8){ctx.fillStyle="rgba(210,228,240,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_mnf.n,W*0.72,H-42);
+        ctx.fillStyle="rgba(190,210,225,0.7)";ctx.font="7px sans-serif";ctx.fillText(_mnf.info.split(" ")[0],W*0.72,H-30);break;}}
   }else if(plName==="Pluto"){
     /* Sputnik Planitia smooth nitrogen ice + Cthulhu Macula dark mottling + water-ice mountains */
     var plr=seedR(311);ctx.globalAlpha=0.2;
