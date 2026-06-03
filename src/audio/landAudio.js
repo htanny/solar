@@ -78,6 +78,13 @@ function startLandSound(plName){
       bnTi.connect(fltTi);fltTi.connect(master);bnTi.start();nodes.push(bnTi,lfoTi);
       var drzInt=setInterval(function(){if(ac.state==="closed")return;var bd=ac.createBufferSource();var bufd=ac.createBuffer(1,Math.floor(ac.sampleRate*0.9),ac.sampleRate);var dd=bufd.getChannelData(0);for(var dr=0;dr<dd.length;dr++)dd[dr]=(Math.random()*2-1)*0.3*Math.min(1,dr/(ac.sampleRate*0.15))*Math.exp(-dr/ac.sampleRate*2.5);bd.buffer=bufd;var gd=ac.createGain();gd.gain.value=0.032;var fd=ac.createBiquadFilter();fd.type="highpass";fd.frequency.value=1100;bd.connect(fd);fd.connect(gd);gd.connect(master);bd.start();},7000+Math.random()*13000);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[drzInt]};
+    }else if(plName==="Phobos"){
+      /* Airless body in tight Mars orbit: deep tidal resonance sub-bass (Mars pulls hard
+         at 7.65h) + occasional microimpact rumble (intense Stickney-region cratering) */
+      var oPh=ac.createOscillator();oPh.type="sine";oPh.frequency.value=24;var gPh=ac.createGain();gPh.gain.value=0.10;oPh.connect(gPh);gPh.connect(master);oPh.start();nodes.push(oPh);
+      var oPh2=ac.createOscillator();oPh2.type="sine";oPh2.frequency.value=48;var gPh2=ac.createGain();gPh2.gain.value=0.04;oPh2.connect(gPh2);gPh2.connect(master);oPh2.start();nodes.push(oPh2);
+      var phImpInt=setInterval(function(){if(ac.state==="closed")return;var bp=ac.createBufferSource();var bufp=ac.createBuffer(1,Math.floor(ac.sampleRate*0.7),ac.sampleRate);var dp=bufp.getChannelData(0);for(var pi=0;pi<dp.length;pi++)dp[pi]=(Math.random()*2-1)*0.4*Math.exp(-pi/ac.sampleRate*10);bp.buffer=bufp;var gp=ac.createGain();gp.gain.value=0.035;var fp=ac.createBiquadFilter();fp.type="lowpass";fp.frequency.value=80;bp.connect(fp);fp.connect(gp);gp.connect(master);bp.start();},9000+Math.random()*15000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[phImpInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);

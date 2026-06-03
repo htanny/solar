@@ -3,6 +3,7 @@ import { mobileSheet, bClose } from "../../styles/panelStyles.js";
 
 var SAT_GROUPS=[
   {grp:"地球系",grpE:"Earth system",col:"180,210,255",items:[{k:"Moon",j:"月",e:"Moon"}]},
+  {grp:"火星系",grpE:"Mars system",col:"200,130,80",items:[{k:"Phobos",j:"フォボス",e:"Phobos"}]},
   {grp:"木星のガリレオ衛星",grpE:"Jupiter (Galilean)",col:"220,200,100",items:[{k:"Io",j:"イオ",e:"Io"},{k:"Europa",j:"エウロパ",e:"Europa"},{k:"Ganymede",j:"ガニメデ",e:"Ganymede"},{k:"Callisto",j:"カリスト",e:"Callisto"}]},
   {grp:"土星系",grpE:"Saturn",col:"218,168,88",items:[{k:"Titan",j:"タイタン",e:"Titan"},{k:"Enceladus",j:"エンケラドゥス",e:"Enceladus"}]},
   {grp:"天王星系",grpE:"Uranus",col:"150,218,225",items:[{k:"Miranda",j:"ミランダ",e:"Miranda"}]},

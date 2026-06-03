@@ -3,7 +3,7 @@ import { TAU, GMOONS, PL_MAP, DWARF_MAP } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /* Parent planet lookup for tidally-locked moons; used for synodic phase calculation. */
-var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto",Phobos:"Mars"};
 
 /**
  * Compute orbital phase, sub-solar longitude, and Sun screen position for a tidally-locked moon.
@@ -430,6 +430,53 @@ function drawSkyBodies(ctx,W,H,s,ctx2){
         var _mps=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
         if(_mps)_drawParentPhase(ctx,muX,muY,muRad,_mps.parentPh,_mps.sunScrX,_mps.sunScrY,"rgba(4,14,16,0.93)");
         if(muY<hrzY-2&&muRad>5){ctx.fillStyle="rgba(148,218,225,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("天王星",muX,muY-muRad-5);}
+      }
+    }
+  }else if(plName==="Phobos"){
+    /* Mars dominates the sky — orbital radius 9376 km, Mars radius 3390 km,
+       angular radius ≈ 20° (80× larger than our Moon appears from Earth). */
+    var phLngR=((lngDeg||0)+540)%360-180;phLngR=phLngR*0.01745;
+    var phLatR=(lat||0)*0.01745;
+    var subPhCos=Math.cos(phLatR)*Math.cos(phLngR);
+    if(subPhCos>-0.08){
+      var phAlt=Math.asin(Math.max(-1,Math.min(1,subPhCos)));
+      var phAz=Math.atan2(Math.sin(phLngR),-Math.sin(phLatR)*Math.cos(phLngR));
+      var phADiff=((phAz-yaw)%TAU+TAU)%TAU;if(phADiff>Math.PI)phADiff-=TAU;
+      if(Math.abs(phADiff)<TAU*0.45){
+        var pmX=W/2+phADiff*W*0.8/TAU;
+        var pmY=hrzY-(phAlt/(Math.PI*0.5))*hrzY*0.85;
+        var pmAngR=0.347;
+        var pmRad=Math.max(14,pmAngR*W*0.8/TAU/fov);
+        /* Glow */
+        var pmg=ctx.createRadialGradient(pmX,pmY,pmRad*0.8,pmX,pmY,pmRad*2.0);
+        pmg.addColorStop(0,"rgba(195,95,38,0.20)");pmg.addColorStop(1,"rgba(195,95,38,0)");
+        ctx.fillStyle=pmg;ctx.fillRect(pmX-pmRad*2.2,pmY-pmRad*2.2,pmRad*4.4,pmRad*4.4);
+        /* Base disk */
+        ctx.save();ctx.beginPath();ctx.arc(pmX,pmY,pmRad,0,TAU);ctx.clip();
+        var pmGrad=ctx.createRadialGradient(pmX-pmRad*0.22,pmY-pmRad*0.22,pmRad*0.04,pmX,pmY,pmRad);
+        pmGrad.addColorStop(0,"rgba(218,118,60,1)");
+        pmGrad.addColorStop(0.4,"rgba(195,88,40,1)");
+        pmGrad.addColorStop(0.75,"rgba(172,68,30,1)");
+        pmGrad.addColorStop(1,"rgba(145,52,22,1)");
+        ctx.fillStyle=pmGrad;ctx.fillRect(pmX-pmRad,pmY-pmRad,pmRad*2,pmRad*2);
+        /* North polar cap */
+        ctx.globalAlpha=0.44;ctx.fillStyle="rgba(232,222,210,1)";
+        ctx.beginPath();ctx.ellipse(pmX,pmY-pmRad*0.68,pmRad*0.40,pmRad*0.16,0,0,TAU);ctx.fill();
+        /* South polar cap */
+        ctx.globalAlpha=0.28;ctx.fillStyle="rgba(220,214,202,1)";
+        ctx.beginPath();ctx.ellipse(pmX,pmY+pmRad*0.74,pmRad*0.27,pmRad*0.11,0,0,TAU);ctx.fill();
+        /* Syrtis Major dark region hint */
+        ctx.globalAlpha=0.20;ctx.fillStyle="rgba(68,34,15,1)";
+        ctx.beginPath();ctx.ellipse(pmX+pmRad*0.22,pmY+pmRad*0.04,pmRad*0.26,pmRad*0.34,0.28,0,TAU);ctx.fill();
+        /* Hellas basin bright patch */
+        ctx.globalAlpha=0.14;ctx.fillStyle="rgba(208,178,148,1)";
+        ctx.beginPath();ctx.arc(pmX+pmRad*0.38,pmY+pmRad*0.44,pmRad*0.17,0,TAU);ctx.fill();
+        ctx.restore();
+        /* Phase shadow */
+        var _phs=_tidalPhaseSetup(plName,t,lngDeg||0,lat||0,yaw,W,hrzY);
+        if(_phs)_drawParentPhase(ctx,pmX,pmY,pmRad,_phs.parentPh,_phs.sunScrX,_phs.sunScrY,"rgba(6,2,1,0.92)");
+        ctx.globalAlpha=1;
+        if(pmY<hrzY-4&&pmRad>8){ctx.fillStyle="rgba(218,118,60,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("火星",pmX,pmY-pmRad-5);}
       }
     }
   }else if(plName==="Mars"){

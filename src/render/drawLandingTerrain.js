@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -483,6 +483,48 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       var _cfcos=Math.sin(_cfl1)*Math.sin(_cfl2)+Math.cos(_cfl1)*Math.cos(_cfl2)*Math.cos(_cfdl);
       var _cfda=Math.acos(Math.max(-1,Math.min(1,_cfcos)))*57.2958;
       if(_cfda<10){ctx.fillStyle="rgba(255,180,140,0.75)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_cf.n,W*0.72,H-42);break;}}
+  }else if(plName==="Phobos"){
+    /* Very dark, heavily cratered carbonaceous body. Dominated by Stickney crater
+       and characteristic parallel groove system caused by tidal stress from Mars. */
+    var phr=seedR(555);
+    /* Dense impact craters */
+    ctx.globalAlpha=0.32;
+    for(var phci=0;phci<22;phci++){
+      var phcx=phr()*W,phcy=hrzY+8+phr()*(H-hrzY-15);
+      var phDist=(phcy-hrzY)/(H-hrzY),phsz=(2+phDist*9+phr()*6*phDist);
+      ctx.fillStyle="rgba(52,42,34,1)";ctx.beginPath();ctx.ellipse(phcx,phcy,phsz,phsz*0.72,0,0,TAU);ctx.fill();
+      ctx.strokeStyle="rgba(118,98,80,1)";ctx.lineWidth=0.5;ctx.beginPath();ctx.ellipse(phcx,phcy,phsz*1.22,phsz*0.88,0,0,TAU);ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    /* Stickney crater — 9km on an 11km-radius body: broad shallow bowl visible for ~25° */
+    var _phDL=((37-(lngDeg||0)+540)%360-180)*0.01745;
+    var _phL1=(lat||0)*0.01745,_phL2=1*0.01745;
+    var _phCos=Math.sin(_phL1)*Math.sin(_phL2)+Math.cos(_phL1)*Math.cos(_phL2)*Math.cos(_phDL);
+    var _phDa=Math.acos(Math.max(-1,Math.min(1,_phCos)))*57.2958;
+    if(_phDa<22){
+      var _phF=Math.max(0,1-_phDa/22);
+      /* Dark interior floor */
+      ctx.globalAlpha=0.20*_phF;ctx.fillStyle="rgba(42,34,26,1)";ctx.fillRect(0,hrzY,W,H-hrzY);
+      /* Bright ejecta rim */
+      ctx.globalAlpha=0.30*_phF;ctx.strokeStyle="rgba(148,126,102,1)";ctx.lineWidth=3+_phF*8;
+      ctx.beginPath();ctx.moveTo(0,hrzY+6+_phF*4);ctx.lineTo(W,hrzY+6+_phF*4);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+    /* Parallel groove system (tidal stress fractures) running approximately E-W */
+    ctx.globalAlpha=0.25;ctx.strokeStyle="rgba(58,46,36,1)";
+    for(var phgi=0;phgi<10;phgi++){
+      var phgy=hrzY+14+phgi*((H-hrzY)*0.077);
+      var phgdist=(phgy-hrzY)/(H-hrzY);ctx.lineWidth=0.7+phgdist*1.6;
+      ctx.beginPath();ctx.moveTo(0,phgy+(phr()*10-5));ctx.lineTo(W,phgy+(phr()*10-5));ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    /* PHOBOS_FEATURES proximity marker */
+    for(var _pfbi=0;_pfbi<PHOBOS_FEATURES.length;_pfbi++){var _pfb=PHOBOS_FEATURES[_pfbi];
+      var _pfbDL=(_pfb.lng-(lngDeg||0))*0.01745,_pfbL1=(lat||0)*0.01745,_pfbL2=_pfb.lat*0.01745;
+      var _pfbCos=Math.sin(_pfbL1)*Math.sin(_pfbL2)+Math.cos(_pfbL1)*Math.cos(_pfbL2)*Math.cos(_pfbDL);
+      var _pfbDa=Math.acos(Math.max(-1,Math.min(1,_pfbCos)))*57.2958;
+      if(_pfbDa<6){ctx.fillStyle="rgba(218,200,178,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_pfb.n,W*0.72,H-42);
+        ctx.fillStyle="rgba(195,178,158,0.7)";ctx.font="7px sans-serif";ctx.fillText(_pfb.info.split(" ")[0],W*0.72,H-30);break;}}
   }else if(plName==="HalleyCore"){
     /* Pitch-black irregular crust with bright sublimation jets */
     var hcr=seedR(601);ctx.globalAlpha=0.4;ctx.fillStyle="rgba(8,6,5,1)";

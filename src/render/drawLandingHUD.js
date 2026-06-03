@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /**
@@ -225,7 +225,7 @@ function drawLandingHUD(ctx,W,H,h){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Miranda"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Miranda"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"||plName==="Phobos"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -244,6 +244,7 @@ Enceladus:"土星の氷衛星 — 南極の虎縞から地下海の水が宇宙�
 Miranda:"天王星の衛星 — 太陽系最高の断崖ベローナ(20km)が聳える混沌の地形 空を占める巨大な天王星",
 Charon:"冥王星と二重惑星系 — 互いに常に同じ面を向ける 北極のモルドール領域は赤い有機物",
 HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ごとに太陽へ接近して尾を伸ばす",
+Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40°の赤い惑星が浮かぶ",
 };
   ctx.fillText(descs[plName]||"",W/2,38);
   var tod=sunAlt>0.3?"昼":sunAlt>0.05?"朝/夕":sunAlt>-0.08?"薄明":"夜";
@@ -264,7 +265,7 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
      Moons reuse their parent planet's orbital position (own offset <2 Mkm is negligible at
      interplanetary scale). Light-time = distance(Mkm)·1e9 m / c. Skipped for exoplanets. */
   if(!sf.exo){
-    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto"};
+    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Phobos:"Mars"};
     var _obName=_parDist[plName]||plName;
     var _ob=PL_MAP[_obName]||DWARF_MAP[_obName];
     var _earthB=PL_MAP.Earth;
@@ -417,6 +418,18 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
   if(plName==="HalleyCore"){
     ctx.fillStyle="rgba(200,220,255,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("彗星核 (16×8km) — 太陽距離が縮むと尾が伸びる",W/2,94);
+  }
+  if(plName==="Phobos"){
+    var _phMin=1e9,_phIdx=-1;
+    for(var _phii=0;_phii<PHOBOS_FEATURES.length;_phii++){var _phf=PHOBOS_FEATURES[_phii];
+      var _phDL=(_phf.lng-(lngDeg||0))*0.01745,_phL1=(lat||0)*0.01745,_phL2=_phf.lat*0.01745;
+      var _phCos=Math.sin(_phL1)*Math.sin(_phL2)+Math.cos(_phL1)*Math.cos(_phL2)*Math.cos(_phDL);
+      var _phD=Math.acos(Math.max(-1,Math.min(1,_phCos)))*57.2958;
+      if(_phD<_phMin){_phMin=_phD;_phIdx=_phii;}}
+    var _phSel=PHOBOS_FEATURES[_phIdx];
+    var _phKm=Math.round(_phMin*11.267*Math.PI/180);
+    ctx.fillStyle="rgba(218,200,178,0.80)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_phSel.n+"　"+_phKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="Itokawa"||plName==="Ryugu"){
     var _haMin=1e9,_haIdx=-1,_haR=plName==="Itokawa"?0.000165:0.000448;

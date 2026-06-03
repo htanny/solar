@@ -255,6 +255,7 @@ export var SURF={
   Triton:{atm:0.02,sunSz:0.0011,g:"rgba(195,170,150,1)",skyTop:"0,0,0",skyBot:"3,2,4"},
   Charon:{atm:0,sunSz:0.0025,g:"rgba(140,128,118,1)",skyTop:"0,0,0",skyBot:"2,2,3"},
   HalleyCore:{atm:0,sunSz:0.5,g:"rgba(18,15,12,1)",skyTop:"0,0,0",skyBot:"1,1,2"},
+  Phobos:{atm:0,sunSz:0.43,g:"rgba(105,88,72,1)",skyTop:"0,0,0",skyBot:"2,1,2"},
 };
 
 export var IO_INFO={n:"Io",j:"イオ",e:"Io",d:778,r:1.821,p:365.25,c:"rgba(220,200,100,1)",t:0,rot:1.769,type:"io",mass:"8.93×10²² kg",grav:"1.80 m/s²",moons:0,day:"1.77日(公転=自転)",year:"木星を1.77日",atm:"SO₂ 極微量",temp:"−143〜+1650℃",dens:"3.53",esc:"2.56",alb:0.63};
@@ -269,6 +270,7 @@ export var CHARON_INFO={n:"Charon",j:"カロン",e:"Charon",d:5906,r:0.606,p:905
 export var ENCELADUS_INFO={n:"Enceladus",j:"エンケラドゥス",e:"Enceladus",d:1427,r:0.252,p:365.25,c:"rgba(230,238,246,1)",t:0,rot:1.370,type:"enceladus",mass:"1.08×10²⁰ kg",grav:"0.11 m/s²",moons:0,day:"1.37日(潮汐固定)",year:"土星を1.37日",atm:"ほぼ無し（間欠泉起源の水蒸気）",temp:"−201℃",dens:"1.61",esc:"0.24",alb:0.99};
 export var MIRANDA_INFO={n:"Miranda",j:"ミランダ",e:"Miranda",d:2871,r:0.236,p:365.25,c:"rgba(180,178,175,1)",t:0,rot:1.413,type:"miranda",mass:"6.59×10¹⁹ kg",grav:"0.08 m/s²",moons:0,day:"1.41日(潮汐固定)",year:"天王星を1.41日",atm:"なし",temp:"−213℃",dens:"1.20",esc:"0.19",alb:0.32};
 export var HALLEY_CORE_INFO={n:"HalleyCore",j:"ハレー彗星核",e:"1P/Halley nucleus",d:2660,r:0.011,p:27484,c:"rgba(22,18,15,1)",t:0,rot:2.2,type:"comet",mass:"2.2×10¹⁴ kg",grav:"0.0005 m/s²",moons:0,day:"52.8時間",year:"75.3年",atm:"昇華ガス(H₂O・CO)",temp:"−170〜+47℃",dens:"0.60",esc:"0.001",alb:0.04};
+export var PHOBOS_INFO={n:"Phobos",j:"フォボス",e:"Phobos",d:228,r:0.01127,p:686.97,c:"rgba(138,115,92,1)",t:0,rot:0.3189,type:"phobos",mass:"1.07×10¹⁶ kg",grav:"0.006 m/s²",moons:0,day:"7.65時間(潮汐固定)",year:"火星を7.65時間",atm:"なし",temp:"−40〜+27℃",dens:"1.876",esc:"0.011",alb:0.07};
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
@@ -305,6 +307,13 @@ export var OUTER_PROBES=[
 /* Titan probe site */
 export var TITAN_PROBES=[
   {n:"ホイヘンス",en:"Huygens",lat:-10.3,lng:167.6,date:"2005-01",info:"ESAのタイタン大気突入プローブ ホイヘンス 72分間送信"},
+];
+/* Phobos geological landmarks (Viking/MRO/Mars Express) */
+export var PHOBOS_FEATURES=[
+  {n:"スティックニー",en:"Stickney",lat:1,lng:37,info:"直径9km — フォボス半径の80%に及ぶ巨大衝突クレーター"},
+  {n:"ロシュ",en:"Roche",lat:-44,lng:122,info:"直径5km クレーター 最もくっきりした輪郭を持つ"},
+  {n:"モノリス",en:"Phobos Monolith",lat:41,lng:338,info:"高さ約90mの孤立岩塊 バイキング1号が撮影した謎の巨大岩"},
+  {n:"ケプラー背斜",en:"Kepler Dorsum",lat:35,lng:192,info:"火星潮汐力が刻んだ平行な亀裂群 フォボス崩壊の前兆とも"},
 ];
 /* Titan geographic landmarks (Cassini-Huygens mapping) */
 export var TITAN_FEATURES=[
@@ -349,6 +358,7 @@ PL_MAP["Titan"]=TITAN_INFO;PL_MAP["Itokawa"]=ITOKAWA_INFO;PL_MAP["Ryugu"]=RYUGU_
 PL_MAP["Triton"]=TRITON_INFO;PL_MAP["Charon"]=CHARON_INFO;PL_MAP["HalleyCore"]=HALLEY_CORE_INFO;
 PL_MAP["Enceladus"]=ENCELADUS_INFO;
 PL_MAP["Miranda"]=MIRANDA_INFO;
+PL_MAP["Phobos"]=PHOBOS_INFO;
 /* Exoplanet surface data - merged into SURF for landing render */
 export var EXO_SURF={
   ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},
