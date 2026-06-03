@@ -515,7 +515,7 @@ export default function App(){
       {cleanView===0&&!landing&&!isPhone&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button aria-label={paused?(lang==="en"?"Play":"再生"):(lang==="en"?"Pause":"一時停止")} style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} aria-label={(lang==="en"?"Speed ":"速度 ")+s+"x"} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
 
       {/* Toggles panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
@@ -597,7 +597,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Zoom panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button aria-label={lang==="en"?"Zoom in":"ズームイン"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button aria-label={lang==="en"?"Zoom out":"ズームアウト"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Event calendar panel */}
       {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
@@ -619,7 +619,7 @@ export default function App(){
       {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
         <div style={{background:"rgba(0,5,18,0.82)",border:"1px solid rgba(100,160,255,0.2)",borderRadius:6,padding:"6px 8px",display:"flex",flexWrap:"wrap",justifyContent:"flex-end",gap:3,maxWidth:260}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>{lang==="en"?"Speed":"速度"}</span>
-          <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
+          <button aria-label={paused?(lang==="en"?"Play":"再生"):(lang==="en"?"Pause":"一時停止")} style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
           {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
           <button style={showConst?bT("100,160,255"):bF} onClick={function(){var v=!showConst;setShowConst(v);showConstR.current=v;}}>{lang==="en"?"Constel.":"星座線"}{showConst?" ●":""}</button>
           <button style={Object.assign({},bT("100,230,160"),{padding:"2px 6px",fontSize:9,marginTop:2,width:"100%"})} onClick={function(){
@@ -655,7 +655,7 @@ export default function App(){
           onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
           style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"center"}}/>
         <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>{lang==="en"?"Lat":"緯度"}</span>
-        <input type="range" min="-90" max="90" step="0.1" value={landLat}
+        <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} min="-90" max="90" step="0.1" value={landLat}
           style={{writingMode:"vertical-lr",direction:"rtl",height:130,width:24,cursor:"pointer",accentColor:"#64b4ff"}}
           onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
@@ -664,7 +664,7 @@ export default function App(){
         <LandingQuickJump landing={landing} setLandLat={setLandLat} setLandLng={setLandLng} landLatR={landLatR} landLngR={landLngR}/>
         {isPhone&&<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lat":"緯度"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
+          <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
             onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
           <input type="number" min="-90" max="90" step="0.01" value={landLat}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
@@ -672,7 +672,7 @@ export default function App(){
         </div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lng":"経度"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
+          <input type="range" aria-label={lang==="en"?"Longitude":"経度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
           <input type="number" min="-180" max="180" step="0.01" value={landLng}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-180,Math.min(180,v));setLandLng(c);landLngR.current=c;}}}
@@ -680,14 +680,14 @@ export default function App(){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Az":"方位"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
+          <input type="range" aria-label={lang==="en"?"Azimuth":"方位"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
             value={Math.round(((landYaw*57.296)%360+360)%360)}
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Tilt":"仰角"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
+          <input type="range" aria-label={lang==="en"?"Tilt":"仰角"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
             onChange={function(e){var v=+e.target.value;setLandTilt(v);landTiltR.current=v;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landTilt>=0?"+":""}{landTilt}°</span>
         </div>
