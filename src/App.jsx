@@ -294,15 +294,20 @@ export default function App(){
       var sd2=(snx-sunPj.x)*(snx-sunPj.x)+(sny-sunPj.y)*(sny-sunPj.y);
       if(show.orbits){for(var oi=0;oi<pd.length;oi++){var osr=pd[oi].oR*cam.zm;if(osr<0.5||osr>orbMaxR||sd2>=osr*osr)continue;dOb(ctx,pd[oi].oR,cam,pd[oi].pl.cRGB,false,pd[oi].pl.ecc,pd[oi].pl.peri);}}
       if(show.trails){for(var tri=0;tri<sim.trails.length;tri++){var trail=sim.trails[tri];if(trail.length<3)continue;var cStr=pd[tri].pl.c.replace(",1)","");var bs=Math.max(2,Math.floor(trail.length/10));for(var tb=0;tb<trail.length-1;tb+=bs){var te2=Math.min(tb+bs+1,trail.length),mA=((tb+te2)*0.5/trail.length)*0.5;ctx.beginPath();ctx.strokeStyle=cStr+","+mA.toFixed(2)+")";ctx.lineWidth=1.5;var fp=pj(trail[tb].x,0,trail[tb].z,cam);ctx.moveTo(fp.x,fp.y);for(var tj=tb+1;tj<te2;tj++){var cp=pj(trail[tj].x,0,trail[tj].z,cam);ctx.lineTo(cp.x,cp.y);}ctx.stroke();}}}
-      if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai++){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
+      /* LoD culling: when zoomed far out, belt/Trojan/Kuiper particles overlap
+         into a sub-pixel ring, so skipping 1/2–2/3 of them is imperceptible while
+         cutting per-frame pj()+fillRect cost on low-end mobile. Normal solar-system
+         view (zm>=0.25) renders every particle for full visual density. */
+      var _lod=cam.zm>=0.25?1:cam.zm>=0.07?2:3;
+      if(show.belt&&!_un){ctx.fillStyle="rgba(160,150,130,0.4)";for(var ai=0;ai<AST.length;ai+=_lod){var as2=AST[ai],aR=_rd?as2.rad*0.15*DK:(160+(as2.rad-330)/200*60),aAng=as2.ang+t*as2.spd,ap=pj(Math.cos(aAng)*aR,as2.y*(_rd?0.1:1),Math.sin(aAng)*aR,cam),aSz=Math.max(as2.sz*cam.zm,0.2);ctx.fillRect(ap.x-aSz*0.5,ap.y-aSz*0.5,aSz,aSz);}}
       /* Jupiter Trojans: L4 = +60° ahead, L5 = -60° behind Jupiter */
       /* Jupiter Trojans: L4 = +60° ahead, L5 = -60° behind Jupiter.
          Use Jupiter's actual screen-space orbital radius (pd[4].oR) so the cloud
          stays co-orbital with Jupiter regardless of zoom/distortion mode.
          Vertical y-spread (±40 units) reveals the 3D inclination cloud when view is tilted. */
-      if(show.trojan&&!_un){var jupAng=Math.atan2(pd[4].wz,pd[4].wx),jupSR=pd[4].oR;for(var tji=0;tji<TROJAN.length;tji++){var tj=TROJAN[tji],tjAng=jupAng+(tj.lp===1?TAU/6:-TAU/6)+tj.off,tjR=_rd?tj.rad*0.15*DK:jupSR*(tj.rad/770),tjY=tj.y*(_rd?0.08:1.0),tjp=pj(Math.cos(tjAng)*tjR,tjY,Math.sin(tjAng)*tjR,cam),tjSz=Math.max(tj.sz*cam.zm,0.2);ctx.fillStyle=tj.lp===1?"rgba(192,184,165,0.58)":"rgba(172,158,130,0.58)";ctx.fillRect(tjp.x-tjSz*0.5,tjp.y-tjSz*0.5,tjSz,tjSz);}if(show.labels&&cam.zm<0.5&&cam.zm>0.005){var lpL4=pj(Math.cos(jupAng+TAU/6)*jupSR,0,Math.sin(jupAng+TAU/6)*jupSR,cam),lpL5=pj(Math.cos(jupAng-TAU/6)*jupSR,0,Math.sin(jupAng-TAU/6)*jupSR,cam);ctx.fillStyle="rgba(220,200,160,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("L4 (Greeks)",lpL4.x,lpL4.y-6);ctx.fillText("L5 (Trojans)",lpL5.x,lpL5.y-6);}}
+      if(show.trojan&&!_un){var jupAng=Math.atan2(pd[4].wz,pd[4].wx),jupSR=pd[4].oR;for(var tji=0;tji<TROJAN.length;tji+=_lod){var tj=TROJAN[tji],tjAng=jupAng+(tj.lp===1?TAU/6:-TAU/6)+tj.off,tjR=_rd?tj.rad*0.15*DK:jupSR*(tj.rad/770),tjY=tj.y*(_rd?0.08:1.0),tjp=pj(Math.cos(tjAng)*tjR,tjY,Math.sin(tjAng)*tjR,cam),tjSz=Math.max(tj.sz*cam.zm,0.2);ctx.fillStyle=tj.lp===1?"rgba(192,184,165,0.58)":"rgba(172,158,130,0.58)";ctx.fillRect(tjp.x-tjSz*0.5,tjp.y-tjSz*0.5,tjSz,tjSz);}if(show.labels&&cam.zm<0.5&&cam.zm>0.005){var lpL4=pj(Math.cos(jupAng+TAU/6)*jupSR,0,Math.sin(jupAng+TAU/6)*jupSR,cam),lpL5=pj(Math.cos(jupAng-TAU/6)*jupSR,0,Math.sin(jupAng-TAU/6)*jupSR,cam);ctx.fillStyle="rgba(220,200,160,0.65)";ctx.font="9px sans-serif";ctx.textAlign="center";ctx.fillText("L4 (Greeks)",lpL4.x,lpL4.y-6);ctx.fillText("L5 (Trojans)",lpL5.x,lpL5.y-6);}}
       /* Kuiper belt: trans-Neptunian objects at 35-50 AU */
-      if(show.kuiper&&!_un){ctx.fillStyle="rgba(140,160,180,0.42)";for(var kbi=0;kbi<KUIPER.length;kbi++){var kb=KUIPER[kbi],kbAng=kb.ang+t*kb.spd,kbR=_rd?kb.rad*0.15*DK:(160+(kb.rad-5250)/2250*60+200);if(_rd){kbR=kb.rad*0.15*DK;}else{kbR=380+(kb.rad-5250)/2250*60;}var kbp=pj(Math.cos(kbAng)*kbR,kb.y*(_rd?0.1:1),Math.sin(kbAng)*kbR,cam),kbSz=Math.max(kb.sz*cam.zm,0.2);ctx.fillRect(kbp.x-kbSz*0.5,kbp.y-kbSz*0.5,kbSz,kbSz);}}
+      if(show.kuiper&&!_un){ctx.fillStyle="rgba(140,160,180,0.42)";for(var kbi=0;kbi<KUIPER.length;kbi+=_lod){var kb=KUIPER[kbi],kbAng=kb.ang+t*kb.spd,kbR=_rd?kb.rad*0.15*DK:(160+(kb.rad-5250)/2250*60+200);if(_rd){kbR=kb.rad*0.15*DK;}else{kbR=380+(kb.rad-5250)/2250*60;}var kbp=pj(Math.cos(kbAng)*kbR,kb.y*(_rd?0.1:1),Math.sin(kbAng)*kbR,cam),kbSz=Math.max(kb.sz*cam.zm,0.2);ctx.fillRect(kbp.x-kbSz*0.5,kbp.y-kbSz*0.5,kbSz,kbSz);}}
 
       /* ======== ZODIAC RING ======== */
       if(!_un&&cam.zm<10){
@@ -510,7 +515,7 @@ export default function App(){
       {cleanView===0&&!landing&&!isPhone&&<DragPanel style={Object.assign({},pn,{top:10,left:10,maxWidth:300})}><div style={lb}>{lang==="en"?"Focus ⠿":"フォーカス ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{FL.map(function(f){return <button key={f.k} style={foc===f.k?bN:bF} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div></DragPanel>}
 
       {/* Speed panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button aria-label={paused?(lang==="en"?"Play":"再生"):(lang==="en"?"Pause":"一時停止")} style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} aria-label={(lang==="en"?"Speed ":"速度 ")+s+"x"} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
 
       {/* Toggles panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
@@ -592,7 +597,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Zoom panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button aria-label={lang==="en"?"Zoom in":"ズームイン"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button aria-label={lang==="en"?"Zoom out":"ズームアウト"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Event calendar panel */}
       {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
@@ -614,7 +619,7 @@ export default function App(){
       {landing&&<div style={{position:"absolute",top:10,right:10,zIndex:26,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
         <div style={{background:"rgba(0,5,18,0.82)",border:"1px solid rgba(100,160,255,0.2)",borderRadius:6,padding:"6px 8px",display:"flex",flexWrap:"wrap",justifyContent:"flex-end",gap:3,maxWidth:260}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:"100%",marginBottom:2}}>{lang==="en"?"Speed":"速度"}</span>
-          <button style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
+          <button aria-label={paused?(lang==="en"?"Play":"再生"):(lang==="en"?"Pause":"一時停止")} style={Object.assign({},paused?bT("100,180,255"):bF,{padding:"2px 6px",fontSize:10})} onClick={function(){setPaused(function(p){return!p;})}}>{paused?"▶":"⏸"}</button>
           {LAND_SP.map(function(s){return <button key={s.l} style={Object.assign({},landSpd===s.v&&!paused?bN:bF,{padding:"2px 5px",fontSize:9})} onClick={function(){setLandSpd(s.v);landSpdR.current=s.v;setPaused(false);}}>{s.l}</button>;})}
           <button style={showConst?bT("100,160,255"):bF} onClick={function(){var v=!showConst;setShowConst(v);showConstR.current=v;}}>{lang==="en"?"Constel.":"星座線"}{showConst?" ●":""}</button>
           <button style={Object.assign({},bT("100,230,160"),{padding:"2px 6px",fontSize:9,marginTop:2,width:"100%"})} onClick={function(){
@@ -650,7 +655,7 @@ export default function App(){
           onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
           style={{width:44,background:"rgba(255,255,255,0.08)",border:"1px solid rgba(100,160,255,0.3)",borderRadius:3,color:"rgba(255,255,255,0.9)",fontSize:9,padding:"2px 3px",outline:"none",fontFamily:"system-ui",textAlign:"center"}}/>
         <span style={{color:"rgba(180,210,255,0.7)",fontSize:9}}>{lang==="en"?"Lat":"緯度"}</span>
-        <input type="range" min="-90" max="90" step="0.1" value={landLat}
+        <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} min="-90" max="90" step="0.1" value={landLat}
           style={{writingMode:"vertical-lr",direction:"rtl",height:130,width:24,cursor:"pointer",accentColor:"#64b4ff"}}
           onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
@@ -659,7 +664,7 @@ export default function App(){
         <LandingQuickJump landing={landing} setLandLat={setLandLat} setLandLng={setLandLng} landLatR={landLatR} landLngR={landLngR}/>
         {isPhone&&<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lat":"緯度"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
+          <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
             onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
           <input type="number" min="-90" max="90" step="0.01" value={landLat}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
@@ -667,7 +672,7 @@ export default function App(){
         </div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lng":"経度"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
+          <input type="range" aria-label={lang==="en"?"Longitude":"経度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
           <input type="number" min="-180" max="180" step="0.01" value={landLng}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-180,Math.min(180,v));setLandLng(c);landLngR.current=c;}}}
@@ -675,14 +680,14 @@ export default function App(){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Az":"方位"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
+          <input type="range" aria-label={lang==="en"?"Azimuth":"方位"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
             value={Math.round(((landYaw*57.296)%360+360)%360)}
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Tilt":"仰角"}</span>
-          <input type="range" style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
+          <input type="range" aria-label={lang==="en"?"Tilt":"仰角"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
             onChange={function(e){var v=+e.target.value;setLandTilt(v);landTiltR.current=v;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landTilt>=0?"+":""}{landTilt}°</span>
         </div>

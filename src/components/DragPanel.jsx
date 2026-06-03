@@ -14,7 +14,14 @@ function DragPanel(props){
       ev.preventDefault();
       var mx=ev.clientX!==undefined?ev.clientX:ev.touches[0].clientX;
       var my=ev.clientY!==undefined?ev.clientY:ev.touches[0].clientY;
-      setPos({x:mx-dr.current.ox,y:my-dr.current.oy});
+      var nx=mx-dr.current.ox,ny=my-dr.current.oy;
+      /* Clamp so the panel can never be flung fully off-screen (esp. on mobile):
+         always keep at least MIN_VIS px reachable on every edge. */
+      var MIN_VIS=48,el2=ref.current,pw=el2?el2.offsetWidth:0,ph=el2?el2.offsetHeight:0;
+      var vw=window.innerWidth,vh=window.innerHeight;
+      nx=Math.max(MIN_VIS-pw,Math.min(nx,vw-MIN_VIS));
+      ny=Math.max(0,Math.min(ny,vh-MIN_VIS));
+      setPos({x:nx,y:ny});
     }
     function onUp(){window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);window.removeEventListener("touchmove",onMove);window.removeEventListener("touchend",onUp);}
     window.addEventListener("mousemove",onMove);window.addEventListener("mouseup",onUp);
