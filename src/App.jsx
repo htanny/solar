@@ -11,6 +11,7 @@ import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, 
 import { drawTourHUD } from "./render/drawTourHUD.js";
 import { drawLanding } from "./render/drawLanding.js";
 import { startLandSound, stopLandSound } from "./audio/landAudio.js";
+import { track } from "./utils/analytics.js";
 import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
 import { initNBody } from "./utils/computations.js";
@@ -32,6 +33,7 @@ import MeteorShowerPanel from "./components/panels/MeteorShowerPanel.jsx";
 import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
 import EarthInteriorPanel from "./components/panels/EarthInteriorPanel.jsx";
 import HelpPanel from "./components/panels/HelpPanel.jsx";
+import AnalyticsPanel from "./components/panels/AnalyticsPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -92,6 +94,7 @@ export default function App(){
   var[showFps,setShowFps,showFpsR]=useRefSync(false);var fpsFrames=useRef([]);
   var[landTut,setLandTut]=useState(false);
 
+  useEffect(function(){track("session_start");},[]);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){if(!landTut)return;var tid=setTimeout(function(){setLandTut(false);},6000);return function(){clearTimeout(tid);};},[landTut]);
   useEffect(function(){try{localStorage.setItem("solar_cfg",JSON.stringify({lang:lang,sh:sh,spd:spd}));}catch(e){};},[lang,sh,spd]);
@@ -100,15 +103,15 @@ export default function App(){
   var dz=useCallback(function(i){var c=Math.max(0,Math.min(ZS.length-1,i));S.current.cam.zm=ZS[c];return c;},[]);
   var zIn=useCallback(function(){setZi(function(p){var n=Math.min(ZS.length-1,p+1);dz(n);S.current.cam.tzm=ZS[n];return n;});},[dz]);
   var zOut=useCallback(function(){setZi(function(p){var n=Math.max(0,p-1);dz(n);S.current.cam.tzm=ZS[n];return n;});},[dz]);
-  var tog=useCallback(function(k){setSh(function(p){var o={};for(var x in p)o[x]=p[x];o[k]=!p[k];return o;});},[]);
+  var tog=useCallback(function(k){track("feature_toggle",{feature:k});setSh(function(p){var o={};for(var x in p)o[x]=p[x];o[k]=!p[k];return o;});},[]);
   function bestZiFor(name,withComet){if(name==="all")return -1;var wr;if(name==="sun"){wr=(SRR/1000)*DK;}else{var pl=PL_MAP[name]||DWARF_MAP[name];if(pl){wr=(pl.r/1000)*DK;}else if(withComet&&COMET_MAP[name]){wr=(1/1000)*DK;}else{return -1;}}var ideal=30/Math.max(wr,0.00001),best=0,bd=1e15;for(var i=0;i<ZS.length;i++){var d=Math.abs(ZS[i]-ideal);if(d<bd){bd=d;best=i;}}return best;}
   function autoZoomVal(name,isUni){if(!isUni)return null;var bi=bestZiFor(name,true);return bi<0?null:ZS[bi];}
   var autoZoom=useCallback(function(name,isUni){if(!isUni)return;var bi=bestZiFor(name,false);if(bi<0)return;S.current.cam.tzm=ZS[bi];ziR.current=bi;setZi(bi);},[]);
   useEffect(function(){if(uni&&foc!=="all"){autoZoom(foc,true);}},[uni,foc,autoZoom]);
   var stopTour=useCallback(function(){setTouring(false);if(tourRef.current)tourRef.current.active=false;},[]);
-  var startTourLv=useCallback(function(lv){setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:lv};setFoc("sun");setInfo({type:"sun"});},[stopTour]);
+  var startTourLv=useCallback(function(lv){track("tour_start",{level:lv});setLanding(null);stopTour();setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:lv};setFoc("sun");setInfo({type:"sun"});},[stopTour]);
   /* Toggle a panel; on phone, close other exclusive panels at the same time */
-  var togglePanel=useCallback(function(key){dispatchPanel({type:isPhone?"TOGGLE_EX":"TOGGLE",key:key});},[isPhone]);
+  var togglePanel=useCallback(function(key){track("panel_toggle",{panel:key});dispatchPanel({type:isPhone?"TOGGLE_EX":"TOGGLE",key:key});},[isPhone]);
   var startQuiz=useCallback(function(){setQuizState({lv:null});},[]);
   var closeQuiz=useCallback(function(){setQuizState(null);},[]);
   var saveBM=useCallback(function(name){var s=S.current,c=s.cam;var code="SS|"+s.t.toFixed(1)+"|"+c.rx.toFixed(3)+"|"+c.ry.toFixed(3)+"|"+zi+"|"+foc;setBookmarks(function(prev){var next=prev.concat({name:name||simDaysToDate(s.t),code:code});try{localStorage.setItem("solar_bm",JSON.stringify(next));}catch(e){}return next;});},[zi,foc]);
@@ -135,6 +138,7 @@ export default function App(){
     landLngR.current=0;setLandLng(0);
     landTiltR.current=0;setLandTilt(0);
     setLanding(plName);setLandYaw(0);setLandLat(0);setLandFov(1);setLandTut(true);
+    track("landing",{planet:plName});
   },[dz,stopTour]);
 
   var doTakeoff=useCallback(function(){
@@ -538,6 +542,7 @@ export default function App(){
           <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){togglePanel("bookOpen");setBookmarkName("");}}>{lang==="en"?"🔖 Bookmarks":"🔖 ブックマーク"}</button>
           <button style={bF} onClick={function(){setOnboardStep(0);}}>{lang==="en"?"❓ Guide":"❓ ガイド"}</button>
           <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
+          <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
           <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
         </div>
@@ -741,6 +746,8 @@ export default function App(){
       {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} lang={lang} pn={pn} bF={bF} bT={bT}/>}
 
       {cleanView===0&&!landing&&<TourPickerPanel visible={panels.tourPick} dispatchPanel={dispatchPanel} startTourLv={startTourLv} lang={lang} pn={pn} bF={bF}/>}
+
+      {cleanView===0&&!landing&&<AnalyticsPanel visible={panels.analyticsOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       {/* Onboarding tour overlay */}
       {onboardStep>=0&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.78)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}} onClick={function(e){e.stopPropagation();}}>
