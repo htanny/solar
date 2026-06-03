@@ -240,6 +240,28 @@ function drawLandingSky(ctx,W,H,s){
       ctx.stroke();
     }
     ctx.globalAlpha=0.05;ctx.fillStyle="rgba(0,0,0,1)";ctx.fillRect(0,hrzY*0.45,W,hrzY*0.08);ctx.globalAlpha=1;
+  }else if(plName==="Titan"){
+    /* N₂/CH₄ photochemical haze: distinct horizontal orange-brown aerosol layers.
+       A full-sky overlay dims the sun and makes stars invisible through the thick soup. */
+    ctx.save();
+    for(var thi=0;thi<6;thi++){
+      ctx.globalAlpha=0.16-thi*0.022;
+      ctx.fillStyle="rgba("+(148+thi*5)+","+(75+thi*4)+","+(18+thi*3)+",1)";
+      ctx.fillRect(Math.sin(t*0.05+thi*1.4)*12,hrzY*(0.06+thi*0.13),W,hrzY*0.10);
+    }
+    /* Uniform haze veil over full sky — dims sun disk, obscures stars */
+    ctx.globalAlpha=0.22;ctx.fillStyle="rgba(158,88,28,1)";ctx.fillRect(0,0,W,hrzY);
+    ctx.restore();
+    /* Fine aerosol particulates drifting with methane wind */
+    ctx.globalAlpha=0.06;ctx.fillStyle="rgba(192,118,44,1)";
+    for(var tpi=0;tpi<30;tpi++){
+      var tpB=rng()*TAU;
+      var tpDr=((tpB+(t/45)*TAU)%TAU+TAU)%TAU;
+      var tpDf=((tpDr-yaw)%TAU+TAU)%TAU;if(tpDf>Math.PI)tpDf-=TAU;
+      var tpx=W/2+tpDf*W*0.8/TAU,tpy=rng()*hrzY*0.88;
+      ctx.fillRect(tpx,tpy,1+rng()*2,1);
+    }
+    ctx.globalAlpha=1;
   }
 }
 

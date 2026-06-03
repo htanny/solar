@@ -306,6 +306,13 @@ export var OUTER_PROBES=[
 export var TITAN_PROBES=[
   {n:"ホイヘンス",en:"Huygens",lat:-10.3,lng:167.6,date:"2005-01",info:"ESAのタイタン大気突入プローブ ホイヘンス 72分間送信"},
 ];
+/* Titan geographic landmarks (Cassini-Huygens mapping) */
+export var TITAN_FEATURES=[
+  {n:"リゲイア海",en:"Ligeia Mare",lat:79,lng:249,info:"北極のメタン湖 面積約126,000km²"},
+  {n:"クラーケン海",en:"Kraken Mare",lat:68,lng:310,info:"最大のメタン海 南北1,170km"},
+  {n:"シャングリラ",en:"Shangri-La",lat:-5,lng:200,info:"赤道付近の有機物砂丘帯 暗黒炭化水素の砂で覆われる"},
+  {n:"アディリ高地",en:"Adiri",lat:-15,lng:210,info:"ホイヘンス着陸域の西に広がる明るい高地"},
+];
 /* Asteroid probe sites */
 export var HAYABUSA_SITES=[
   {n:"はやぶさ（Muses-C）",en:"Hayabusa",body:"Itokawa",lat:0.0,lng:0.0,date:"2005-11",info:"JAXA はやぶさ 表面接触・試料採取"},

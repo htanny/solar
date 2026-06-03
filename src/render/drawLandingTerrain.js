@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -267,14 +267,38 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       ctx.strokeStyle="rgba(88,82,72,1)";ctx.lineWidth=0.8;ctx.beginPath();ctx.arc(calx,caly,calsz*1.35,0,TAU);ctx.stroke();}
     ctx.globalAlpha=1;
   }else if(plName==="Titan"){
-    /* Orange-tinted dunes and methane lake patches */
-    var ttnr=seedR(222);ctx.globalAlpha=0.2;
-    for(var tdi=0;tdi<20;tdi++){var tdx=ttnr()*W,tdy=hrzY+4+ttnr()*(H-hrzY-10),tdD=(tdy-hrzY)/(H-hrzY),tdsz=3+tdD*14;
-      ctx.strokeStyle="rgba(80,55,25,1)";ctx.lineWidth=tdsz*0.4;ctx.beginPath();ctx.moveTo(tdx,tdy);ctx.lineTo(tdx+(ttnr()-0.5)*tdsz*4,tdy-tdsz*0.5);ctx.stroke();}
-    ctx.globalAlpha=0.15;ctx.fillStyle="rgba(40,28,12,1)";
-    for(var tli=0;tli<4;tli++){var tlx=ttnr()*W,tly=hrzY+25+ttnr()*(H-hrzY-38),tlrx=30+ttnr()*60,tlry=8+ttnr()*14;
-      ctx.beginPath();ctx.ellipse(tlx,tly,tlrx,tlry,0,0,TAU);ctx.fill();}
+    /* East-west aligned hydrocarbon sand dunes (Titan's linear dunes are 100-150m tall,
+       100km+ long, formed by Saturn-tide winds) + dark methane lake patches */
+    var ttnr=seedR(222);
+    /* Methane lakes — dark blue-black pools (more prominent than before) */
+    for(var tli=0;tli<6;tli++){
+      var tlx=ttnr()*W,tly=hrzY+18+ttnr()*(H-hrzY-35),tlrx=18+ttnr()*75,tlry=5+ttnr()*16,tlRot=(ttnr()-0.5)*0.6;
+      ctx.globalAlpha=0.28;ctx.fillStyle="rgba(18,14,26,1)";
+      ctx.beginPath();ctx.ellipse(tlx,tly,tlrx,tlry,tlRot,0,TAU);ctx.fill();
+      if(dayF>0.12){ctx.globalAlpha=0.10*dayF;ctx.fillStyle="rgba(70,55,95,1)";
+        ctx.beginPath();ctx.ellipse(tlx-tlrx*0.1,tly-tlry*0.2,tlrx*0.65,tlry*0.45,tlRot,0,TAU);ctx.fill();}
+    }
+    /* Long east-west dune crests */
+    ctx.strokeStyle="rgba(70,48,18,1)";
+    for(var tdi=0;tdi<28;tdi++){
+      var tdy=hrzY+3+ttnr()*(H-hrzY-10),tdD=(tdy-hrzY)/(H-hrzY);
+      ctx.lineWidth=0.7+tdD*2.8;ctx.globalAlpha=0.15+tdD*0.20;
+      ctx.beginPath();
+      var tdx0=ttnr()*W*0.4,tdLen=W*0.35+ttnr()*W*0.55;
+      ctx.moveTo(tdx0,tdy);ctx.lineTo(tdx0+tdLen,tdy+(ttnr()-0.5)*2.5);ctx.stroke();
+    }
     ctx.globalAlpha=1;
+    /* TITAN_FEATURES proximity marker */
+    var _tfMin=1e9,_tfIdx=-1;
+    for(var _tfii=0;_tfii<TITAN_FEATURES.length;_tfii++){var _tff=TITAN_FEATURES[_tfii];
+      var _tfdl=(_tff.lng-(lngDeg||0))*0.01745,_tfl1=(lat||0)*0.01745,_tfl2=_tff.lat*0.01745;
+      var _tfcos=Math.sin(_tfl1)*Math.sin(_tfl2)+Math.cos(_tfl1)*Math.cos(_tfl2)*Math.cos(_tfdl);
+      var _tfda=Math.acos(Math.max(-1,Math.min(1,_tfcos)))*57.2958;
+      if(_tfda<_tfMin){_tfMin=_tfda;_tfIdx=_tfii;}}
+    if(_tfMin<3&&_tfIdx>=0){var _tfSel=TITAN_FEATURES[_tfIdx];
+      ctx.globalAlpha=0.82;ctx.fillStyle="rgba(255,210,100,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText("◆ "+_tfSel.n,W*0.5,H-56);ctx.globalAlpha=0.65;ctx.font="7px sans-serif";ctx.fillStyle="rgba(220,195,150,0.85)";
+      ctx.fillText(_tfSel.info,W*0.5,H-44);ctx.globalAlpha=1;}
     /* Huygens probe site marker */
     for(var _tpi=0;_tpi<TITAN_PROBES.length;_tpi++){var _tp=TITAN_PROBES[_tpi];
       var _tdl=(_tp.lng-(lngDeg||0))*0.01745,_tl1=(lat||0)*0.01745,_tl2=_tp.lat*0.01745;

@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /**
@@ -343,16 +343,16 @@ HalleyCore:"ハレー彗星核 — 不規則な16×8kmの黒い氷塊 76年ご�
     ctx.fillText("最寄: "+_hSel.n+"　"+_hKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="Titan"){
-    var _tpMin=1e9,_tpIdx=-1;
-    for(var _tpii=0;_tpii<TITAN_PROBES.length;_tpii++){var _tp2=TITAN_PROBES[_tpii];
-      var _tpDL=(_tp2.lng-(lngDeg||0))*0.01745,_tpL1=(lat||0)*0.01745,_tpL2=_tp2.lat*0.01745;
-      var _tpCos=Math.sin(_tpL1)*Math.sin(_tpL2)+Math.cos(_tpL1)*Math.cos(_tpL2)*Math.cos(_tpDL);
-      var _tpD=Math.acos(Math.max(-1,Math.min(1,_tpCos)))*57.2958;
-      if(_tpD<_tpMin){_tpMin=_tpD;_tpIdx=_tpii;}}
-    var _tpSel=TITAN_PROBES[_tpIdx];
-    var _tpKm=Math.round(_tpMin*2575*Math.PI/180);
-    ctx.fillStyle="rgba(255,210,140,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_tpSel.n+"　"+_tpKm.toLocaleString()+"km",W/2,94);
+    var _ttMin=1e9,_ttIdx=-1;
+    for(var _ttii=0;_ttii<TITAN_FEATURES.length;_ttii++){var _ttf=TITAN_FEATURES[_ttii];
+      var _ttDL=(_ttf.lng-(lngDeg||0))*0.01745,_ttL1=(lat||0)*0.01745,_ttL2=_ttf.lat*0.01745;
+      var _ttCos=Math.sin(_ttL1)*Math.sin(_ttL2)+Math.cos(_ttL1)*Math.cos(_ttL2)*Math.cos(_ttDL);
+      var _ttD=Math.acos(Math.max(-1,Math.min(1,_ttCos)))*57.2958;
+      if(_ttD<_ttMin){_ttMin=_ttD;_ttIdx=_ttii;}}
+    var _ttSel=TITAN_FEATURES[_ttIdx];
+    var _ttKm=Math.round(_ttMin*2575*Math.PI/180);
+    ctx.fillStyle="rgba(255,210,140,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_ttSel.n+"　"+_ttKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="Triton"){
     var _trMin=1e9,_trIdx=-1;

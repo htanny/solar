@@ -66,6 +66,18 @@ function startLandSound(plName){
       var fltEx=ac.createBiquadFilter();fltEx.type="bandpass";fltEx.frequency.value=350;fltEx.Q.value=1.5;bnEx.connect(fltEx);fltEx.connect(master);bnEx.start();nodes.push(bnEx);
       var oEx=ac.createOscillator();oEx.type="sine";oEx.frequency.value=40;var gEx=ac.createGain();gEx.gain.value=0.15;oEx.connect(gEx);gEx.connect(master);oEx.start();nodes.push(oEx);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[]};
+    }else if(plName==="Titan"){
+      /* Dense N₂/CH₄ atmosphere: low atmospheric drone + N₂ wind (Huygens measured 5-10 m/s near surface)
+         + periodic methane drizzle patter (at polar latitudes). Sound speed in cold N₂ is ~180 m/s,
+         so atmosphere resonance is lower-pitched than Earth. */
+      var oTi=ac.createOscillator();oTi.type="sine";oTi.frequency.value=55;var gTi=ac.createGain();gTi.gain.value=0.11;oTi.connect(gTi);gTi.connect(master);oTi.start();nodes.push(oTi);
+      var oTi2=ac.createOscillator();oTi2.type="sine";oTi2.frequency.value=82;var gTi2=ac.createGain();gTi2.gain.value=0.045;oTi2.connect(gTi2);gTi2.connect(master);oTi2.start();nodes.push(oTi2);
+      var bnTi=ac.createBufferSource();var bufTi=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);var dTi=bufTi.getChannelData(0);for(var tw=0;tw<dTi.length;tw++)dTi[tw]=(Math.random()*2-1)*0.22;bnTi.buffer=bufTi;bnTi.loop=true;
+      var fltTi=ac.createBiquadFilter();fltTi.type="lowpass";fltTi.frequency.value=220;
+      var lfoTi=ac.createOscillator();lfoTi.frequency.value=0.07;var lgTi=ac.createGain();lgTi.gain.value=80;lfoTi.connect(lgTi);lgTi.connect(fltTi.frequency);lfoTi.start();
+      bnTi.connect(fltTi);fltTi.connect(master);bnTi.start();nodes.push(bnTi,lfoTi);
+      var drzInt=setInterval(function(){if(ac.state==="closed")return;var bd=ac.createBufferSource();var bufd=ac.createBuffer(1,Math.floor(ac.sampleRate*0.9),ac.sampleRate);var dd=bufd.getChannelData(0);for(var dr=0;dr<dd.length;dr++)dd[dr]=(Math.random()*2-1)*0.3*Math.min(1,dr/(ac.sampleRate*0.15))*Math.exp(-dr/ac.sampleRate*2.5);bd.buffer=bufd;var gd=ac.createGain();gd.gain.value=0.032;var fd=ac.createBiquadFilter();fd.type="highpass";fd.frequency.value=1100;bd.connect(fd);fd.connect(gd);gd.connect(master);bd.start();},7000+Math.random()*13000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[drzInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);
