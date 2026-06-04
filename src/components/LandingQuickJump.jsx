@@ -1,5 +1,5 @@
 // @ts-check
-import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES } from "../data/solarData.js";
+import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES } from "../data/solarData.js";
 
 /* 着陸モード下部のクイックジャンプ行設定。
    各天体に対応する着陸地点リストと、ボタンに表示するキー文字列を生成する関数。 */
@@ -10,6 +10,7 @@ var QUICK_JUMP_CONFIG=[
   {match:function(l){return l==="Moon";},label:"アポロ",col:"255,180,30",textCol:"255,220,80",sites:APOLLO_SITES,getKey:function(_s,i){return "A"+APOLLO_LABELS[i];}},
   {match:function(l){return l==="Venus";},label:"ベネラ",col:"255,160,30",textCol:"255,200,80",sites:VENUS_LANDERS,getKey:function(_s,i){return VENERA_LABELS[i];}},
   {match:function(l){return l==="Mercury";},label:"探査機",col:"180,200,255",textCol:"200,220,255",sites:MERCURY_SITES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Titan";},label:"地形",col:"218,168,88",textCol:"240,200,130",sites:TITAN_FEATURES,getKey:function(s){return s.n;}},
   {match:function(l){return l==="Titan";},label:"探査機",col:"255,180,80",textCol:"255,210,140",sites:TITAN_PROBES,getKey:function(s){return s.en;}},
   {match:function(l){return l==="Triton";},label:"地形",col:"220,205,185",textCol:"240,225,205",sites:TRITON_FEATURES,getKey:function(s){return s.n;}},
   {match:function(l){return l==="Enceladus";},label:"地形",col:"200,225,250",textCol:"215,235,255",sites:ENCELADUS_FEATURES,getKey:function(s){return s.n;}},
@@ -18,6 +19,7 @@ var QUICK_JUMP_CONFIG=[
    extras:[{label:"NH最接近",col:"255,220,80",textCol:"255,230,120",lat:OUTER_PROBES[0].lat,lng:OUTER_PROBES[0].lng}]},
   {match:function(l){return l==="Charon";},label:"地形",col:"255,200,180",textCol:"255,215,200",sites:CHARON_FEATURES,getKey:function(s){return s.n;}},
   {match:function(l){return l==="Itokawa"||l==="Ryugu";},label:"着陸点",col:"160,180,255",textCol:"200,215,255",sites:HAYABUSA_SITES,filter:function(s,landing){return s.body===landing;},getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Phobos";},label:"地形",col:"200,178,148",textCol:"222,202,175",sites:PHOBOS_FEATURES,getKey:function(s){return s.en;}},
 ];
 
 /**

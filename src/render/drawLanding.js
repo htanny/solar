@@ -121,7 +121,7 @@ function drawLanding(ctx,W,H,t,plName,yaw,lat,fov,lngDeg,tilt,constOn){
      The parent body always sits at sub-parent point (lng=0,lat=0); the Sun cycles through
      the moon's sky at the synodic period. Sub-solar lng: 0°=near-side facing parent (full
      parent from moon), ±180°=far-side (new/dark parent from moon). */
-  var _parentMap={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto"};
+  var _parentMap={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto",Phobos:"Mars"};
   var _parentName=_parentMap[plName];
   if(_parentName){
     var _parent=PL_MAP[_parentName]||DWARF_MAP[_parentName];
