@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH } from "./landingUtils.js";
 
@@ -245,12 +245,44 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     for(var ili=0;ili<3;ili++){var ilx=((rng()*W*1.5+yaw*40)%(W*1.2))-W*0.1;ctx.beginPath();ctx.moveTo(ilx-30,hrzY);ctx.lineTo(ilx,hrzY-4-rng()*8);ctx.lineTo(ilx+30,hrzY);ctx.fill();}
     ctx.globalAlpha=1;
   }else if(plName==="Europa"){
-    /* Ice ridges and linear chaos terrain */
-    var eur=seedR(888);ctx.globalAlpha=0.22;
-    for(var eui=0;eui<14;eui++){var eux=eur()*W,euy=hrzY+5+eur()*(H-hrzY-12),euw=1+eur()*3,eul=20+eur()*80,eua=(eur()-0.5)*0.6;
-      ctx.strokeStyle=eur()<0.3?"rgba(160,100,70,1)":"rgba(180,150,120,1)";ctx.lineWidth=euw;
-      ctx.beginPath();ctx.moveTo(eux,euy);ctx.lineTo(eux+Math.cos(eua)*eul,euy+Math.sin(eua)*eul);ctx.stroke();}
+    /* Ice-covered ocean world: reddish double-ridge lineae (tidal fracturing from Jupiter),
+       lenticulae chaos terrain (sub-ice material upwelling), very few craters (young surface ~40-90 Myr) */
+    var eur=seedR(888);
+    /* E-W primary double ridges (lineae) — outer dark ridge + bright ice spine */
+    for(var eui=0;eui<18;eui++){
+      var euy=hrzY+4+eur()*(H-hrzY-12),euD=(euy-hrzY)/(H-hrzY),euW=0.8+euD*3.2;
+      var euLen=W*0.4+eur()*W*0.55,euX0=eur()*W*0.5,euA=(eur()-0.5)*0.18;
+      ctx.globalAlpha=0.32;ctx.strokeStyle=eur()<0.4?"rgba(140,85,55,1)":"rgba(162,100,65,1)";ctx.lineWidth=euW+1.5;
+      ctx.beginPath();ctx.moveTo(euX0,euy);ctx.lineTo(euX0+Math.cos(euA)*euLen,euy+Math.sin(euA)*euLen);ctx.stroke();
+      ctx.globalAlpha=0.16;ctx.strokeStyle="rgba(232,228,238,1)";ctx.lineWidth=euW*0.4;
+      ctx.beginPath();ctx.moveTo(euX0,euy);ctx.lineTo(euX0+Math.cos(euA)*euLen,euy+Math.sin(euA)*euLen);ctx.stroke();
+    }
+    /* Diagonal cross-cutting lineae at steeper angles */
+    ctx.globalAlpha=0.20;ctx.strokeStyle="rgba(118,72,52,1)";
+    for(var edi=0;edi<8;edi++){
+      var edY=hrzY+6+eur()*(H-hrzY-14),edD2=(edY-hrzY)/(H-hrzY),edA=0.3+eur()*0.85;
+      var edX0=eur()*W,edLen=W*0.18+eur()*W*0.32;
+      ctx.lineWidth=0.5+edD2*1.8;
+      ctx.beginPath();ctx.moveTo(edX0,edY);ctx.lineTo(edX0+Math.cos(edA)*edLen,edY+Math.sin(edA)*edLen);ctx.stroke();
+    }
+    /* Lenticulae chaos patches — oval disrupted surface with bright halo */
+    ctx.globalAlpha=0.28;
+    for(var eli=0;eli<10;eli++){
+      var elX=eur()*W,elY=hrzY+10+eur()*(H-hrzY-20),elRx=4+eur()*14,elRy=elRx*(0.32+eur()*0.38),elRot=eur()*Math.PI;
+      ctx.fillStyle=eur()<0.5?"rgba(155,95,62,1)":"rgba(82,76,90,1)";
+      ctx.beginPath();ctx.ellipse(elX,elY,elRx,elRy,elRot,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.10;ctx.strokeStyle="rgba(228,222,235,1)";ctx.lineWidth=0.8;
+      ctx.beginPath();ctx.ellipse(elX,elY,elRx*1.45,elRy*1.45,elRot,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.28;
+    }
     ctx.globalAlpha=1;
+    /* EUROPA_FEATURES proximity label */
+    for(var _efei=0;_efei<EUROPA_FEATURES.length;_efei++){var _efe=EUROPA_FEATURES[_efei];
+      var _efeDL=(_efe.lng-(lngDeg||0))*0.01745,_efeL1=(lat||0)*0.01745,_efeL2=_efe.lat*0.01745;
+      var _efeCos=Math.sin(_efeL1)*Math.sin(_efeL2)+Math.cos(_efeL1)*Math.cos(_efeL2)*Math.cos(_efeDL);
+      var _efeDa=Math.acos(Math.max(-1,Math.min(1,_efeCos)))*57.2958;
+      if(_efeDa<6){ctx.fillStyle="rgba(200,188,220,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_efe.n,W*0.72,H-42);
+        ctx.fillStyle="rgba(182,172,205,0.7)";ctx.font="7px sans-serif";ctx.fillText(_efe.info.split(" ")[0],W*0.72,H-30);break;}}
   }else if(plName==="Ganymede"){
     /* Mix of dark ancient and bright grooved terrain */
     var gnr=seedR(999);ctx.globalAlpha=0.18;
