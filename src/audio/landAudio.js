@@ -85,6 +85,15 @@ function startLandSound(plName){
       var oPh2=ac.createOscillator();oPh2.type="sine";oPh2.frequency.value=48;var gPh2=ac.createGain();gPh2.gain.value=0.04;oPh2.connect(gPh2);gPh2.connect(master);oPh2.start();nodes.push(oPh2);
       var phImpInt=setInterval(function(){if(ac.state==="closed")return;var bp=ac.createBufferSource();var bufp=ac.createBuffer(1,Math.floor(ac.sampleRate*0.7),ac.sampleRate);var dp=bufp.getChannelData(0);for(var pi=0;pi<dp.length;pi++)dp[pi]=(Math.random()*2-1)*0.4*Math.exp(-pi/ac.sampleRate*10);bp.buffer=bufp;var gp=ac.createGain();gp.gain.value=0.035;var fp=ac.createBiquadFilter();fp.type="lowpass";fp.frequency.value=80;bp.connect(fp);fp.connect(gp);gp.connect(master);bp.start();},9000+Math.random()*15000);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[phImpInt]};
+    }else if(plName==="Europa"){
+      /* Tidal flexing from Jupiter (3.55-day orbit): deep 20Hz sub-bass + 40Hz harmonic
+         + bandpass-filtered subglacial ocean rumble + ice shell crack pops */
+      var oEu=ac.createOscillator();oEu.type="sine";oEu.frequency.value=20;var gEu=ac.createGain();gEu.gain.value=0.12;oEu.connect(gEu);gEu.connect(master);oEu.start();nodes.push(oEu);
+      var oEu2=ac.createOscillator();oEu2.type="sine";oEu2.frequency.value=40;var gEu2=ac.createGain();gEu2.gain.value=0.05;oEu2.connect(gEu2);gEu2.connect(master);oEu2.start();nodes.push(oEu2);
+      var bnEu=ac.createBufferSource();var bufEu=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);var dEu=bufEu.getChannelData(0);for(var eu=0;eu<dEu.length;eu++)dEu[eu]=(Math.random()*2-1)*0.16;bnEu.buffer=bufEu;bnEu.loop=true;
+      var fltEu=ac.createBiquadFilter();fltEu.type="bandpass";fltEu.frequency.value=42;fltEu.Q.value=1.8;bnEu.connect(fltEu);fltEu.connect(master);bnEu.start();nodes.push(bnEu);
+      var crackInt=setInterval(function(){if(ac.state==="closed")return;var bc=ac.createBufferSource();var bufc=ac.createBuffer(1,Math.floor(ac.sampleRate*0.12),ac.sampleRate);var dc=bufc.getChannelData(0);for(var ci=0;ci<dc.length;ci++)dc[ci]=(Math.random()*2-1)*0.55*Math.exp(-ci/ac.sampleRate*30);bc.buffer=bufc;var gc=ac.createGain();gc.gain.value=0.025;var fcrk=ac.createBiquadFilter();fcrk.type="highpass";fcrk.frequency.value=600;bc.connect(fcrk);fcrk.connect(gc);gc.connect(master);bc.start();},5000+Math.random()*11000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[crackInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);

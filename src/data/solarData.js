@@ -271,6 +271,14 @@ export var ENCELADUS_INFO={n:"Enceladus",j:"エンケラドゥス",e:"Enceladus"
 export var MIRANDA_INFO={n:"Miranda",j:"ミランダ",e:"Miranda",d:2871,r:0.236,p:365.25,c:"rgba(180,178,175,1)",t:0,rot:1.413,type:"miranda",mass:"6.59×10¹⁹ kg",grav:"0.08 m/s²",moons:0,day:"1.41日(潮汐固定)",year:"天王星を1.41日",atm:"なし",temp:"−213℃",dens:"1.20",esc:"0.19",alb:0.32};
 export var HALLEY_CORE_INFO={n:"HalleyCore",j:"ハレー彗星核",e:"1P/Halley nucleus",d:2660,r:0.011,p:27484,c:"rgba(22,18,15,1)",t:0,rot:2.2,type:"comet",mass:"2.2×10¹⁴ kg",grav:"0.0005 m/s²",moons:0,day:"52.8時間",year:"75.3年",atm:"昇華ガス(H₂O・CO)",temp:"−170〜+47℃",dens:"0.60",esc:"0.001",alb:0.04};
 export var PHOBOS_INFO={n:"Phobos",j:"フォボス",e:"Phobos",d:228,r:0.01127,p:686.97,c:"rgba(138,115,92,1)",t:0,rot:0.3189,type:"phobos",mass:"1.07×10¹⁶ kg",grav:"0.006 m/s²",moons:0,day:"7.65時間(潮汐固定)",year:"火星を7.65時間",atm:"なし",temp:"−40〜+27℃",dens:"1.876",esc:"0.011",alb:0.07};
+/* Europa geological landmarks (Galileo/Voyager) */
+export var EUROPA_FEATURES=[
+  {n:"コナマラ混沌地形",en:"Conamara Chaos",lat:9,lng:274,info:"板状氷塊が漂流して再凍結 地下海の動証拠"},
+  {n:"プウィル・クレーター",en:"Pwyll",lat:-26,lng:271,info:"最若い大型クレーター 直径26km 明るい放射状エジェクタ"},
+  {n:"テラ・マキュラ",en:"Thera Macula",lat:-47,lng:181,info:"赤褐色の混沌地形 液体水が地表近くに上昇した証拠"},
+  {n:"ラダマンティス・リネア",en:"Rhadamanthys Linea",lat:-5,lng:178,info:"幅2km 長さ1500kmの二重峰リネア 硫黄化合物が峰を形成"},
+  {n:"タラ地域",en:"Tara Regio",lat:-6,lng:213,info:"大規模な混沌地形 近年の地殻活動で生成された可能性"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},

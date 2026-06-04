@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /**
@@ -225,7 +225,7 @@ function drawLandingHUD(ctx,W,H,h){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Miranda"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"||plName==="Phobos"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Miranda"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"||plName==="Phobos"||plName==="Europa"?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -430,6 +430,18 @@ Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40
     var _phKm=Math.round(_phMin*11.267*Math.PI/180);
     ctx.fillStyle="rgba(218,200,178,0.80)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("最寄: "+_phSel.n+"　"+_phKm.toLocaleString()+"km",W/2,94);
+  }
+  if(plName==="Europa"){
+    var _euMin=1e9,_euIdx=-1;
+    for(var _euii=0;_euii<EUROPA_FEATURES.length;_euii++){var _euf2=EUROPA_FEATURES[_euii];
+      var _euDL=(_euf2.lng-(lngDeg||0))*0.01745,_euL1=(lat||0)*0.01745,_euL2=_euf2.lat*0.01745;
+      var _euCos=Math.sin(_euL1)*Math.sin(_euL2)+Math.cos(_euL1)*Math.cos(_euL2)*Math.cos(_euDL);
+      var _euD=Math.acos(Math.max(-1,Math.min(1,_euCos)))*57.2958;
+      if(_euD<_euMin){_euMin=_euD;_euIdx=_euii;}}
+    var _euSel=EUROPA_FEATURES[_euIdx];
+    var _euKm=Math.round(_euMin*1560.8*Math.PI/180);
+    ctx.fillStyle="rgba(185,175,215,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_euSel.n+"　"+_euKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="Itokawa"||plName==="Ryugu"){
     var _haMin=1e9,_haIdx=-1,_haR=plName==="Itokawa"?0.000165:0.000448;
