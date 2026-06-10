@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { track } from "../utils/analytics.js";
 import { pickSuggestion } from "../utils/todayHighlight.js";
+import { getVisitedMap, nextGoal } from "../utils/explorerLog.js";
 
 /* 「今日のみどころ」カード。提案ロジックは utils/todayHighlight.js を参照。
    1日1回表示（localStorage "solar_today" に最終表示日を保存）。 */
@@ -41,6 +42,10 @@ export default function TodayHighlight({lang,S,doLanding}){
         style={{background:"none",border:"none",color:"rgba(255,255,255,0.45)",cursor:"pointer",fontSize:11,padding:"0 2px"}}>✕</button>
     </div>
     <div style={{fontSize:10,color:"rgba(255,255,255,0.82)",lineHeight:1.55,marginBottom:7}}>{body}</div>
+    {sug.kind==="land"&&(function(){
+      var goal=nextGoal(getVisitedMap(),en);
+      return goal?<div style={{fontSize:9,color:"rgba(160,220,170,0.8)",marginTop:-3,marginBottom:7}}>🧭 {goal}</div>:null;
+    })()}
     <div style={{display:"flex",justifyContent:"flex-end",gap:6}}>
       <button onClick={function(){close("dismiss");}}
         style={{background:"rgba(255,255,255,0.07)",border:"1px solid rgba(255,255,255,0.18)",borderRadius:5,
