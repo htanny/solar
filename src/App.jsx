@@ -34,6 +34,7 @@ import OrbitalElementsPanel from "./components/panels/OrbitalElementsPanel.jsx";
 import EarthInteriorPanel from "./components/panels/EarthInteriorPanel.jsx";
 import HelpPanel from "./components/panels/HelpPanel.jsx";
 import AnalyticsPanel from "./components/panels/AnalyticsPanel.jsx";
+import TodayHighlight from "./components/TodayHighlight.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -750,6 +751,9 @@ export default function App(){
       {cleanView===0&&!landing&&<TourPickerPanel visible={panels.tourPick} dispatchPanel={dispatchPanel} startTourLv={startTourLv} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<AnalyticsPanel visible={panels.analyticsOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
+
+      {/* 今日のみどころカード（オンボーディング完了後のみ・1日1回） */}
+      {cleanView===0&&!landing&&!touring&&onboardStep<0&&<TodayHighlight lang={lang} S={S} doLanding={doLanding}/>}
 
       {/* Onboarding tour overlay */}
       {onboardStep>=0&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.78)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}} onClick={function(e){e.stopPropagation();}}>
