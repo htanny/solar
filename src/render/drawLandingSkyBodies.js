@@ -1,9 +1,9 @@
 // @ts-check
-import { TAU, GMOONS, PL_MAP, DWARF_MAP } from "../data/solarData.js";
+import { TAU, GMOONS, PL_MAP, DWARF_MAP, PARENT_OF } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 
 /* Parent planet lookup for tidally-locked moons; used for synodic phase calculation. */
-var _PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto",Phobos:"Mars"};
+var _PARENT_OF=PARENT_OF;
 
 /**
  * Compute orbital phase, sub-solar longitude, and Sun screen position for a tidally-locked moon.

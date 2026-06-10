@@ -367,6 +367,10 @@ PL_MAP["Triton"]=TRITON_INFO;PL_MAP["Charon"]=CHARON_INFO;PL_MAP["HalleyCore"]=H
 PL_MAP["Enceladus"]=ENCELADUS_INFO;
 PL_MAP["Miranda"]=MIRANDA_INFO;
 PL_MAP["Phobos"]=PHOBOS_INFO;
+/* 潮汐固定衛星 → 親天体名の共有マップ。drawLanding（太陽位置）・drawLandingSkyBodies（親天体描画）・
+   drawLandingHUD（距離表示）の3か所で共用する。Pluto はカロンと相互潮汐固定のため自身を親として
+   朔望周期計算に使う特殊エントリ。 */
+export var PARENT_OF={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Pluto:"Pluto",Phobos:"Mars"};
 /* Exoplanet surface data - merged into SURF for landing render */
 export var EXO_SURF={
   ProximaB:{atm:0.5,sunSz:1.7,g:"rgba(120,75,55,1)",skyTop:"55,18,32",skyBot:"125,55,55",skyNT:"3,2,8",skyNB:"15,8,20",exo:true,starTint:"255,150,90",fixedSun:true},

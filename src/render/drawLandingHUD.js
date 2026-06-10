@@ -1,6 +1,25 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, PARENT_OF, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
+import { angSepDeg } from "./landingUtils.js";
+
+/* 「最寄: ○○ XXkm」表示の天体別設定。sites=地名配列 / r=天体半径(km) / col=表示色。
+   特殊フォーマットを持つ Moon(秤動)・Mars(方位)・Itokawa/Ryugu(m単位+body絞り込み)・
+   HalleyCore(固定文言) は個別ブロックのまま。 */
+var NEAREST_CFG={
+  Venus:{sites:VENUS_LANDERS,r:6051.8,col:"rgba(255,200,120,0.72)"},
+  Mercury:{sites:MERCURY_SITES,r:2439.7,col:"rgba(200,200,228,0.72)"},
+  Titan:{sites:TITAN_FEATURES,r:2575,col:"rgba(255,210,140,0.78)"},
+  Triton:{sites:TRITON_FEATURES,r:1353,col:"rgba(220,205,185,0.78)"},
+  Enceladus:{sites:ENCELADUS_FEATURES,r:252,col:"rgba(200,225,250,0.8)"},
+  Miranda:{sites:MIRANDA_FEATURES,r:236,col:"rgba(200,220,235,0.78)"},
+  Pluto:{sites:PLUTO_FEATURES,r:1188,col:"rgba(255,220,180,0.78)"},
+  Charon:{sites:CHARON_FEATURES,r:606,col:"rgba(255,200,180,0.78)"},
+  Phobos:{sites:PHOBOS_FEATURES,r:11.267,col:"rgba(218,200,178,0.80)"},
+  Europa:{sites:EUROPA_FEATURES,r:1560.8,col:"rgba(185,175,215,0.78)"},
+};
+/* 下部に最寄情報行を持つ着陸先（HUD 背景を 104px に拡張する天体） */
+var HUD_TALL={Moon:1,Mars:1,Venus:1,Mercury:1,Titan:1,Itokawa:1,Ryugu:1,Triton:1,Enceladus:1,Miranda:1,Pluto:1,Charon:1,HalleyCore:1,Phobos:1,Europa:1};
 
 /**
  * @param {CanvasRenderingContext2D} ctx
@@ -225,7 +244,7 @@ function drawLandingHUD(ctx,W,H,h){
   }
 
   /* ======== HUD ======== */
-  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,plName==="Moon"||plName==="Mars"||plName==="Venus"||plName==="Mercury"||plName==="Titan"||plName==="Itokawa"||plName==="Ryugu"||plName==="Triton"||plName==="Enceladus"||plName==="Miranda"||plName==="Pluto"||plName==="Charon"||plName==="HalleyCore"||plName==="Phobos"||plName==="Europa"?104:rot<0?100:90);
+  ctx.fillStyle="rgba(0,0,0,0.45)";ctx.fillRect(0,0,W,HUD_TALL[plName]?104:rot<0?100:90);
   ctx.fillStyle="rgba(255,255,255,0.9)";ctx.font="bold 14px sans-serif";ctx.textAlign="center";
   ctx.fillText(pl.j+"の表面",W/2,22);
   ctx.fillStyle="rgba(255,255,255,0.4)";ctx.font="9px sans-serif";
@@ -265,8 +284,7 @@ Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40
      Moons reuse their parent planet's orbital position (own offset <2 Mkm is negligible at
      interplanetary scale). Light-time = distance(Mkm)·1e9 m / c. Skipped for exoplanets. */
   if(!sf.exo){
-    var _parDist={Moon:"Earth",Io:"Jupiter",Europa:"Jupiter",Ganymede:"Jupiter",Callisto:"Jupiter",Titan:"Saturn",Enceladus:"Saturn",Miranda:"Uranus",Triton:"Neptune",Charon:"Pluto",Phobos:"Mars"};
-    var _obName=_parDist[plName]||plName;
+    var _obName=PARENT_OF[plName]||plName;
     var _ob=PL_MAP[_obName]||DWARF_MAP[_obName];
     var _earthB=PL_MAP.Earth;
     if(_ob&&_earthB){
@@ -290,10 +308,8 @@ Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40
   if(rot<0){ctx.fillStyle="rgba(255,200,100,0.35)";ctx.font="9px sans-serif";ctx.fillText("※逆行自転: 太陽は西から昇り東に沈む",W/2,94);}
   if(plName==="Moon"){
     var _aMin=1e9,_aIdx=-1;
-    for(var _api=0;_api<APOLLO_SITES.length;_api++){var _aS=APOLLO_SITES[_api];
-      var _aDL=(_aS.lng-(lngDeg||0))*0.01745,_aL1=(lat||0)*0.01745,_aL2=_aS.lat*0.01745;
-      var _aCos=Math.sin(_aL1)*Math.sin(_aL2)+Math.cos(_aL1)*Math.cos(_aL2)*Math.cos(_aDL);
-      var _aD=Math.acos(Math.max(-1,Math.min(1,_aCos)))*57.2958;
+    for(var _api=0;_api<APOLLO_SITES.length;_api++){
+      var _aD=angSepDeg(lat||0,lngDeg||0,APOLLO_SITES[_api].lat,APOLLO_SITES[_api].lng);
       if(_aD<_aMin){_aMin=_aD;_aIdx=_api;}}
     var _aSel=APOLLO_SITES[_aIdx];
     var _aKm=Math.round(_aMin*1737*Math.PI/180);
@@ -304,10 +320,8 @@ Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40
   }
   if(plName==="Mars"){
     var _mMin=1e9,_mIdx=-1;
-    for(var _mli=0;_mli<MARS_LANDMARKS.length;_mli++){var _ml=MARS_LANDMARKS[_mli];
-      var _mDL=(_ml.lng-(lngDeg||0))*0.01745,_mL1=(lat||0)*0.01745,_mL2=_ml.lat*0.01745;
-      var _mCos=Math.sin(_mL1)*Math.sin(_mL2)+Math.cos(_mL1)*Math.cos(_mL2)*Math.cos(_mDL);
-      var _mD=Math.acos(Math.max(-1,Math.min(1,_mCos)))*57.2958;
+    for(var _mli=0;_mli<MARS_LANDMARKS.length;_mli++){
+      var _mD=angSepDeg(lat||0,lngDeg||0,MARS_LANDMARKS[_mli].lat,MARS_LANDMARKS[_mli].lng);
       if(_mD<_mMin){_mMin=_mD;_mIdx=_mli;}}
     var _mSel=MARS_LANDMARKS[_mIdx];
     var _mKm=Math.round(_mMin*3389.5*Math.PI/180);
@@ -319,137 +333,26 @@ Phobos:"火星の第一衛星 — 7.65時間で火星を一周 空には直径40
     ctx.fillStyle="rgba(255,160,100,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("最寄: "+_mSel.n+"　"+_mKm.toLocaleString()+"km "+_mbN+"("+_mbDeg+"°)",W/2,94);
   }
-  if(plName==="Venus"){
-    var _vMin=1e9,_vIdx=-1;
-    for(var _vli=0;_vli<VENUS_LANDERS.length;_vli++){var _vl2=VENUS_LANDERS[_vli];
-      var _vDL=(_vl2.lng-(lngDeg||0))*0.01745,_vL1=(lat||0)*0.01745,_vL2=_vl2.lat*0.01745;
-      var _vCos=Math.sin(_vL1)*Math.sin(_vL2)+Math.cos(_vL1)*Math.cos(_vL2)*Math.cos(_vDL);
-      var _vD=Math.acos(Math.max(-1,Math.min(1,_vCos)))*57.2958;
-      if(_vD<_vMin){_vMin=_vD;_vIdx=_vli;}}
-    var _vSel=VENUS_LANDERS[_vIdx];
-    var _vKm=Math.round(_vMin*6051.8*Math.PI/180);
-    ctx.fillStyle="rgba(255,200,120,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_vSel.n+"　"+_vKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Mercury"){
-    var _hMin=1e9,_hIdx=-1;
-    for(var _hsi2=0;_hsi2<MERCURY_SITES.length;_hsi2++){var _hs2=MERCURY_SITES[_hsi2];
-      var _hDL=(_hs2.lng-(lngDeg||0))*0.01745,_hL1=(lat||0)*0.01745,_hL2=_hs2.lat*0.01745;
-      var _hCos=Math.sin(_hL1)*Math.sin(_hL2)+Math.cos(_hL1)*Math.cos(_hL2)*Math.cos(_hDL);
-      var _hD=Math.acos(Math.max(-1,Math.min(1,_hCos)))*57.2958;
-      if(_hD<_hMin){_hMin=_hD;_hIdx=_hsi2;}}
-    var _hSel=MERCURY_SITES[_hIdx];
-    var _hKm=Math.round(_hMin*2439.7*Math.PI/180);
-    ctx.fillStyle="rgba(200,200,228,0.72)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_hSel.n+"　"+_hKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Titan"){
-    var _ttMin=1e9,_ttIdx=-1;
-    for(var _ttii=0;_ttii<TITAN_FEATURES.length;_ttii++){var _ttf=TITAN_FEATURES[_ttii];
-      var _ttDL=(_ttf.lng-(lngDeg||0))*0.01745,_ttL1=(lat||0)*0.01745,_ttL2=_ttf.lat*0.01745;
-      var _ttCos=Math.sin(_ttL1)*Math.sin(_ttL2)+Math.cos(_ttL1)*Math.cos(_ttL2)*Math.cos(_ttDL);
-      var _ttD=Math.acos(Math.max(-1,Math.min(1,_ttCos)))*57.2958;
-      if(_ttD<_ttMin){_ttMin=_ttD;_ttIdx=_ttii;}}
-    var _ttSel=TITAN_FEATURES[_ttIdx];
-    var _ttKm=Math.round(_ttMin*2575*Math.PI/180);
-    ctx.fillStyle="rgba(255,210,140,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_ttSel.n+"　"+_ttKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Triton"){
-    var _trMin=1e9,_trIdx=-1;
-    for(var _trii=0;_trii<TRITON_FEATURES.length;_trii++){var _trf2=TRITON_FEATURES[_trii];
-      var _trDL=(_trf2.lng-(lngDeg||0))*0.01745,_trL1=(lat||0)*0.01745,_trL2=_trf2.lat*0.01745;
-      var _trCos=Math.sin(_trL1)*Math.sin(_trL2)+Math.cos(_trL1)*Math.cos(_trL2)*Math.cos(_trDL);
-      var _trD=Math.acos(Math.max(-1,Math.min(1,_trCos)))*57.2958;
-      if(_trD<_trMin){_trMin=_trD;_trIdx=_trii;}}
-    var _trSel=TRITON_FEATURES[_trIdx];
-    var _trKm=Math.round(_trMin*1353*Math.PI/180);
-    ctx.fillStyle="rgba(220,205,185,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_trSel.n+"　"+_trKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Enceladus"){
-    var _enMin=1e9,_enIdx=-1;
-    for(var _enii=0;_enii<ENCELADUS_FEATURES.length;_enii++){var _enf2=ENCELADUS_FEATURES[_enii];
-      var _enDL=(_enf2.lng-(lngDeg||0))*0.01745,_enL1=(lat||0)*0.01745,_enL2=_enf2.lat*0.01745;
-      var _enCos=Math.sin(_enL1)*Math.sin(_enL2)+Math.cos(_enL1)*Math.cos(_enL2)*Math.cos(_enDL);
-      var _enD=Math.acos(Math.max(-1,Math.min(1,_enCos)))*57.2958;
-      if(_enD<_enMin){_enMin=_enD;_enIdx=_enii;}}
-    var _enSel=ENCELADUS_FEATURES[_enIdx];
-    var _enKm=Math.round(_enMin*252*Math.PI/180);
-    ctx.fillStyle="rgba(200,225,250,0.8)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_enSel.n+"　"+_enKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Miranda"){
-    var _miMin=1e9,_miIdx=-1;
-    for(var _miii=0;_miii<MIRANDA_FEATURES.length;_miii++){var _mif=MIRANDA_FEATURES[_miii];
-      var _miDL=(_mif.lng-(lngDeg||0))*0.01745,_miL1=(lat||0)*0.01745,_miL2=_mif.lat*0.01745;
-      var _miCos=Math.sin(_miL1)*Math.sin(_miL2)+Math.cos(_miL1)*Math.cos(_miL2)*Math.cos(_miDL);
-      var _miD=Math.acos(Math.max(-1,Math.min(1,_miCos)))*57.2958;
-      if(_miD<_miMin){_miMin=_miD;_miIdx=_miii;}}
-    var _miSel=MIRANDA_FEATURES[_miIdx];
-    var _miKm=Math.round(_miMin*236*Math.PI/180);
-    ctx.fillStyle="rgba(200,220,235,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_miSel.n+"　"+_miKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Pluto"){
-    var _puMin=1e9,_puIdx=-1;
-    for(var _puii=0;_puii<PLUTO_FEATURES.length;_puii++){var _puf=PLUTO_FEATURES[_puii];
-      var _puDL=(_puf.lng-(lngDeg||0))*0.01745,_puL1=(lat||0)*0.01745,_puL2=_puf.lat*0.01745;
-      var _puCos=Math.sin(_puL1)*Math.sin(_puL2)+Math.cos(_puL1)*Math.cos(_puL2)*Math.cos(_puDL);
-      var _puD=Math.acos(Math.max(-1,Math.min(1,_puCos)))*57.2958;
-      if(_puD<_puMin){_puMin=_puD;_puIdx=_puii;}}
-    var _puSel=PLUTO_FEATURES[_puIdx];
-    var _puKm=Math.round(_puMin*1188*Math.PI/180);
-    ctx.fillStyle="rgba(255,220,180,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_puSel.n+"　"+_puKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Charon"){
-    var _cMin=1e9,_cIdx=-1;
-    for(var _cii=0;_cii<CHARON_FEATURES.length;_cii++){var _cf2=CHARON_FEATURES[_cii];
-      var _cDL=(_cf2.lng-(lngDeg||0))*0.01745,_cL1=(lat||0)*0.01745,_cL2=_cf2.lat*0.01745;
-      var _cCos=Math.sin(_cL1)*Math.sin(_cL2)+Math.cos(_cL1)*Math.cos(_cL2)*Math.cos(_cDL);
-      var _cD=Math.acos(Math.max(-1,Math.min(1,_cCos)))*57.2958;
-      if(_cD<_cMin){_cMin=_cD;_cIdx=_cii;}}
-    var _cSel=CHARON_FEATURES[_cIdx];
-    var _cKm=Math.round(_cMin*606*Math.PI/180);
-    ctx.fillStyle="rgba(255,200,180,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_cSel.n+"　"+_cKm.toLocaleString()+"km",W/2,94);
+  /* 最寄地点表示 — NEAREST_CFG に登録された天体は共通ロジックで描画 */
+  var _nc=NEAREST_CFG[plName];
+  if(_nc){
+    var _nMin=1e9,_nIdx=-1;
+    for(var _ni=0;_ni<_nc.sites.length;_ni++){
+      var _nD=angSepDeg(lat||0,lngDeg||0,_nc.sites[_ni].lat,_nc.sites[_ni].lng);
+      if(_nD<_nMin){_nMin=_nD;_nIdx=_ni;}}
+    var _nKm=Math.round(_nMin*_nc.r*Math.PI/180);
+    ctx.fillStyle=_nc.col;ctx.font="9px sans-serif";ctx.textAlign="center";
+    ctx.fillText("最寄: "+_nc.sites[_nIdx].n+"　"+_nKm.toLocaleString()+"km",W/2,94);
   }
   if(plName==="HalleyCore"){
     ctx.fillStyle="rgba(200,220,255,0.75)";ctx.font="9px sans-serif";ctx.textAlign="center";
     ctx.fillText("彗星核 (16×8km) — 太陽距離が縮むと尾が伸びる",W/2,94);
   }
-  if(plName==="Phobos"){
-    var _phMin=1e9,_phIdx=-1;
-    for(var _phii=0;_phii<PHOBOS_FEATURES.length;_phii++){var _phf=PHOBOS_FEATURES[_phii];
-      var _phDL=(_phf.lng-(lngDeg||0))*0.01745,_phL1=(lat||0)*0.01745,_phL2=_phf.lat*0.01745;
-      var _phCos=Math.sin(_phL1)*Math.sin(_phL2)+Math.cos(_phL1)*Math.cos(_phL2)*Math.cos(_phDL);
-      var _phD=Math.acos(Math.max(-1,Math.min(1,_phCos)))*57.2958;
-      if(_phD<_phMin){_phMin=_phD;_phIdx=_phii;}}
-    var _phSel=PHOBOS_FEATURES[_phIdx];
-    var _phKm=Math.round(_phMin*11.267*Math.PI/180);
-    ctx.fillStyle="rgba(218,200,178,0.80)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_phSel.n+"　"+_phKm.toLocaleString()+"km",W/2,94);
-  }
-  if(plName==="Europa"){
-    var _euMin=1e9,_euIdx=-1;
-    for(var _euii=0;_euii<EUROPA_FEATURES.length;_euii++){var _euf2=EUROPA_FEATURES[_euii];
-      var _euDL=(_euf2.lng-(lngDeg||0))*0.01745,_euL1=(lat||0)*0.01745,_euL2=_euf2.lat*0.01745;
-      var _euCos=Math.sin(_euL1)*Math.sin(_euL2)+Math.cos(_euL1)*Math.cos(_euL2)*Math.cos(_euDL);
-      var _euD=Math.acos(Math.max(-1,Math.min(1,_euCos)))*57.2958;
-      if(_euD<_euMin){_euMin=_euD;_euIdx=_euii;}}
-    var _euSel=EUROPA_FEATURES[_euIdx];
-    var _euKm=Math.round(_euMin*1560.8*Math.PI/180);
-    ctx.fillStyle="rgba(185,175,215,0.78)";ctx.font="9px sans-serif";ctx.textAlign="center";
-    ctx.fillText("最寄: "+_euSel.n+"　"+_euKm.toLocaleString()+"km",W/2,94);
-  }
   if(plName==="Itokawa"||plName==="Ryugu"){
     var _haMin=1e9,_haIdx=-1,_haR=plName==="Itokawa"?0.000165:0.000448;
     for(var _ha2i=0;_ha2i<HAYABUSA_SITES.length;_ha2i++){var _ha2=HAYABUSA_SITES[_ha2i];
       if(_ha2.body!==plName)continue;
-      var _haDL=(_ha2.lng-(lngDeg||0))*0.01745,_haL1=(lat||0)*0.01745,_haL2=_ha2.lat*0.01745;
-      var _haCos=Math.sin(_haL1)*Math.sin(_haL2)+Math.cos(_haL1)*Math.cos(_haL2)*Math.cos(_haDL);
-      var _haD=Math.acos(Math.max(-1,Math.min(1,_haCos)))*57.2958;
+      var _haD=angSepDeg(lat||0,lngDeg||0,_ha2.lat,_ha2.lng);
       if(_haD<_haMin){_haMin=_haD;_haIdx=_ha2i;}}
     if(_haIdx>=0){
       var _haSel=HAYABUSA_SITES[_haIdx];
