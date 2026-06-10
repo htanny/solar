@@ -5,7 +5,7 @@
      - その他 (manifest, favicon, sw.js): stale-while-revalidate
 */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const STATIC_CACHE = 'solar-static-' + VERSION;
 const RUNTIME_CACHE = 'solar-runtime-' + VERSION;
 const BASE = '/solar/';

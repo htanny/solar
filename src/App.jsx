@@ -35,6 +35,7 @@ import EarthInteriorPanel from "./components/panels/EarthInteriorPanel.jsx";
 import HelpPanel from "./components/panels/HelpPanel.jsx";
 import AnalyticsPanel from "./components/panels/AnalyticsPanel.jsx";
 import TodayHighlight from "./components/TodayHighlight.jsx";
+import InstallPrompt from "./components/InstallPrompt.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -85,6 +86,7 @@ export default function App(){
   var[nBody,setNBody,nBodyR]=useRefSync(false);
   var nBodyStateR=useRef(null);
   var[onboardStep,setOnboardStep]=useState(function(){return localStorage.getItem("solar_ob")?-1:0;});
+  var[isOffline,setIsOffline]=useState(typeof navigator!=="undefined"?!navigator.onLine:false);
   var landR=useRef(null);
   var[showConst,setShowConst,showConstR]=useRefSync(true);
   var[hillSphere,setHillSphere,hillR]=useRefSync(false);
@@ -96,6 +98,13 @@ export default function App(){
   var[landTut,setLandTut]=useState(false);
 
   useEffect(function(){track("session_start");},[]);
+  useEffect(function(){
+    function onOnline(){setIsOffline(false);}
+    function onOffline(){setIsOffline(true);}
+    window.addEventListener("online",onOnline);
+    window.addEventListener("offline",onOffline);
+    return function(){window.removeEventListener("online",onOnline);window.removeEventListener("offline",onOffline);};
+  },[]);
   useEffect(function(){landR.current=landing;if(landing){startLandSound(landing);}else{stopLandSound();}return function(){stopLandSound();};},[landing]);
   useEffect(function(){if(!landTut)return;var tid=setTimeout(function(){setLandTut(false);},6000);return function(){clearTimeout(tid);};},[landTut]);
   useEffect(function(){try{localStorage.setItem("solar_cfg",JSON.stringify({lang:lang,sh:sh,spd:spd}));}catch(e){};},[lang,sh,spd]);
@@ -754,6 +763,14 @@ export default function App(){
 
       {/* 今日のみどころカード（オンボーディング完了後のみ・1日1回） */}
       {cleanView===0&&!landing&&!touring&&onboardStep<0&&<TodayHighlight lang={lang} S={S} doLanding={doLanding}/>}
+
+      {/* PWAインストール促進バナー */}
+      {cleanView===0&&<InstallPrompt lang={lang}/>}
+
+      {/* オフラインバッジ */}
+      {isOffline&&<div style={{position:"absolute",top:4,right:4,zIndex:30,background:"rgba(220,80,60,0.9)",borderRadius:5,padding:"2px 7px",fontSize:9,color:"rgba(255,255,255,0.95)",fontFamily:"system-ui,sans-serif",pointerEvents:"none"}}>
+        {lang==="en"?"📡 Offline":"📡 オフライン"}
+      </div>}
 
       {/* Onboarding tour overlay */}
       {onboardStep>=0&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.78)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}} onClick={function(e){e.stopPropagation();}}>
