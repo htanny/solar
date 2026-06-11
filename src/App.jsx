@@ -36,6 +36,7 @@ import HelpPanel from "./components/panels/HelpPanel.jsx";
 import AnalyticsPanel from "./components/panels/AnalyticsPanel.jsx";
 import TodayHighlight from "./components/TodayHighlight.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
+import ExplorerLogPanel from "./components/panels/ExplorerLogPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -557,6 +558,7 @@ export default function App(){
           <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
           <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
+          <button style={panels.explorerOpen?bT("160,220,170"):bF} onClick={function(){togglePanel("explorerOpen");}} title={lang==="en"?"Landing stamp rally & badges":"着陸スタンプラリーと実績バッジ"}>{lang==="en"?"🧭 Explorer Log":"🧭 探検手帳"}</button>
         </div>
         <div style={Object.assign({},lb,{marginTop:6,marginBottom:2})}>{lang==="en"?"Visualization":"可視化"}</div>
         <div style={Object.assign({},lb,{marginTop:2,marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Cosmic structure":"宇宙構造"}</div>
@@ -760,6 +762,8 @@ export default function App(){
       {cleanView===0&&!landing&&<TourPickerPanel visible={panels.tourPick} dispatchPanel={dispatchPanel} startTourLv={startTourLv} lang={lang} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<AnalyticsPanel visible={panels.analyticsOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
+
+      {cleanView===0&&!landing&&<ExplorerLogPanel visible={panels.explorerOpen} dispatchPanel={dispatchPanel} doLanding={doLanding} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       {/* 今日のみどころカード（オンボーディング完了後のみ・1日1回） */}
       {cleanView===0&&!landing&&!touring&&onboardStep<0&&<TodayHighlight lang={lang} S={S} doLanding={doLanding}/>}
