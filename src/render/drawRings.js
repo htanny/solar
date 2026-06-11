@@ -31,7 +31,22 @@ function dRiPlane(ctx,wx,wy,wz,pr,cam,tiltDeg,poleLon,layers,segMul){
   }
 }
 
-var SAT_LAYERS=[{i:1.24,o:1.42,c:"rgba(200,180,135,0.30)"},{i:1.45,o:1.92,c:"rgba(225,205,155,0.55)"},{i:1.97,o:2.02,c:"rgba(20,15,10,0.7)"},{i:2.03,o:2.27,c:"rgba(195,175,125,0.40)"},{i:2.30,o:2.40,c:"rgba(155,135,95,0.20)"}];
+/* Saturn ring layers, inside→out: C ring / B ring (3 bands with darker grooves between —
+   the radial brightness structure Voyager imaged) / Cassini division / A ring split by the
+   Encke gap / faint F ring. Radii relative to planet radius. */
+var SAT_LAYERS=[
+  {i:1.24,o:1.42,c:"rgba(200,180,135,0.30)"},
+  {i:1.45,o:1.58,c:"rgba(222,202,150,0.50)"},
+  {i:1.58,o:1.62,c:"rgba(205,185,135,0.36)"},
+  {i:1.62,o:1.78,c:"rgba(235,215,165,0.62)"},
+  {i:1.78,o:1.82,c:"rgba(202,182,132,0.38)"},
+  {i:1.82,o:1.92,c:"rgba(225,205,155,0.52)"},
+  {i:1.97,o:2.02,c:"rgba(20,15,10,0.7)"},
+  {i:2.03,o:2.12,c:"rgba(200,180,130,0.44)"},
+  {i:2.12,o:2.14,c:"rgba(110,96,68,0.30)"},
+  {i:2.14,o:2.27,c:"rgba(190,170,122,0.38)"},
+  {i:2.30,o:2.40,c:"rgba(155,135,95,0.20)"},
+];
 var URA_LAYERS=[{i:1.38,o:1.40,c:"rgba(60,80,90,0.30)"},{i:1.50,o:1.52,c:"rgba(60,80,90,0.28)"},{i:1.58,o:1.60,c:"rgba(70,90,100,0.28)"},{i:1.65,o:1.68,c:"rgba(70,90,100,0.32)"},{i:1.76,o:1.79,c:"rgba(80,100,110,0.28)"},{i:1.90,o:1.95,c:"rgba(70,90,100,0.38)"}];
 
 function dRi(ctx,wx,wy,wz,pr,cam,td){dRiPlane(ctx,wx,wy,wz,pr,cam,td,SAT_POLE_LON,SAT_LAYERS,0.6);}
