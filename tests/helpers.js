@@ -25,8 +25,14 @@ export async function load(page, query) {
   await page.waitForTimeout(400);
 }
 
-/* Visual regression: deterministic state via URL, longer wait for first frame + font load. */
+/* Visual regression: deterministic state via URL, longer wait for first frame + font load.
+   Onboarding overlay and the once-a-day Today's Highlight card are suppressed —
+   both would otherwise cover/darken the canvas and blind the screenshot comparison. */
 export async function loadAndWait(page, state) {
+  await bypassOnboarding(page);
+  await page.evaluate(() => {
+    localStorage.setItem("solar_today", new Date().toISOString().slice(0, 10));
+  });
   await page.goto(`/?state=${encodeURIComponent(state)}&paused=1`);
   await page.waitForSelector(CANVAS, { state: "visible" });
   await page.waitForTimeout(800);
