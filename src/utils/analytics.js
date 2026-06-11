@@ -15,3 +15,23 @@ export function track(ev,payload){
 export function getAnalytics(){return _load();}
 
 export function clearAnalytics(){try{localStorage.removeItem(_KEY);}catch(e){}}
+
+/* グロース施策(v2.51〜v2.54)のイベントを集計（純粋関数 — テスト対象）。
+   today_card / pwa_install / share_card / badge_earned のファネルデータを返す。 */
+export function growthStats(events){
+  var today={shown:0,go:0,dismiss:0};
+  var pwa={shown:0,installed:0,declined:0,dismiss:0};
+  var share={total:0,explorer:0,today:0,webshare:0,clipboard:0};
+  var badges=[];
+  (events||[]).forEach(function(e){
+    if(e.ev==="today_card"){if(today[e.action]!==undefined)today[e.action]++;}
+    else if(e.ev==="pwa_install"){if(pwa[e.action]!==undefined)pwa[e.action]++;}
+    else if(e.ev==="share_card"){
+      share.total++;
+      if(share[e.source]!==undefined)share[e.source]++;
+      if(share[e.method]!==undefined)share[e.method]++;
+    }
+    else if(e.ev==="badge_earned"&&e.badge)badges.push(e.badge);
+  });
+  return{today:today,pwa:pwa,share:share,badges:badges};
+}

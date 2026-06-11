@@ -1,6 +1,7 @@
 import {useState,useEffect} from "react";
 import {DragPanel} from "../DragPanel.jsx";
-import {getAnalytics,clearAnalytics} from "../../utils/analytics.js";
+import {getAnalytics,clearAnalytics,growthStats} from "../../utils/analytics.js";
+import {BADGES} from "../../utils/explorerLog.js";
 import {mobileSheet,bClose} from "../../styles/panelStyles.js";
 
 var PANEL_LBL_JA={showEvents:"📅 天文イベント",searchOpen:"🔍 検索",exoOpen:"🪐 系外惑星",nightSkyOpen:"🌙 今夜の空",bookOpen:"🔖 ブックマーク",moonCal:"🌙 月相",meteorOpen:"🌠 流星群",orbElemOpen:"📊 軌道要素",compareTable:"📊 比較表",satOpen:"🛰 衛星",helpOpen:"⌨ ヘルプ",tourPick:"🎓 ツアー",analyticsOpen:"📈 分析"};
@@ -24,6 +25,19 @@ export default function AnalyticsPanel({visible,dispatchPanel,lang,isPhone,pn,bF
   var landKeys=_topN(landC,8),panKeys=_topN(panC,7),featKeys=_topN(featC,7);
   var landMax=landKeys.length?landC[landKeys[0]]:1,panMax=panKeys.length?panC[panKeys[0]]:1,featMax=featKeys.length?featC[featKeys[0]]:1;
   var PLBL=en?PANEL_LBL_EN:PANEL_LBL_JA,FLBL=en?FEAT_LBL_EN:FEAT_LBL_JA;
+  var gs=growthStats(events);
+  var hasGrowth=gs.today.shown>0||gs.pwa.shown>0||gs.share.total>0||gs.badges.length>0;
+  var badgeIcon={};BADGES.forEach(function(b){badgeIcon[b.id]=b.ic;});
+
+  /* ファネル1行: 「表示 12 → 実行 5 (42%)」 */
+  function Funnel(label,shown,acted,actedLabel){
+    var pct=shown>0?Math.round(acted/shown*100):0;
+    return <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:3,fontSize:9}}>
+      <span style={{width:106,color:"rgba(180,210,255,0.82)",overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis",flexShrink:0}}>{label}</span>
+      <span style={{color:"rgba(255,255,255,0.55)"}}>{(en?"shown ":"表示 ")+shown+" → "+actedLabel+" "+acted}</span>
+      <span style={{marginLeft:"auto",color:pct>=30?"rgba(140,220,160,0.9)":"rgba(255,255,255,0.42)",flexShrink:0}}>{shown>0?pct+"%":"—"}</span>
+    </div>;
+  }
 
   function Bar(key,count,max,label){
     var pct=max>0?Math.round(count/max*100):0;
@@ -76,6 +90,21 @@ export default function AnalyticsPanel({visible,dispatchPanel,lang,isPhone,pn,bF
     {featKeys.length>0&&<div>
       {Heading(en?"🔧 Feature Toggles":"🔧 機能トグル")}
       {featKeys.map(function(k){return Bar(k,featC[k],featMax,FLBL[k]||k);})}
+    </div>}
+
+    {hasGrowth&&<div>
+      {Heading(en?"📣 Growth Funnels":"📣 グロース施策")}
+      {gs.today.shown>0&&Funnel(en?"Today's highlight":"今日のみどころ",gs.today.shown,gs.today.go,en?"go":"実行")}
+      {gs.pwa.shown>0&&Funnel(en?"PWA install":"PWAインストール",gs.pwa.shown,gs.pwa.installed,en?"installed":"追加")}
+      {gs.share.total>0&&<div style={{fontSize:9,color:"rgba(255,255,255,0.55)",marginBottom:3}}>
+        <span style={{color:"rgba(180,210,255,0.82)"}}>{en?"Shares: ":"共有: "}</span>
+        {gs.share.total+(en?" total":"回")+"（"+(en?"log ":"手帳")+gs.share.explorer+" / "+(en?"card ":"カード")+gs.share.today+"）"}
+      </div>}
+      {gs.badges.length>0&&<div style={{fontSize:9,color:"rgba(255,255,255,0.55)"}}>
+        <span style={{color:"rgba(180,210,255,0.82)"}}>{en?"Badges earned: ":"バッジ獲得: "}</span>
+        {gs.badges.length+(en?"":"個")+" "}
+        {gs.badges.map(function(id){return badgeIcon[id]||"";}).join("")}
+      </div>}
     </div>}
 
     <div style={{display:"flex",gap:4,marginTop:10}}>
