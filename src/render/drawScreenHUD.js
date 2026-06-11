@@ -122,17 +122,22 @@ function drawMiniMap(ctx,W,H,t,fc,pd){
 }
 
 /**
- * FPS counter (bottom left).
+ * FPS counter (bottom left). texStats があればテクスチャキャッシュのヒット率も併記。
  * @param {CanvasRenderingContext2D} ctx
  * @param {number} H
  * @param {number} fps
+ * @param {{hit:number,miss:number,skip:number}} [texStats]
  */
-function drawFps(ctx,H,fps){
+function drawFps(ctx,H,fps,texStats){
   ctx.save();
-  ctx.fillStyle="rgba(0,0,0,0.65)";ctx.fillRect(4,H-22,60,18);
+  var total=texStats?texStats.hit+texStats.miss:0;
+  var label="FPS: "+fps;
+  if(total>0)label+="  tex "+Math.round(texStats.hit/total*100)+"%";
+  var w=ctx.measureText(label).width;
+  ctx.fillStyle="rgba(0,0,0,0.65)";ctx.fillRect(4,H-22,Math.max(60,w+14),18);
   ctx.fillStyle=fps>=55?"rgba(100,255,100,0.9)":fps>=30?"rgba(255,220,80,0.9)":"rgba(255,80,80,0.9)";
   ctx.font="10px monospace";ctx.textAlign="left";
-  ctx.fillText("FPS: "+fps,8,H-8);
+  ctx.fillText(label,8,H-8);
   ctx.restore();
 }
 

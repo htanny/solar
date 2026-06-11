@@ -69,7 +69,58 @@ function dTidalMark(ctx,mx,my,mr,px,py){
 function dAx(ctx,px,py,r,td,cam){if(r<2)return;var tr=td*0.01745,len=r+Math.min(14,r*0.8);var ap=RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx);var dx=ap[0]*len,dy=ap[1]*len;ctx.beginPath();ctx.moveTo(px-dx,py+dy);ctx.lineTo(px+dx,py-dy);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);var ax=px+dx,ay=py-dy,ad=Math.atan2(-dy,dx);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad-0.4)*5,ay-Math.sin(ad-0.4)*5);ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad+0.4)*5,ay-Math.sin(ad+0.4)*5);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.stroke();}
 
 /* ===== PLANET TEXTURES — TRUE SPHERICAL PROJECTION ===== */
+
+/* オフスクリーンテクスチャキャッシュ:
+   惑星面のプロシージャル描画(球面投影・大陸ポリゴン等)は位相とカメラ角に依存する。
+   アニメーション中(毎フレーム位相が動く)は直接描画のままコストを一切足さない。
+   パラメータが2フレーム連続で安定(ドリフト<0.35px相当)したときだけ
+   オフスクリーンに1回描き、以後は drawImage で再利用する。
+   一時停止中・カメラ静止中は3フレーム目からほぼゼロコストになる。 */
+var _texCache={};
+var texCacheStats={hit:0,miss:0,skip:0};
+var _TEX_PAD=1.3;   /* 大気グロー(r*1.25)まで含める余白 */
+var _TEX_MAX=1400;  /* これ以上のキャンバスはメモリ節約のため直接描画 */
+var _TEX_MIN_R=8;   /* 小径ディスクは直接描画のほうが安い */
+
 function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
+  var half=Math.ceil(r*_TEX_PAD);
+  if(r<_TEX_MIN_R||half*2>_TEX_MAX||typeof document==="undefined"){
+    texCacheStats.skip++;
+    drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam);
+    return;
+  }
+  var phase=(((rotAngle%TAU)/TAU)%1+1)%1;
+  var rx=cam?cam.rx:0,ry=cam?cam.ry:0;
+  var eps=0.35/r;/* リム上の移動 ~0.35px 相当 (rad) */
+  var e=_texCache[pl.n]||(_texCache[pl.n]={});
+  var pd=e.phase!==undefined?Math.abs(phase-e.phase):1;if(pd>0.5)pd=1-pd;/* 位相は循環 */
+  var stable=e.phase!==undefined&&Math.abs(e.r-r)<=0.25&&pd*TAU<=eps&&
+    Math.abs(e.rx-rx)<=eps&&Math.abs(e.ry-ry)<=eps;
+  if(stable&&e.valid){
+    texCacheStats.hit++;
+    ctx.drawImage(e.cv,cx-e.half,cy-e.half);
+    return;
+  }
+  if(stable){
+    /* 2フレーム連続で安定 → 今回だけオフスクリーンに描き、以後 blit */
+    if(!e.cv)e.cv=document.createElement("canvas");
+    if(e.cv.width!==half*2){e.cv.width=half*2;e.cv.height=half*2;}
+    var octx=e.cv.getContext("2d");
+    octx.clearRect(0,0,half*2,half*2);
+    /* アンカー(e.phase等)は据え置き: ドリフトは安定開始時点から累積判定する */
+    drawPlanetBodyDirect(octx,half,half,r,pl,rotAngle,cam);
+    e.half=half;e.valid=true;
+    texCacheStats.miss++;
+    ctx.drawImage(e.cv,cx-e.half,cy-e.half);
+    return;
+  }
+  /* アニメーション中: キャッシュ作成コストもかけず直接描画 */
+  e.r=r;e.phase=phase;e.rx=rx;e.ry=ry;e.valid=false;
+  texCacheStats.skip++;
+  drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam);
+}
+
+function drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam){
   if(r<1.5){fillCirc(ctx,cx,cy,Math.max(r,0.4),pl.c);return;}
   var tp=pl.type,phase=(((rotAngle%TAU)/TAU)%1+1)%1,hi=r>12,atm=null,R=r*1.5;
   var tr=pl.t*0.01745,cosTr=Math.cos(tr),sinTr=Math.sin(tr);
@@ -266,4 +317,4 @@ function drawEarthInteriorOverlay(ctx,cx,cy,r,lang){
   ctx.restore();
 }
 
-export { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
+export { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, texCacheStats, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
