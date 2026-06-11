@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { track } from "../utils/analytics.js";
 import { pickSuggestion } from "../utils/todayHighlight.js";
 import { getVisitedMap, nextGoal } from "../utils/explorerLog.js";
+import { highlightShareText, shareOut } from "../utils/shareCard.js";
 
 /* 「今日のみどころ」カード。提案ロジックは utils/todayHighlight.js を参照。
    1日1回表示（localStorage "solar_today" に最終表示日を保存）。 */
@@ -13,6 +14,7 @@ export default function TodayHighlight({lang,S,doLanding}){
     try{return localStorage.getItem("solar_today")===todayStr;}catch(e){return false;}
   });
   var[sug]=useState(function(){return dismissed?null:pickSuggestion(S.current.t);});
+  var[shared,setShared]=useState(false);
   useEffect(function(){if(sug)track("today_card",{action:"shown",kind:sug.kind});},[sug]);
   if(dismissed||!sug)return null;
   var close=function(action){
@@ -38,6 +40,13 @@ export default function TodayHighlight({lang,S,doLanding}){
     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
       <span style={{fontSize:13}}>{icon}</span>
       <span style={{fontSize:10,fontWeight:"bold",color:"rgba(255,215,120,0.95)",flex:1}}>{title}</span>
+      <button aria-label={en?"Share":"共有"} title={shared?(en?"Copied!":"コピーしました！"):(en?"Share":"共有")}
+        onClick={function(){
+          shareOut(highlightShareText(sug,en)).then(function(method){
+            if(method){track("share_card",{source:"today",method:method});setShared(true);setTimeout(function(){setShared(false);},2500);}
+          });
+        }}
+        style={{background:"none",border:"none",color:shared?"rgba(160,220,170,0.9)":"rgba(255,255,255,0.45)",cursor:"pointer",fontSize:11,padding:"0 2px"}}>{shared?"✓":"📤"}</button>
       <button aria-label={en?"Close":"閉じる"} onClick={function(){close("dismiss");}}
         style={{background:"none",border:"none",color:"rgba(255,255,255,0.45)",cursor:"pointer",fontSize:11,padding:"0 2px"}}>✕</button>
     </div>
