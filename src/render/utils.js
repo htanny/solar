@@ -33,8 +33,16 @@ export function fillCirc(ctx,cx,cy,r,f){ctx.beginPath();ctx.arc(cx,cy,Math.max(r
 export function sphereShade(ctx,cx,cy,r){var g=ctx.createRadialGradient(cx-r*0.25,cy-r*0.25,r*0.1,cx,cy,r);g.addColorStop(0,"rgba(255,255,255,0.12)");g.addColorStop(0.5,"rgba(255,255,255,0)");g.addColorStop(1,"rgba(0,0,0,0.15)");ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fillStyle=g;ctx.fill();}
 /** Limb-darkening rim shading. @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r @param {number} [i] */
 export function limbDarken(ctx,cx,cy,r,i){var g=ctx.createRadialGradient(cx,cy,r*0.3,cx,cy,r);g.addColorStop(0,"rgba(0,0,0,0)");g.addColorStop(0.7,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,0,0,"+(i||0.35)+")");ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.fillStyle=g;ctx.fill();}
-/** Atmospheric glow halo. @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r @param {string} col @param {number} w */
-export function atmosGlow(ctx,cx,cy,r,col,w){var g=ctx.createRadialGradient(cx,cy,r*(1-w),cx,cy,r*1.08);g.addColorStop(0,"rgba("+col+",0)");g.addColorStop(0.5,"rgba("+col+",0.08)");g.addColorStop(1,"rgba("+col+",0)");ctx.fillStyle=g;ctx.fillRect(cx-r*1.1,cy-r*1.1,r*2.2,r*2.2);}
+/** Atmospheric glow halo — two layers: a bright rim hugging the limb plus a soft
+ * scattering shell fading into space. @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r @param {string} col @param {number} w */
+export function atmosGlow(ctx,cx,cy,r,col,w){
+  var g=ctx.createRadialGradient(cx,cy,r*(1-w),cx,cy,r*1.04);
+  g.addColorStop(0,"rgba("+col+",0)");g.addColorStop(0.72,"rgba("+col+",0.20)");g.addColorStop(1,"rgba("+col+",0)");
+  ctx.fillStyle=g;ctx.fillRect(cx-r*1.1,cy-r*1.1,r*2.2,r*2.2);
+  var g2=ctx.createRadialGradient(cx,cy,r*0.98,cx,cy,r*1.22);
+  g2.addColorStop(0,"rgba("+col+",0.13)");g2.addColorStop(0.45,"rgba("+col+",0.05)");g2.addColorStop(1,"rgba("+col+",0)");
+  ctx.fillStyle=g2;ctx.fillRect(cx-r*1.25,cy-r*1.25,r*2.5,r*2.5);
+}
 /** Draw circle, but fall back to pixel point when too small. @param {CanvasRenderingContext2D} ctx @param {number} cx @param {number} cy @param {number} r @param {string} f */
 export function dC(ctx,cx,cy,r,f){if(r<0.3){ctx.fillStyle=f;ctx.fillRect(cx-0.5,cy-0.5,1,1);return;}fillCirc(ctx,cx,cy,r,f);}
 

@@ -71,8 +71,21 @@ var NEAR_STARS=mkNearStars();
 var SUNSPOTS=(function(){var r=seedR(55),o=[];for(var i=0;i<12;i++){o.push({lng:r()*TAU,lat:(r()-0.5)*1.2,sz:0.03+r()*0.06,life:r()*100});}return o;})();
 function drawSun(ctx,sx,sy,sr,t){
   if(sr<2){fillCirc(ctx,sx,sy,Math.max(sr,1),"rgba(255,200,50,1)");return;}
-  /* Corona glow */
-  var cg=ctx.createRadialGradient(sx,sy,sr*0.2,sx,sy,sr*3);cg.addColorStop(0,"rgba(255,220,80,0.5)");cg.addColorStop(0.3,"rgba(255,180,50,0.12)");cg.addColorStop(1,"rgba(255,150,30,0)");ctx.fillStyle=cg;ctx.fillRect(sx-sr*3,sy-sr*3,sr*6,sr*6);
+  /* Corona glow — inner hot white core + outer warm falloff (two-tone bloom) */
+  var cg=ctx.createRadialGradient(sx,sy,sr*0.2,sx,sy,sr*3);cg.addColorStop(0,"rgba(255,235,150,0.55)");cg.addColorStop(0.12,"rgba(255,220,80,0.32)");cg.addColorStop(0.3,"rgba(255,180,50,0.12)");cg.addColorStop(1,"rgba(255,150,30,0)");ctx.fillStyle=cg;ctx.fillRect(sx-sr*3,sy-sr*3,sr*6,sr*6);
+  /* Diffraction spikes — lens-cross bloom; fades out as the sun fills the view (sr>120)
+     so close-ups keep the clean disc. Vertical spike is shorter, as in camera optics. */
+  var spk=Math.max(0,1-sr/120);
+  if(spk>0.05){
+    var sLen=sr*4.5,sW=Math.max(0.8,sr*0.07);
+    var hg=ctx.createLinearGradient(sx-sLen,sy,sx+sLen,sy);
+    hg.addColorStop(0,"rgba(255,230,170,0)");hg.addColorStop(0.5,"rgba(255,240,200,"+(0.30*spk).toFixed(3)+")");hg.addColorStop(1,"rgba(255,230,170,0)");
+    ctx.fillStyle=hg;ctx.fillRect(sx-sLen,sy-sW,sLen*2,sW*2);
+    var vLen=sLen*0.62;
+    var vg2=ctx.createLinearGradient(sx,sy-vLen,sx,sy+vLen);
+    vg2.addColorStop(0,"rgba(255,230,170,0)");vg2.addColorStop(0.5,"rgba(255,240,200,"+(0.24*spk).toFixed(3)+")");vg2.addColorStop(1,"rgba(255,230,170,0)");
+    ctx.fillStyle=vg2;ctx.fillRect(sx-sW,sy-vLen,sW*2,vLen*2);
+  }
   /* Corona rays */
   if(sr>6){ctx.save();ctx.globalAlpha=0.12;for(var ri=0;ri<12;ri++){var ra2=(ri/12)*TAU+t*0.02,rL=sr*(1.8+Math.sin(ri*2.3+t*0.5)*0.5);ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+Math.cos(ra2-0.06)*rL,sy+Math.sin(ra2-0.06)*rL);ctx.lineTo(sx+Math.cos(ra2+0.06)*rL,sy+Math.sin(ra2+0.06)*rL);ctx.closePath();ctx.fillStyle="rgba(255,220,100,0.3)";ctx.fill();}ctx.restore();}
   /* Prominences - plasma arcs at limb */
