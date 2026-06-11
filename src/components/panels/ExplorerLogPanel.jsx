@@ -2,6 +2,7 @@ import {useState,useEffect} from "react";
 import {DragPanel} from "../DragPanel.jsx";
 import {mobileSheet,bClose} from "../../styles/panelStyles.js";
 import {EXPLORER_GROUPS,ALL_BODIES,getVisitedMap,computeBadges,nextGoal} from "../../utils/explorerLog.js";
+import {explorerShareText,shareOut} from "../../utils/shareCard.js";
 import {track} from "../../utils/analytics.js";
 
 /* 探検手帳: 着陸スタンプラリー + 実績バッジ。
@@ -11,6 +12,7 @@ import {track} from "../../utils/analytics.js";
 export default function ExplorerLogPanel({visible,dispatchPanel,doLanding,lang,isPhone,pn,bF}){
   var[visited,setVisited]=useState(null);
   var[newBadges,setNewBadges]=useState({});
+  var[shared,setShared]=useState(null);
   useEffect(function(){
     if(!visible)return;
     var v=getVisitedMap();
@@ -86,6 +88,22 @@ export default function ExplorerLogPanel({visible,dispatchPanel,doLanding,lang,i
           <span style={{fontSize:8,color:"rgba(255,255,255,0.4)",flexShrink:0}}>{r.have}/{r.total}</span>
         </div>;
       })}
+    </div>
+
+    {/* 実績を共有 */}
+    <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,paddingTop:7,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+      <button style={Object.assign({},bF,{fontSize:9,flex:1})} onClick={function(){
+        shareOut(explorerShareText(visited,en)).then(function(method){
+          if(method){
+            track("share_card",{source:"explorer",method:method});
+            setShared(method);
+            setTimeout(function(){setShared(null);},2500);
+          }
+        });
+      }}>📤 {en?"Share progress":"実績を共有"}</button>
+      {shared&&<span style={{fontSize:9,color:"rgba(160,220,170,0.9)",flexShrink:0}}>
+        {shared==="clipboard"?(en?"Copied!":"コピーしました！"):(en?"Shared!":"共有しました！")}
+      </span>}
     </div>
   </DragPanel>;
 }
