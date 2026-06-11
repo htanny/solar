@@ -18,9 +18,10 @@ export default defineConfig({
     deviceScaleFactor: 1,
   },
   expect: {
-    /* ピクセル単位の比較しきい値: アニメーション/フォントレンダリングの微小差を許容 */
+    /* ピクセル単位の比較しきい値: アニメーション/フォントレンダリングの微小差を許容
+       (地球フォーカスは実行間で~300pxの揺らぎがあるため 400。全画素の0.04%) */
     toHaveScreenshot: {
-      maxDiffPixels: 200,
+      maxDiffPixels: 400,
       threshold: 0.2,
       animations: "disabled",
     },
