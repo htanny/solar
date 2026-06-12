@@ -287,6 +287,14 @@ export var IO_FEATURES=[
   {n:"トヴァシュタル・パテラ",en:"Tvashtar Paterae",lat:62,lng:122,info:"ニューホライズンズが撮影した高度330kmの巨大プルーム"},
   {n:"ボオサウレ山",en:"Boösaule Montes",lat:-4,lng:270,info:"高さ17.5km 太陽系で最も高い山のひとつ 非火山性隆起"},
 ];
+/* Ganymede geological landmarks (Voyager / Galileo) */
+export var GANYMEDE_FEATURES=[
+  {n:"ガリレオ地域",en:"Galileo Regio",lat:35,lng:145,info:"直径3200kmの暗い古地形 太陽系最大級の暗領域 40億年前の地殻"},
+  {n:"ウルク・スルクス",en:"Uruk Sulcus",lat:0,lng:160,info:"明るい溝状地形 平行な尾根と溝の帯 テクトニクス活動の痕跡"},
+  {n:"エンキ・カテナ",en:"Enki Catena",lat:38,lng:13,info:"13個の連鎖クレーター 分裂彗星(SL9型)の衝突列 全長160km"},
+  {n:"トロス・クレーター",en:"Tros",lat:11,lng:27,info:"明るい放射状エジェクタを持つ若いクレーター 直径94km"},
+  {n:"ニコルソン地域",en:"Nicholson Regio",lat:-20,lng:0,info:"暗い古地形 明るい溝状地形との境界が明瞭 地殻進化の記録"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},

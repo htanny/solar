@@ -106,6 +106,14 @@ function startLandSound(plName){
       var erupInt=setInterval(function(){if(ac.state==="closed")return;var be=ac.createBufferSource();var bufe=ac.createBuffer(1,Math.floor(ac.sampleRate*2.2),ac.sampleRate);var de=bufe.getChannelData(0);for(var ei=0;ei<de.length;ei++)de[ei]=(Math.random()*2-1)*0.45*Math.min(1,ei/(ac.sampleRate*0.5))*Math.exp(-ei/ac.sampleRate*0.9);be.buffer=bufe;var ge=ac.createGain();ge.gain.value=0.055;var fe=ac.createBiquadFilter();fe.type="lowpass";fe.frequency.value=160;be.connect(fe);fe.connect(ge);ge.connect(master);be.start();},11000+Math.random()*14000);
       var popInt=setInterval(function(){if(ac.state==="closed")return;var bp2=ac.createBufferSource();var bufp2=ac.createBuffer(1,Math.floor(ac.sampleRate*0.08),ac.sampleRate);var dp2=bufp2.getChannelData(0);for(var pi2=0;pi2<dp2.length;pi2++)dp2[pi2]=(Math.random()*2-1)*0.5*Math.exp(-pi2/ac.sampleRate*55);bp2.buffer=bufp2;var gp2=ac.createGain();gp2.gain.value=0.02;var fp2=ac.createBiquadFilter();fp2.type="bandpass";fp2.frequency.value=420;bp2.connect(fp2);fp2.connect(gp2);gp2.connect(master);bp2.start();},3000+Math.random()*6000);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[erupInt,popInt]};
+    }else if(plName==="Ganymede"){
+      /* 太陽系唯一の固有磁場を持つ衛星: 深い地下海ハム(22Hz+44Hz)
+         + 磁気圏ホイッスラー空電(下降スイープ音) + 氷地殻のピング */
+      var oGn=ac.createOscillator();oGn.type="sine";oGn.frequency.value=22;var gGn=ac.createGain();gGn.gain.value=0.11;oGn.connect(gGn);gGn.connect(master);oGn.start();nodes.push(oGn);
+      var oGn2=ac.createOscillator();oGn2.type="sine";oGn2.frequency.value=44;var gGn2=ac.createGain();gGn2.gain.value=0.045;oGn2.connect(gGn2);gGn2.connect(master);oGn2.start();nodes.push(oGn2);
+      var whisInt=setInterval(function(){if(ac.state==="closed")return;var ow=ac.createOscillator();ow.type="sine";ow.frequency.setValueAtTime(2400+Math.random()*1600,ac.currentTime);ow.frequency.exponentialRampToValueAtTime(180,ac.currentTime+1.4);var gw=ac.createGain();gw.gain.value=0.014;ow.connect(gw);gw.connect(master);ow.start();gw.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);ow.stop(ac.currentTime+1.6);},9000+Math.random()*12000);
+      var icePingInt=setInterval(function(){if(ac.state==="closed")return;var op=ac.createOscillator();op.type="triangle";op.frequency.value=1600+Math.random()*1400;var gpn=ac.createGain();gpn.gain.value=0.012;op.connect(gpn);gpn.connect(master);op.start();gpn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.6);op.stop(ac.currentTime+0.65);},7000+Math.random()*11000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[whisInt,icePingInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);
