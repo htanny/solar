@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH, angSepDeg } from "./landingUtils.js";
 
@@ -229,13 +229,86 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
         ctx.globalAlpha=1;break;}
     }
   }else if(plName==="Io"){
-    /* Sulfur plains with lava pools and volcanic calderas */
-    var ior=seedR(777);ctx.globalAlpha=0.3;
-    for(var ioi=0;ioi<8;ioi++){var iox=ior()*W,ioy=hrzY+10+ior()*(H-hrzY-20),ioR=8+ior()*25;
-      ctx.fillStyle=ior()<0.5?"rgba(30,10,5,1)":"rgba(80,20,5,1)";ctx.beginPath();ctx.ellipse(iox,ioy,ioR,ioR*0.38,0,0,TAU);ctx.fill();}
-    ctx.globalAlpha=0.18;ctx.fillStyle="rgba(240,80,20,1)";
-    for(var ili=0;ili<3;ili++){var ilx=((rng()*W*1.5+yaw*40)%(W*1.2))-W*0.1;ctx.beginPath();ctx.moveTo(ilx-30,hrzY);ctx.lineTo(ilx,hrzY-4-rng()*8);ctx.lineTo(ilx+30,hrzY);ctx.fill();}
+    /* 太陽系で最も火山活動が活発な天体: 硫黄平原(黄・橙・白のSO₂霜)、
+       黒い溶岩湖(縁が赤熱)、蛇行する溶岩流、地平線の噴煙プルーム、非火山性の山影 */
+    var ior=seedR(777);
+    /* SO₂霜と硫黄化合物の色斑 — イオ特有のまだら模様 */
+    for(var iosi=0;iosi<14;iosi++){
+      var sx2=ior()*W,sy2=hrzY+6+ior()*(H-hrzY-12),sR2=10+ior()*30,sPick=ior();
+      ctx.globalAlpha=0.13;
+      ctx.fillStyle=sPick<0.35?"rgba(250,240,200,1)":sPick<0.7?"rgba(225,160,40,1)":"rgba(180,210,170,1)";
+      ctx.beginPath();ctx.ellipse(sx2,sy2,sR2,sR2*0.32,(ior()-0.5)*0.4,0,TAU);ctx.fill();
+    }
+    /* 溶岩湖(パテラ) — 黒い湖面+赤熱した縁(夜はより明るく脈動) */
+    var ioGlow=0.5+(1-dayF)*0.5;
+    for(var ioi=0;ioi<8;ioi++){
+      var iox=ior()*W,ioy=hrzY+10+ior()*(H-hrzY-20),ioR=8+ior()*25,ioPh=ior()*TAU;
+      ctx.globalAlpha=0.34;
+      ctx.fillStyle="rgba(22,8,4,1)";ctx.beginPath();ctx.ellipse(iox,ioy,ioR,ioR*0.38,0,0,TAU);ctx.fill();
+      var ioPulse=0.7+Math.sin(t*1.8+ioPh)*0.3;
+      ctx.globalAlpha=0.30*ioGlow*ioPulse;
+      ctx.strokeStyle="rgba(255,120,30,1)";ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.ellipse(iox,ioy,ioR*0.92,ioR*0.34,0,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.16*ioGlow*ioPulse;
+      ctx.fillStyle="rgba(255,90,20,1)";ctx.beginPath();ctx.ellipse(iox,ioy,ioR*0.5,ioR*0.18,0,0,TAU);ctx.fill();
+    }
+    /* 蛇行する溶岩流 — 地平線側から手前へ */
+    for(var ifl=0;ifl<4;ifl++){
+      var ifx=ior()*W,ifAmp=4+ior()*7,ifSeg=6+Math.floor(ior()*4);
+      ctx.globalAlpha=0.30*ioGlow;ctx.strokeStyle="rgba(255,110,25,1)";ctx.lineWidth=1.1+ior()*1.4;
+      ctx.beginPath();ctx.moveTo(ifx,hrzY+3);
+      for(var ifs=1;ifs<=ifSeg;ifs++){
+        var ifyy=hrzY+3+(H-hrzY-20)*(ifs/ifSeg)*(0.3+ior()*0.25);
+        ctx.lineTo(ifx+Math.sin(ifs*1.9+ifx)*ifAmp*(ifs/ifSeg+0.4),ifyy);
+      }
+      ctx.stroke();
+    }
     ctx.globalAlpha=1;
+    /* 地平線の山影(非火山性の隆起山地、最大17.5km級) */
+    ctx.globalAlpha=0.5;ctx.fillStyle="rgba(48,32,16,1)";
+    for(var imt=0;imt<3;imt++){
+      var imx=((ior()*W*2+yaw*55)%(W*1.4))-W*0.2,imw=30+ior()*50,imh=8+ior()*16;
+      ctx.beginPath();ctx.moveTo(imx-imw,hrzY);
+      ctx.lineTo(imx-imw*0.3,hrzY-imh);ctx.lineTo(imx+imw*0.25,hrzY-imh*0.6);ctx.lineTo(imx+imw,hrzY);
+      ctx.closePath();ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    /* 噴煙プルーム — 地平線から傘状に立ち上る(ヨー連動で2本) */
+    for(var ipl=0;ipl<2;ipl++){
+      var ipx=((ipl*W*0.9+W*0.3+yaw*70)%(W*1.6))-W*0.3;
+      if(ipx<-60||ipx>W+60)continue;
+      var ipH=46+ipl*22,ipPh2=t*0.9+ipl*2.6;
+      /* 噴出柱 */
+      ctx.globalAlpha=0.20*ioGlow;ctx.strokeStyle="rgba(255,150,60,1)";ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(ipx,hrzY);ctx.quadraticCurveTo(ipx+Math.sin(ipPh2)*2,hrzY-ipH*0.6,ipx,hrzY-ipH);ctx.stroke();
+      /* 傘状の頂部(弾道軌道で広がって落下するSO₂) */
+      ctx.globalAlpha=0.13;ctx.strokeStyle="rgba(235,210,170,1)";ctx.lineWidth=1.2;
+      for(var ipa=0;ipa<5;ipa++){
+        var ipf=(ipa/4-0.5)*2;
+        ctx.beginPath();ctx.moveTo(ipx,hrzY-ipH);
+        ctx.quadraticCurveTo(ipx+ipf*ipH*0.55,hrzY-ipH-8,ipx+ipf*ipH*0.8,hrzY-ipH*0.25);
+        ctx.stroke();
+      }
+      /* 落下する粒子のきらめき */
+      ctx.fillStyle="rgba(255,200,140,1)";
+      for(var ipp=0;ipp<6;ipp++){
+        var ippT=((t*0.5+ipp*0.37+ipl*0.5)%1),ippX=ipx+Math.sin(ipp*2.4)*ipH*0.6*ippT,ippY=hrzY-ipH+(ipH*0.75)*ippT*ippT;
+        ctx.globalAlpha=0.25*(1-ippT)*ioGlow;
+        ctx.fillRect(ippX-0.7,ippY-0.7,1.4,1.4);
+      }
+    }
+    ctx.globalAlpha=1;
+    /* IO_FEATURES 近接ラベル */
+    var _ioMin=1e9,_ioIdx=-1;
+    for(var _ifi=0;_ifi<IO_FEATURES.length;_ifi++){
+      var _iod=angSepDeg(lat||0,lngDeg||0,IO_FEATURES[_ifi].lat,IO_FEATURES[_ifi].lng);
+      if(_iod<_ioMin){_ioMin=_iod;_ioIdx=_ifi;}
+    }
+    if(_ioMin<6&&_ioIdx>=0){var _ioSel=IO_FEATURES[_ioIdx];
+      ctx.fillStyle="rgba(255,200,120,0.92)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText(_ioSel.n,W*0.72,H-42);
+      ctx.fillStyle="rgba(230,180,110,0.7)";ctx.font="7px sans-serif";
+      ctx.fillText(_ioSel.info.split(" ")[0],W*0.72,H-30);}
   }else if(plName==="Europa"){
     /* Ice-covered ocean world: reddish double-ridge lineae (tidal fracturing from Jupiter),
        lenticulae chaos terrain (sub-ice material upwelling), very few craters (young surface ~40-90 Myr) */

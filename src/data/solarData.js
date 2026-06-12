@@ -279,6 +279,14 @@ export var EUROPA_FEATURES=[
   {n:"ラダマンティス・リネア",en:"Rhadamanthys Linea",lat:-5,lng:178,info:"幅2km 長さ1500kmの二重峰リネア 硫黄化合物が峰を形成"},
   {n:"タラ地域",en:"Tara Regio",lat:-6,lng:213,info:"大規模な混沌地形 近年の地殻活動で生成された可能性"},
 ];
+/* Io volcanic landmarks (Voyager / Galileo / New Horizons) */
+export var IO_FEATURES=[
+  {n:"ロキ・パテラ",en:"Loki Patera",lat:13,lng:309,info:"直径200kmの溶岩湖 太陽系最強の火山 イオ全熱放射の10%"},
+  {n:"ペレ",en:"Pele",lat:-18,lng:255,info:"高度300kmの噴煙プルーム 直径1200kmの赤い硫黄リング"},
+  {n:"プロメテウス",en:"Prometheus",lat:-2,lng:153,info:"「イオの忠実な火山」1979年から噴火継続 高度100kmプルーム"},
+  {n:"トヴァシュタル・パテラ",en:"Tvashtar Paterae",lat:62,lng:122,info:"ニューホライズンズが撮影した高度330kmの巨大プルーム"},
+  {n:"ボオサウレ山",en:"Boösaule Montes",lat:-4,lng:270,info:"高さ17.5km 太陽系で最も高い山のひとつ 非火山性隆起"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},

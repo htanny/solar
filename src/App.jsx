@@ -4,7 +4,7 @@ import { useRefSync } from "./hooks/useRefSync.js";
 import { useKeyboard } from "./hooks/useKeyboard.js";
 import { PL, MD, GMOONS, EXTRA_MOONS, NAMED_ASTEROIDS, SPACECRAFT, COMETS, PL_MAP, COMET_MAP, DWARFS, DWARF_MAP, SRR, DK, SK, TRAIL_LEN, TAU, FL, SP, ZS, TOUR_SEQ, TOUR_NAMES, TOUR_NAMES_EN, TOUR_HOLD, TOUR_DESC, TOUR_DESC_BEG, TOUR_DESC_ADV, TOUR_DESC_EN, TOUR_EXAM, TOUR_EXAM_BEG, TOUR_EXAM_ADV, TOUR_EXAM_EN, LAND_SP, ZODIAC, ZODIAC_BASE, J2000, orbitState, solveKepler } from "./data/solarData.js";
 import { oR, pRf, sRf, mOf, mRf, RX, RY, pj, fillCirc, sphereShade, dC } from "./render/utils.js";
-import { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, drawEarthInteriorOverlay, drawSun, sSP, SD, NB, AST, TROJAN, KUIPER, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
+import { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, texCacheStats, drawEarthInteriorOverlay, drawSun, sSP, SD, NB, AST, TROJAN, KUIPER, drawEarthCityLights, drawMoonDetail } from "./render/drawBodies.js";
 import { drawOverlays, drawCompareMode } from "./render/drawOverlays.js";
 import { drawGalaxyView, drawGalaxyInfo } from "./render/drawGalaxyView.js";
 import { drawDateReadout, drawScaleBar, drawMiniMap, drawFps, drawEclipseAlert, drawConjunctionAlert } from "./render/drawScreenHUD.js";
@@ -505,7 +505,7 @@ export default function App(){
       if(cmpR.current)drawCompareMode(ctx,cmpStateRef.current,W,H,t);
 
       /* FPS display */
-      if(showFpsR.current)drawFps(ctx,H,fpsFrames.current.length);
+      if(showFpsR.current)drawFps(ctx,H,fpsFrames.current.length,texCacheStats);
       fR.current=requestAnimationFrame(frame);
     }
     fR.current=requestAnimationFrame(frame);

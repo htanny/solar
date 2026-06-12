@@ -69,7 +69,58 @@ function dTidalMark(ctx,mx,my,mr,px,py){
 function dAx(ctx,px,py,r,td,cam){if(r<2)return;var tr=td*0.01745,len=r+Math.min(14,r*0.8);var ap=RX(RY([Math.sin(tr),Math.cos(tr),0],cam.ry),cam.rx);var dx=ap[0]*len,dy=ap[1]*len;ctx.beginPath();ctx.moveTo(px-dx,py+dy);ctx.lineTo(px+dx,py-dy);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);var ax=px+dx,ay=py-dy,ad=Math.atan2(-dy,dx);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad-0.4)*5,ay-Math.sin(ad-0.4)*5);ctx.moveTo(ax,ay);ctx.lineTo(ax-Math.cos(ad+0.4)*5,ay-Math.sin(ad+0.4)*5);ctx.strokeStyle="rgba(255,255,100,0.5)";ctx.lineWidth=1;ctx.stroke();}
 
 /* ===== PLANET TEXTURES — TRUE SPHERICAL PROJECTION ===== */
+
+/* オフスクリーンテクスチャキャッシュ:
+   惑星面のプロシージャル描画(球面投影・大陸ポリゴン等)は位相とカメラ角に依存する。
+   アニメーション中(毎フレーム位相が動く)は直接描画のままコストを一切足さない。
+   パラメータが2フレーム連続で安定(ドリフト<0.35px相当)したときだけ
+   オフスクリーンに1回描き、以後は drawImage で再利用する。
+   一時停止中・カメラ静止中は3フレーム目からほぼゼロコストになる。 */
+var _texCache={};
+var texCacheStats={hit:0,miss:0,skip:0};
+var _TEX_PAD=1.3;   /* 大気グロー(r*1.25)まで含める余白 */
+var _TEX_MAX=1400;  /* これ以上のキャンバスはメモリ節約のため直接描画 */
+var _TEX_MIN_R=8;   /* 小径ディスクは直接描画のほうが安い */
+
 function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
+  var half=Math.ceil(r*_TEX_PAD);
+  if(r<_TEX_MIN_R||half*2>_TEX_MAX||typeof document==="undefined"){
+    texCacheStats.skip++;
+    drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam);
+    return;
+  }
+  var phase=(((rotAngle%TAU)/TAU)%1+1)%1;
+  var rx=cam?cam.rx:0,ry=cam?cam.ry:0;
+  var eps=0.35/r;/* リム上の移動 ~0.35px 相当 (rad) */
+  var e=_texCache[pl.n]||(_texCache[pl.n]={});
+  var pd=e.phase!==undefined?Math.abs(phase-e.phase):1;if(pd>0.5)pd=1-pd;/* 位相は循環 */
+  var stable=e.phase!==undefined&&Math.abs(e.r-r)<=0.25&&pd*TAU<=eps&&
+    Math.abs(e.rx-rx)<=eps&&Math.abs(e.ry-ry)<=eps;
+  if(stable&&e.valid){
+    texCacheStats.hit++;
+    ctx.drawImage(e.cv,cx-e.half,cy-e.half);
+    return;
+  }
+  if(stable){
+    /* 2フレーム連続で安定 → 今回だけオフスクリーンに描き、以後 blit */
+    if(!e.cv)e.cv=document.createElement("canvas");
+    if(e.cv.width!==half*2){e.cv.width=half*2;e.cv.height=half*2;}
+    var octx=e.cv.getContext("2d");
+    octx.clearRect(0,0,half*2,half*2);
+    /* アンカー(e.phase等)は据え置き: ドリフトは安定開始時点から累積判定する */
+    drawPlanetBodyDirect(octx,half,half,r,pl,rotAngle,cam);
+    e.half=half;e.valid=true;
+    texCacheStats.miss++;
+    ctx.drawImage(e.cv,cx-e.half,cy-e.half);
+    return;
+  }
+  /* アニメーション中: キャッシュ作成コストもかけず直接描画 */
+  e.r=r;e.phase=phase;e.rx=rx;e.ry=ry;e.valid=false;
+  texCacheStats.skip++;
+  drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam);
+}
+
+function drawPlanetBodyDirect(ctx,cx,cy,r,pl,rotAngle,cam){
   if(r<1.5){fillCirc(ctx,cx,cy,Math.max(r,0.4),pl.c);return;}
   var tp=pl.type,phase=(((rotAngle%TAU)/TAU)%1+1)%1,hi=r>12,atm=null,R=r*1.5;
   var tr=pl.t*0.01745,cosTr=Math.cos(tr),sinTr=Math.sin(tr);
@@ -175,6 +226,24 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
           else ctx.lineTo(csx+Math.cos(ca3)*crx3,csy+Math.sin(ca3)*cry3);}
         ctx.closePath();ctx.fill();
       }
+      /* 大径時のみ: 小さい雲セルの追加レイヤーで密度感を出す */
+      if(r>40){
+        var cSeed2=seedR(89);
+        for(var cl2=0;cl2<10;cl2++){
+          var c2Lng=cSeed2()*1.0,c2Lat=(cSeed2()-0.5)*1.5,c2W=0.03+cSeed2()*0.06,c2H=0.01+cSeed2()*0.012;
+          var cu3=((c2Lng+cloudPh*1.15)%1+1)%1,clon3=cu3*TAU+Math.PI*0.5;
+          var csL2=-c2Lat,ccL2=Math.sqrt(Math.max(0,1-csL2*csL2)),ccLon2=ccL2*Math.cos(clon3);
+          var cp4=RX(RY([ccLon2*cosTr+csL2*sinTr,-ccLon2*sinTr+csL2*cosTr,ccL2*Math.sin(clon3)],cry),crx);
+          if(cp4[2]>=0)continue;
+          var cd2=-cp4[2],csx2=cx+cp4[0]*r,csy2=cy-cp4[1]*r;
+          ctx.globalAlpha=0.13*cd2;
+          ctx.beginPath();
+          for(var ck3=0;ck3<=10;ck3++){var ca4=(ck3/10)*TAU,crx4=c2W*r*cd2*(1+Math.sin(ca4*3+cl2*1.7)*0.3),cry4=c2H*r*2.5;
+            if(ck3===0)ctx.moveTo(csx2+Math.cos(ca4)*crx4,csy2+Math.sin(ca4)*cry4);
+            else ctx.lineTo(csx2+Math.cos(ca4)*crx4,csy2+Math.sin(ca4)*cry4);}
+          ctx.closePath();ctx.fill();
+        }
+      }
       ctx.globalAlpha=1;
     }
     /* Ocean specular highlight */
@@ -195,26 +264,88 @@ function drawPlanetBody(ctx,cx,cy,r,pl,rotAngle,cam){
     ctx.fillStyle="rgba(195,170,125,1)";ctx.fillRect(cx-R,cy-R,R*2,R*2);
     var jB=[{y:-0.88,h:0.1,v:185},{y:-0.72,h:0.12,v:215},{y:-0.55,h:0.1,v:165},{y:-0.4,h:0.14,v:225},{y:-0.22,h:0.1,v:175},{y:-0.08,h:0.16,v:220},{y:0.12,h:0.12,v:170},{y:0.28,h:0.14,v:218},{y:0.45,h:0.1,v:160},{y:0.58,h:0.14,v:212},{y:0.75,h:0.1,v:168},{y:0.88,h:0.1,v:205}];
     for(var jbi=0;jbi<jB.length;jbi++){var jb2=jB[jbi];ctx.fillStyle="rgba("+jb2.v+","+(jb2.v-25)+","+(jb2.v-70)+",1)";ctx.fillRect(cx-R,cy+jb2.y*r-jb2.h*r*0.5,R*2,jb2.h*r);if(r>22){ctx.globalAlpha=0.22;ctx.fillStyle="rgba("+(jb2.v+18)+","+(jb2.v-8)+","+(jb2.v-50)+",1)";for(var ssi=0;ssi<7;ssi++){var ssfx=((ssi/7+phase*(jbi%2?1.4:-1.2))%1)*2-1,ssfd=1-ssfx*ssfx;if(ssfd<0.18)continue;ctx.fillRect(cx+ssfx*r*0.86-r*0.045,cy+jb2.y*r-jb2.h*r*0.32,r*0.09*ssfd,jb2.h*r*0.65);}ctx.globalAlpha=1;}}
+    /* フェストーン: 赤道帯から斜めに垂れる青灰色のウィスプ (大径時のみ) */
+    if(r>40){
+      ctx.lineWidth=Math.max(0.8,r*0.015);ctx.strokeStyle="rgba(110,125,150,1)";
+      for(var jfi=0;jfi<4;jfi++){
+        var jfx=((jfi/4+phase*1.35)%1)*2-1,jfd=1-jfx*jfx;if(jfd<0.2)continue;
+        ctx.globalAlpha=0.32*jfd;
+        ctx.beginPath();ctx.moveTo(cx+jfx*r*0.85,cy-r*0.02);
+        ctx.quadraticCurveTo(cx+jfx*r*0.85+r*0.05,cy+r*0.07,cx+jfx*r*0.85-r*0.03,cy+r*0.13);
+        ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
     var gx=((0.3+phase*1.1)%1)*2-1,gd=1-gx*gx;
-    if(gd>0.12){var gpx=cx+gx*r*0.75,gpy=cy+r*0.22,gsz=r*0.14*gd;ctx.globalAlpha=0.7*gd;fillCirc(ctx,gpx,gpy,gsz,"rgba(195,95,60,1)");ctx.globalAlpha=0.4*gd;fillCirc(ctx,gpx,gpy,gsz*0.5,"rgba(175,70,45,1)");if(gsz>4){ctx.globalAlpha=0.45*gd;ctx.lineWidth=Math.max(0.7,gsz*0.06);ctx.strokeStyle="rgba(225,150,110,1)";var grsRot=phase*5.5;for(var sai=0;sai<3;sai++){ctx.beginPath();for(var sap=0;sap<16;sap++){var sat=sap/16,saR=gsz*(0.15+sat*0.85),saA=grsRot+sai*TAU/3+sat*5.0;var sax=gpx+Math.cos(saA)*saR*0.95,say=gpy+Math.sin(saA)*saR*0.6;if(sap===0)ctx.moveTo(sax,say);else ctx.lineTo(sax,say);}ctx.stroke();}}ctx.globalAlpha=1;}
+    if(gd>0.12){var gpx=cx+gx*r*0.75,gpy=cy+r*0.22,gsz=r*0.14*gd;ctx.globalAlpha=0.7*gd;fillCirc(ctx,gpx,gpy,gsz,"rgba(195,95,60,1)");ctx.globalAlpha=0.4*gd;fillCirc(ctx,gpx,gpy,gsz*0.5,"rgba(175,70,45,1)");if(gsz>4){ctx.globalAlpha=0.45*gd;ctx.lineWidth=Math.max(0.7,gsz*0.06);ctx.strokeStyle="rgba(225,150,110,1)";var grsRot=phase*5.5;for(var sai=0;sai<3;sai++){ctx.beginPath();for(var sap=0;sap<16;sap++){var sat=sap/16,saR=gsz*(0.15+sat*0.85),saA=grsRot+sai*TAU/3+sat*5.0;var sax=gpx+Math.cos(saA)*saR*0.95,say=gpy+Math.sin(saA)*saR*0.6;if(sap===0)ctx.moveTo(sax,say);else ctx.lineTo(sax,say);}ctx.stroke();}}
+      /* 大赤斑の乱流後流: 斑点の西側に波打つ筋 (大径時のみ) */
+      if(r>40){ctx.globalAlpha=0.3*gd;ctx.lineWidth=Math.max(0.7,r*0.01);ctx.strokeStyle="rgba(215,185,150,1)";
+        for(var jwi=0;jwi<2;jwi++){ctx.beginPath();
+          for(var jwp=0;jwp<=14;jwp++){var jwt=jwp/14;
+            ctx.lineTo(gpx-gsz*(1.2+jwt*3.2),gpy+(jwi-0.5)*gsz*0.7+Math.sin(jwt*9+jwi*2+phase*20)*gsz*0.22);}
+          ctx.stroke();}}
+      ctx.globalAlpha=1;}
     ctx.restore();limbDarken(ctx,cx,cy,r,0.3);atm="215,175,110";
   }else if(tp==="gas2"){
     ctx.save();ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.translate(-cx,-cy);
     var sg2=ctx.createRadialGradient(cx,cy,0,cx,cy,r);sg2.addColorStop(0,"rgba(225,210,165,1)");sg2.addColorStop(1,"rgba(190,175,130,1)");ctx.fillStyle=sg2;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     var sB=[{y:-0.8,h:0.12,v:210},{y:-0.6,h:0.15,v:225},{y:-0.38,h:0.12,v:200},{y:-0.18,h:0.18,v:228},{y:0.05,h:0.14,v:205},{y:0.25,h:0.16,v:222},{y:0.45,h:0.12,v:198},{y:0.62,h:0.14,v:218},{y:0.8,h:0.12,v:195}];
-    for(var sbi=0;sbi<sB.length;sbi++){var sb2=sB[sbi];ctx.fillStyle="rgba("+sb2.v+","+(sb2.v-15)+","+(sb2.v-62)+",0.7)";ctx.fillRect(cx-R,cy+sb2.y*r-sb2.h*r*0.5,R*2,sb2.h*r);}
-    ctx.restore();limbDarken(ctx,cx,cy,r,0.25);atm="220,200,145";
+    for(var sbi=0;sbi<sB.length;sbi++){var sb2=sB[sbi];ctx.fillStyle="rgba("+sb2.v+","+(sb2.v-15)+","+(sb2.v-62)+",0.7)";ctx.fillRect(cx-R,cy+sb2.y*r-sb2.h*r*0.5,R*2,sb2.h*r);
+      /* 帯内の淡い乱流ストリーク (大径時のみ、木星と同手法の控えめ版) */
+      if(r>30){ctx.globalAlpha=0.14;ctx.fillStyle="rgba("+(sb2.v+15)+","+sb2.v+","+(sb2.v-45)+",1)";
+        for(var sst=0;sst<5;sst++){var ssx2=((sst/5+phase*(sbi%2?1.25:-1.05))%1)*2-1,ssd2=1-ssx2*ssx2;if(ssd2<0.2)continue;
+          ctx.fillRect(cx+ssx2*r*0.88-r*0.05,cy+sb2.y*r-sb2.h*r*0.25,r*0.1*ssd2,sb2.h*r*0.5);}
+        ctx.globalAlpha=1;}}
+    ctx.restore();
+    /* 北極六角形ジェット気流 (カッシーニ観測): 極がカメラ側を向く大径時のみ */
+    var snp=-ap[2];
+    if(r>36&&snp>0.25){
+      var hpx2=cx+ap[0]*r,hpy2=cy-ap[1]*r;
+      ctx.save();ctx.translate(hpx2,hpy2);ctx.rotate(screenTilt);ctx.scale(1,Math.max(0.15,snp));
+      ctx.strokeStyle="rgba(175,145,92,"+(0.5*snp).toFixed(3)+")";ctx.lineWidth=Math.max(0.8,r*0.014);
+      ctx.beginPath();
+      for(var hxi=0;hxi<=6;hxi++){var hxa=hxi/6*TAU+phase*2.2,hxr=r*0.22;
+        if(hxi===0)ctx.moveTo(Math.cos(hxa)*hxr,Math.sin(hxa)*hxr);
+        else ctx.lineTo(Math.cos(hxa)*hxr,Math.sin(hxa)*hxr);}
+      ctx.closePath();ctx.stroke();
+      fillCirc(ctx,0,0,r*0.05,"rgba(165,135,88,"+(0.45*snp).toFixed(3)+")");
+      ctx.restore();
+    }
+    limbDarken(ctx,cx,cy,r,0.25);atm="220,200,145";
   }else if(tp==="ice1"){
     ctx.save();ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.translate(-cx,-cy);
     var ug=ctx.createRadialGradient(cx,cy,0,cx,cy,r);ug.addColorStop(0,"rgba(170,228,232,1)");ug.addColorStop(1,"rgba(110,185,195,1)");ctx.fillStyle=ug;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     ctx.fillStyle="rgba(140,210,218,0.07)";ctx.fillRect(cx-R,cy-r*0.6,R*2,r*0.25);ctx.fillRect(cx-R,cy+r*0.2,R*2,r*0.25);
-    ctx.restore();limbDarken(ctx,cx,cy,r,0.25);atm="150,220,230";
+    ctx.restore();
+    /* 極域フード: カメラ側を向いた極の明るいヘイズ (大径時のみ) */
+    if(r>30){
+      var uds=-ap[2]>0?1:-1,udd=Math.abs(ap[2]);
+      if(udd>0.3){
+        var upx=cx+uds*ap[0]*r,upy=cy-uds*ap[1]*r;
+        var uhG=ctx.createRadialGradient(upx,upy,0,upx,upy,r*0.5);
+        uhG.addColorStop(0,"rgba(225,245,245,"+(0.22*udd).toFixed(3)+")");uhG.addColorStop(1,"rgba(225,245,245,0)");
+        ctx.fillStyle=uhG;ctx.fillRect(cx-R,cy-R,R*2,R*2);
+      }
+    }
+    limbDarken(ctx,cx,cy,r,0.25);atm="150,220,230";
   }else if(tp==="ice2"){
     ctx.save();ctx.translate(cx,cy);ctx.rotate(screenTilt);ctx.translate(-cx,-cy);
     var ng=ctx.createRadialGradient(cx,cy,0,cx,cy,r);ng.addColorStop(0,"rgba(55,90,215,1)");ng.addColorStop(1,"rgba(25,45,150,1)");ctx.fillStyle=ng;ctx.fillRect(cx-R,cy-R,R*2,R*2);
     ctx.fillStyle="rgba(50,80,200,0.4)";ctx.fillRect(cx-R,cy-r*0.5,R*2,r*0.2);ctx.fillRect(cx-R,cy+r*0.1,R*2,r*0.25);
     var ndx=((0.5+phase*0.9)%1)*2-1,ndd=1-ndx*ndx;
     if(ndd>0.15){ctx.globalAlpha=0.55*ndd;fillCirc(ctx,cx+ndx*r*0.7,cy-r*0.15,r*0.12*ndd,"rgba(25,40,130,1)");ctx.globalAlpha=1;}
+    /* 白い巻雲ストリーク (ボイジャー2号が撮影したメタン雲、大径時のみ) */
+    if(r>25){
+      ctx.lineWidth=Math.max(0.7,r*0.012);ctx.strokeStyle="rgba(235,245,255,1)";
+      var nc=[{y:-0.32,w:0.45,sp:1.6},{y:-0.05,w:0.3,sp:2.1},{y:0.38,w:0.38,sp:1.3}];
+      for(var nci=0;nci<nc.length;nci++){var nc2=nc[nci];
+        var ncx=((nci*0.37+phase*nc2.sp)%1)*2-1,ncd=1-ncx*ncx;if(ncd<0.2)continue;
+        ctx.globalAlpha=0.4*ncd;
+        ctx.beginPath();ctx.moveTo(cx+(ncx-nc2.w*0.5)*r*0.85,cy+nc2.y*r);
+        ctx.quadraticCurveTo(cx+ncx*r*0.85,cy+nc2.y*r-r*0.03,cx+(ncx+nc2.w*0.5)*r*0.85,cy+nc2.y*r);
+        ctx.stroke();}
+      ctx.globalAlpha=1;
+    }
     ctx.restore();limbDarken(ctx,cx,cy,r,0.3);atm="60,100,220";
   }
   sphereShade(ctx,cx,cy,r);
@@ -266,4 +397,4 @@ function drawEarthInteriorOverlay(ctx,cx,cy,r,lang){
   ctx.restore();
 }
 
-export { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };
+export { dOb, dRi, dRiUranus, dRingShadow, dSh, dAx, dTidalMark, drawPlanetBody, texCacheStats, drawEarthInteriorOverlay, drawSun, mkStars, mkNeb, sSP, mkAst, mkGalaxy, mkNearStars, SD, NB, AST, TROJAN, KUIPER, GAL, GAL_COLS, GAL_R, SUN_GAL_R, SUN_GAL_ANG, NEAR_STARS, SUNSPOTS, drawEarthCityLights, drawMoonDetail };

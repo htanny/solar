@@ -94,6 +94,18 @@ function startLandSound(plName){
       var fltEu=ac.createBiquadFilter();fltEu.type="bandpass";fltEu.frequency.value=42;fltEu.Q.value=1.8;bnEu.connect(fltEu);fltEu.connect(master);bnEu.start();nodes.push(bnEu);
       var crackInt=setInterval(function(){if(ac.state==="closed")return;var bc=ac.createBufferSource();var bufc=ac.createBuffer(1,Math.floor(ac.sampleRate*0.12),ac.sampleRate);var dc=bufc.getChannelData(0);for(var ci=0;ci<dc.length;ci++)dc[ci]=(Math.random()*2-1)*0.55*Math.exp(-ci/ac.sampleRate*30);bc.buffer=bufc;var gc=ac.createGain();gc.gain.value=0.025;var fcrk=ac.createBiquadFilter();fcrk.type="highpass";fcrk.frequency.value=600;bc.connect(fcrk);fcrk.connect(gc);gc.connect(master);bc.start();},5000+Math.random()*11000);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[crackInt]};
+    }else if(plName==="Io"){
+      /* 太陽系最活発の火山天体: 深い火山性トレモア(16Hz+32Hz)
+         + LFO変調ローパスノイズの溶岩湖ランブル + 周期的な噴火ホワール + 溶岩はぜ音 */
+      var oIo=ac.createOscillator();oIo.type="sine";oIo.frequency.value=16;var gIo=ac.createGain();gIo.gain.value=0.13;oIo.connect(gIo);gIo.connect(master);oIo.start();nodes.push(oIo);
+      var oIo2=ac.createOscillator();oIo2.type="sine";oIo2.frequency.value=32;var gIo2=ac.createGain();gIo2.gain.value=0.06;oIo2.connect(gIo2);gIo2.connect(master);oIo2.start();nodes.push(oIo2);
+      var bnIo=ac.createBufferSource();var bufIo=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate);var dIo=bufIo.getChannelData(0);for(var io=0;io<dIo.length;io++)dIo[io]=(Math.random()*2-1)*0.20;bnIo.buffer=bufIo;bnIo.loop=true;
+      var fltIo=ac.createBiquadFilter();fltIo.type="lowpass";fltIo.frequency.value=75;
+      var lfoIo=ac.createOscillator();lfoIo.frequency.value=0.11;var lgIo=ac.createGain();lgIo.gain.value=35;lfoIo.connect(lgIo);lgIo.connect(fltIo.frequency);lfoIo.start();
+      bnIo.connect(fltIo);fltIo.connect(master);bnIo.start();nodes.push(bnIo,lfoIo);
+      var erupInt=setInterval(function(){if(ac.state==="closed")return;var be=ac.createBufferSource();var bufe=ac.createBuffer(1,Math.floor(ac.sampleRate*2.2),ac.sampleRate);var de=bufe.getChannelData(0);for(var ei=0;ei<de.length;ei++)de[ei]=(Math.random()*2-1)*0.45*Math.min(1,ei/(ac.sampleRate*0.5))*Math.exp(-ei/ac.sampleRate*0.9);be.buffer=bufe;var ge=ac.createGain();ge.gain.value=0.055;var fe=ac.createBiquadFilter();fe.type="lowpass";fe.frequency.value=160;be.connect(fe);fe.connect(ge);ge.connect(master);be.start();},11000+Math.random()*14000);
+      var popInt=setInterval(function(){if(ac.state==="closed")return;var bp2=ac.createBufferSource();var bufp2=ac.createBuffer(1,Math.floor(ac.sampleRate*0.08),ac.sampleRate);var dp2=bufp2.getChannelData(0);for(var pi2=0;pi2<dp2.length;pi2++)dp2[pi2]=(Math.random()*2-1)*0.5*Math.exp(-pi2/ac.sampleRate*55);bp2.buffer=bufp2;var gp2=ac.createGain();gp2.gain.value=0.02;var fp2=ac.createBiquadFilter();fp2.type="bandpass";fp2.frequency.value=420;bp2.connect(fp2);fp2.connect(gp2);gp2.connect(master);bp2.start();},3000+Math.random()*6000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[erupInt,popInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);
