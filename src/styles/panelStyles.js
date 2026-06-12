@@ -11,11 +11,16 @@ var bT=function(c){return Object.assign({},bF,{background:"rgba("+c+",0.25)",bor
 var bFM=Object.assign({},bF,{padding:"7px 12px",fontSize:11,minHeight:32});
 var bNM=Object.assign({},bN,{padding:"7px 12px",fontSize:11,minHeight:32});
 
+/* Phone touch-target scaling: merged into bF/bN/bU/bD/bT in App.jsx when isPhone.
+   Buttons grow from ~22px to ~34px tall — closer to the 44px tap-target guideline
+   while still fitting the dense toggle grid on a 360px-wide screen. */
+var PHONE_BTN={fontSize:12,padding:"7px 11px",minHeight:34};
+
 /* Phone: render sub-panels as a bottom sheet anchored above the focus bar (~52px tall).
    Desktop: keep the panel's own positioning (caller provides top/left/right). */
 function mobileSheet(isPhone){
   if(!isPhone)return null;
-  return{position:"fixed",top:"auto",left:8,right:8,bottom:62,maxWidth:"none",width:"auto",maxHeight:"calc(100dvh - 130px)",overflowY:"auto",zIndex:25};
+  return{position:"fixed",top:"auto",left:8,right:8,bottom:"calc(62px + env(safe-area-inset-bottom))",maxWidth:"none",width:"auto",maxHeight:"calc(100dvh - 130px)",overflowY:"auto",zIndex:25};
 }
 
-export { pn, bF, bN, bU, bD, bClose, lb, bT, bFM, bNM, mobileSheet };
+export { pn, bF, bN, bU, bD, bClose, lb, bT, bFM, bNM, PHONE_BTN, mobileSheet };

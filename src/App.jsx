@@ -16,7 +16,7 @@ import { dateToSimDays, simDaysToDate, scanEvents } from "./utils/timeUtils.js";
 import { DragPanel } from "./components/DragPanel.jsx";
 import { initNBody } from "./utils/computations.js";
 import { PANEL_INIT, panelReducer } from "./utils/panelReducer.js";
-import { pn, bF, bN, bU, bD, lb, bT, bFM, bNM } from "./styles/panelStyles.js";
+import { pn, bF as bF0, bN as bN0, bU as bU0, bD as bD0, lb, bT as bT0, bFM, bNM, PHONE_BTN } from "./styles/panelStyles.js";
 import InfoPanel from "./components/panels/InfoPanel.jsx";
 import LandingQuickJump from "./components/LandingQuickJump.jsx";
 import CompareTablePanel from "./components/panels/CompareTablePanel.jsx";
@@ -76,6 +76,13 @@ export default function App(){
   var[winW,setWinW]=useState(typeof window!=="undefined"?window.innerWidth:1280);
   useEffect(function(){function onResize(){setWinW(window.innerWidth);}window.addEventListener("resize",onResize);return function(){window.removeEventListener("resize",onResize);};},[]);
   var isPhone=winW<640;
+  /* スマホではタップターゲットを拡大した派生スタイルを使う。
+     全パネルは bF/bN 等を props 経由で受け取るため、ここで一括して効く。 */
+  var bF=isPhone?Object.assign({},bF0,PHONE_BTN):bF0;
+  var bN=isPhone?Object.assign({},bN0,PHONE_BTN):bN0;
+  var bU=isPhone?Object.assign({},bU0,PHONE_BTN):bU0;
+  var bD=isPhone?Object.assign({},bD0,PHONE_BTN):bD0;
+  var bT=isPhone?function(c){return Object.assign({},bT0(c),PHONE_BTN);}:bT0;
   var[searchQ,setSearchQ]=useState("");
   var[habZone,setHabZone,habZR]=useRefSync(false);
   var[helio,setHelio,helioR]=useRefSync(false);
@@ -535,7 +542,7 @@ export default function App(){
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{top:10,right:10})}><div style={lb}>{lang==="en"?"Speed ⠿":"速度 ⠿"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}><button aria-label={paused?(lang==="en"?"Play":"再生"):(lang==="en"?"Pause":"一時停止")} style={Object.assign({},paused?bU:bF,{fontSize:12,padding:"3px 7px"})} onClick={function(){setPaused(function(p){return!p;});}}>{paused?"▶":"⏸"}</button>{SP.map(function(s){return <button key={s} aria-label={(lang==="en"?"Speed ":"速度 ")+s+"x"} style={spd===s&&!paused?bN:bF} onClick={function(){setSpd(s);setPaused(false);}}>{s}x</button>;})}</div></DragPanel>}
 
       {/* Toggles panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?"calc(60px + env(safe-area-inset-bottom))":10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
         <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>{lang==="en"?"Display ⠿":"表示 ⠿"}</span><button style={Object.assign({},bF,{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道",e:"Orbits"},{k:"trails",l:"軌跡",e:"Trails"},{k:"belt",l:"小惑星帯",e:"Belt"},{k:"trojan",l:"トロヤ群",e:"Trojans"},{k:"kuiper",l:"カイパー帯",e:"Kuiper"},{k:"nasteroid",l:"準惑星名",e:"Dwarf names"},{k:"tilt",l:"地軸",e:"Axis"},{k:"moon",l:"月",e:"Moon"},{k:"labels",l:"ラベル",e:"Labels"},{k:"planets",l:"惑星",e:"Planets"},{k:"lagrange",l:"L点",e:"L points"},{k:"spacecraft",l:"探査機",e:"Probes"},{k:"cme",l:"CME",e:"CME"},{k:"distbar",l:"距離バー",e:"Dist bar"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{lang==="en"?x.e:x.l}</button>;})}</div>
         <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Real scale":"実スケール"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>{lang==="en"?"Sun":"太陽"}{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>{lang==="en"?"Planets":"惑星"}{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>{lang==="en"?"Distance":"距離"}{!uni&&rDi?" ●":""}</button></div>
         <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>{lang==="en"?"Unify":"統一比率"}{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>{lang==="en"?"Compare":"比較"}{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{dispatchPanel({type:"SET",key:"tourPick",value:true});}}}>{touring?(lang==="en"?"Stop Tour":"ツアー停止"):(lang==="en"?"Tour":"学習ツアー")}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?(lang==="en"?"Measuring":"計測中")+(measurePair.length===0?(lang==="en"?"(1st)":"(1つ目)"):measurePair.length===1?(lang==="en"?"(2nd)":"(2つ目)"):""):(lang==="en"?"📐 Measure":"📐計測")}</button></div>
@@ -616,7 +623,7 @@ export default function App(){
       </DragPanel>}
 
       {/* Zoom panel */}
-      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?60:10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button aria-label={lang==="en"?"Zoom in":"ズームイン"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button aria-label={lang==="en"?"Zoom out":"ズームアウト"} style={Object.assign({},bF,{width:34,height:30,fontSize:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
+      {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?"calc(60px + env(safe-area-inset-bottom))":10,right:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4})}><div style={lb}>{lang==="en"?"Zoom ⠿":"ズーム ⠿"}</div><button aria-label={lang==="en"?"Zoom in":"ズームイン"} style={Object.assign({},bF,{width:isPhone?44:34,height:isPhone?40:30,fontSize:isPhone?22:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zIn}>+</button><div style={{fontSize:10,color:"rgba(255,255,255,0.5)",minWidth:44,textAlign:"center"}}>{zmStr}<br/><span style={{fontSize:7,color:"rgba(255,255,255,0.3)"}}>{zmLabel}</span></div><button aria-label={lang==="en"?"Zoom out":"ズームアウト"} style={Object.assign({},bF,{width:isPhone?44:34,height:isPhone?40:30,fontSize:isPhone?22:18,padding:0,display:"flex",alignItems:"center",justifyContent:"center"})} onClick={zOut}>−</button></DragPanel>}
 
       {/* Event calendar panel */}
       {cleanView===0&&!landing&&<EventsPanel visible={panels.showEvents} eventsRef={eventsRef} dispatchPanel={dispatchPanel} S={S} isPhone={isPhone} lang={lang} pn={pn} bF={bF}/>}
@@ -665,7 +672,7 @@ export default function App(){
         </div>
       </div>}
 
-      {isPhone&&cleanView===0&&!landing&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:20,background:"rgba(8,10,20,0.92)",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 8px",display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{FL.map(function(f){return <button key={f.k} style={Object.assign({},foc===f.k?bNM:bFM,{flexShrink:0,padding:"6px 10px",fontSize:11})} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div>}
+      {isPhone&&cleanView===0&&!landing&&<div style={{position:"fixed",bottom:0,left:0,right:0,zIndex:20,background:"rgba(8,10,20,0.92)",borderTop:"1px solid rgba(255,255,255,0.08)",padding:"6px 8px calc(6px + env(safe-area-inset-bottom))",display:"flex",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{FL.map(function(f){return <button key={f.k} style={Object.assign({},foc===f.k?bNM:bFM,{flexShrink:0,padding:"6px 10px",fontSize:11})} onClick={function(){focusOn(f.k);}}>{lang==="en"?(f.e||f.l):f.l}</button>;})}</div>}
 
       {/* Landing mode control panel — desktop: lat=left vertical, bottom=lng+az+tilt. Phone portrait: lat moved into bottom panel as horizontal slider. */}
       {landing&&!isPhone&&<div style={{position:"absolute",left:0,top:"50%",transform:"translateY(-50%)",zIndex:25,background:"rgba(0,5,18,0.82)",borderRight:"1px solid rgba(100,160,255,0.2)",padding:"10px 6px",display:"flex",flexDirection:"column",alignItems:"center",gap:6,fontFamily:"system-ui,sans-serif"}}>
@@ -679,11 +686,11 @@ export default function App(){
           onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
         <span style={{color:"rgba(120,150,200,0.5)",fontSize:8}}>S</span>
       </div>}
-      {landing&&<div style={{position:"absolute",bottom:0,left:isPhone?0:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
-        <LandingQuickJump landing={landing} setLandLat={setLandLat} setLandLng={setLandLng} landLatR={landLatR} landLngR={landLngR}/>
+      {landing&&<div style={{position:"absolute",bottom:0,left:isPhone?0:40,right:0,zIndex:25,background:"rgba(0,5,18,0.85)",borderTop:"1px solid rgba(100,160,255,0.2)",padding:isPhone?"6px 10px calc(8px + env(safe-area-inset-bottom))":"6px 10px 8px",fontFamily:"system-ui,sans-serif"}}>
+        <LandingQuickJump landing={landing} setLandLat={setLandLat} setLandLng={setLandLng} landLatR={landLatR} landLngR={landLngR} isPhone={isPhone}/>
         {isPhone&&<div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lat":"緯度"}</span>
-          <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
+          <input type="range" aria-label={lang==="en"?"Latitude":"緯度"} style={{flex:1,height:isPhone?26:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-90" max="90" step="0.1" value={landLat}
             onChange={function(e){var v=+e.target.value;setLandLat(v);landLatR.current=v;}}/>
           <input type="number" min="-90" max="90" step="0.01" value={landLat}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-90,Math.min(90,v));setLandLat(c);landLatR.current=c;}}}
@@ -691,7 +698,7 @@ export default function App(){
         </div>}
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Lng":"経度"}</span>
-          <input type="range" aria-label={lang==="en"?"Longitude":"経度"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
+          <input type="range" aria-label={lang==="en"?"Longitude":"経度"} style={{flex:1,height:isPhone?26:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-180" max="180" step="0.1" value={landLng}
             onChange={function(e){var v=+e.target.value;setLandLng(v);landLngR.current=v;}}/>
           <input type="number" min="-180" max="180" step="0.01" value={landLng}
             onChange={function(e){var v=parseFloat(e.target.value);if(!isNaN(v)){var c=Math.max(-180,Math.min(180,v));setLandLng(c);landLngR.current=c;}}}
@@ -699,14 +706,14 @@ export default function App(){
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,marginBottom:4}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Az":"方位"}</span>
-          <input type="range" aria-label={lang==="en"?"Azimuth":"方位"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
+          <input type="range" aria-label={lang==="en"?"Azimuth":"方位"} style={{flex:1,height:isPhone?26:16,cursor:"pointer",accentColor:"#64b4ff"}} min="0" max="359" step="1"
             value={Math.round(((landYaw*57.296)%360+360)%360)}
             onChange={function(e){var r=(+e.target.value)*0.01745;setLandYaw(r);landYR.current=r;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{(function(){var d=Math.round(((landYaw*57.296)%360+360)%360);var n=d<23?"N":d<68?"NE":d<113?"E":d<158?"SE":d<203?"S":d<248?"SW":d<293?"W":d<338?"NW":"N";return d+"°"+n;})()}</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5}}>
           <span style={{color:"rgba(180,210,255,0.7)",fontSize:9,width:22,flexShrink:0}}>{lang==="en"?"Tilt":"仰角"}</span>
-          <input type="range" aria-label={lang==="en"?"Tilt":"仰角"} style={{flex:1,height:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
+          <input type="range" aria-label={lang==="en"?"Tilt":"仰角"} style={{flex:1,height:isPhone?26:16,cursor:"pointer",accentColor:"#64b4ff"}} min="-40" max="40" step="1" value={landTilt}
             onChange={function(e){var v=+e.target.value;setLandTilt(v);landTiltR.current=v;}}/>
           <span style={{color:"rgba(255,255,255,0.85)",fontSize:9,width:46,textAlign:"right",flexShrink:0}}>{landTilt>=0?"+":""}{landTilt}°</span>
         </div>
