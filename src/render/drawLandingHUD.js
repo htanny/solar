@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, PARENT_OF, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES, PARENT_OF, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 import { angSepDeg } from "./landingUtils.js";
 
@@ -20,9 +20,10 @@ var NEAREST_CFG={
   Io:{sites:IO_FEATURES,r:1821.6,col:"rgba(255,195,110,0.80)"},
   Ganymede:{sites:GANYMEDE_FEATURES,r:2634.1,col:"rgba(205,196,176,0.78)"},
   Callisto:{sites:CALLISTO_FEATURES,r:2410.3,col:"rgba(188,180,162,0.78)"},
+  Ceres:{sites:CERES_FEATURES,r:469.7,col:"rgba(218,212,200,0.78)"},
 };
 /* 下部に最寄情報行を持つ着陸先（HUD 背景を 104px に拡張する天体） */
-var HUD_TALL={Moon:1,Mars:1,Venus:1,Mercury:1,Titan:1,Itokawa:1,Ryugu:1,Triton:1,Enceladus:1,Miranda:1,Pluto:1,Charon:1,HalleyCore:1,Phobos:1,Europa:1,Io:1,Ganymede:1,Callisto:1};
+var HUD_TALL={Moon:1,Mars:1,Venus:1,Mercury:1,Titan:1,Itokawa:1,Ryugu:1,Triton:1,Enceladus:1,Miranda:1,Pluto:1,Charon:1,HalleyCore:1,Phobos:1,Europa:1,Io:1,Ganymede:1,Callisto:1,Ceres:1};
 
 /**
  * @param {CanvasRenderingContext2D} ctx

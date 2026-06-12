@@ -303,6 +303,14 @@ export var CALLISTO_FEATURES=[
   {n:"アディンダ環",en:"Adlinda",lat:-58,lng:22,info:"南半球の多重リング構造 直径1600km ヴォイジャー2号が撮影"},
   {n:"ティール・マクラ",en:"Tyr Macula",lat:23,lng:215,info:"明るい斑点状古地形 古代の地殻変動の痕跡 40億年前の表面"},
 ];
+/* Ceres geological landmarks (Dawn 2015-2018) */
+export var CERES_FEATURES=[
+  {n:"オッカトル・クレーター",en:"Occator",lat:19.8,lng:239,info:"直径92km 中央輝点ケレアリア・ファクラは炭酸ナトリウム塩 地下塩水の噴出痕"},
+  {n:"アフナ山",en:"Ahuna Mons",lat:-10.5,lng:316,info:"高さ4kmの孤立氷火山 太陽系で最も若いクリオボルケーノのひとつ"},
+  {n:"ケルワン盆地",en:"Kerwan",lat:-10.8,lng:124,info:"直径280kmの最大クレーター 浅く緩和した古い衝突盆地"},
+  {n:"ハウラニ・クレーター",en:"Haulani",lat:5.8,lng:11,info:"直径34kmの若いクレーター 青みがかった明るいエジェクタ"},
+  {n:"ヤロード盆地",en:"Yalode",lat:-42.6,lng:293,info:"直径260kmの衝突盆地 南半球の古地形 ウルヴァラ盆地と隣接"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},

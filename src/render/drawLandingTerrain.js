@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH, angSepDeg } from "./landingUtils.js";
 
@@ -468,6 +468,85 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       ctx.fillText(_clSel.n,W*0.72,H-42);
       ctx.fillStyle="rgba(172,164,145,0.7)";ctx.font="7px sans-serif";
       ctx.fillText(_clSel.info.split(" ")[0],W*0.72,H-30);}
+  }else if(plName==="Ceres"){
+    /* 小惑星帯最大の天体: 暗い炭素質レゴリス(アルベド0.09)、緩和クレーター、
+       300超の輝点(炭酸ナトリウム塩) — オッカトル付近では地表に輝くファクラが広がる */
+    var cer=seedR(414);
+    /* 暗いアンモニア化粘土のまだら */
+    ctx.globalAlpha=0.16;ctx.fillStyle="rgba(58,54,48,1)";
+    for(var cedi=0;cedi<8;cedi++){
+      var cedx=cer()*W,cedy=hrzY+10+cer()*(H-hrzY-18),cedr=18+cer()*45;
+      ctx.beginPath();ctx.ellipse(cedx,cedy,cedr,cedr*0.30,(cer()-0.5)*0.4,0,TAU);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    /* 中密度の緩和クレーター(氷を含む地殻で起伏が低い) */
+    ctx.globalAlpha=0.30;
+    for(var ceci=0;ceci<18;ceci++){
+      var cecx=cer()*W,cecy=hrzY+7+cer()*(H-hrzY-14);
+      var cecD=(cecy-hrzY)/(H-hrzY),cecsz=(1.5+cecD*9+cer()*5*cecD);
+      ctx.fillStyle="rgba(48,44,38,1)";
+      ctx.beginPath();ctx.ellipse(cecx,cecy,cecsz,cecsz*0.62,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.14;ctx.strokeStyle="rgba(150,142,128,1)";ctx.lineWidth=0.5+cecD*0.7;
+      ctx.beginPath();ctx.ellipse(cecx,cecy,cecsz*1.22,cecsz*0.78,0,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.30;
+    }
+    ctx.globalAlpha=1;
+    /* オッカトルの輝点(ファクラ) — 近接時(25°以内)に暗い地表で輝く塩の斑点 */
+    var _ocDist=angSepDeg(lat||0,lngDeg||0,19.8,239);
+    if(_ocDist<25){
+      var _ocF=Math.max(0,1-_ocDist/25);
+      for(var cefi=0;cefi<7;cefi++){
+        var cefx=cer()*W,cefy=hrzY+12+cer()*(H-hrzY-22),cefsz=(3+cer()*10)*(0.5+_ocF*0.5);
+        /* 外側のぼんやりした明るいハロ */
+        ctx.globalAlpha=0.18*_ocF;ctx.fillStyle="rgba(235,232,225,1)";
+        ctx.beginPath();ctx.ellipse(cefx,cefy,cefsz*1.9,cefsz*0.60,0,0,TAU);ctx.fill();
+        /* 中心の高輝度塩堆積物 */
+        ctx.globalAlpha=0.62*_ocF;ctx.fillStyle="rgba(255,253,248,1)";
+        ctx.beginPath();ctx.ellipse(cefx,cefy,cefsz,cefsz*0.32,0,0,TAU);ctx.fill();
+        ctx.globalAlpha=0.85*_ocF;ctx.fillStyle="rgba(255,255,252,1)";
+        ctx.beginPath();ctx.ellipse(cefx,cefy,cefsz*0.4,cefsz*0.14,0,0,TAU);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }else{
+      /* 散在する小さな輝点(ケレス全球に300以上) */
+      ctx.globalAlpha=0.22;ctx.fillStyle="rgba(225,220,210,1)";
+      for(var cesi=0;cesi<5;cesi++){
+        var cesx=cer()*W,cesy=hrzY+14+cer()*(H-hrzY-24),cessz=1.5+cer()*4;
+        ctx.beginPath();ctx.ellipse(cesx,cesy,cessz,cessz*0.4,0,0,TAU);ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
+    /* アフナ山 — 近接時(25°以内)に地平線に聳える孤立した急峻な氷火山 */
+    var _ahDist=angSepDeg(lat||0,lngDeg||0,-10.5,316);
+    if(_ahDist<25){
+      var _ahF=Math.max(0,1-_ahDist/25);
+      var ahx=((W*0.62+yaw*60)%(W*1.4))-W*0.2,ahw=34+_ahF*30,ahh=(20+_ahF*34);
+      if(ahx>-80&&ahx<W+80){
+        ctx.globalAlpha=0.55*_ahF+0.2;ctx.fillStyle="rgba(62,57,50,1)";
+        ctx.beginPath();ctx.moveTo(ahx-ahw,hrzY);
+        ctx.lineTo(ahx-ahw*0.22,hrzY-ahh);ctx.lineTo(ahx+ahw*0.18,hrzY-ahh*0.96);ctx.lineTo(ahx+ahw,hrzY);
+        ctx.closePath();ctx.fill();
+        /* 斜面の明るい縦縞(若い氷の露出) */
+        ctx.globalAlpha=0.25*_ahF;ctx.strokeStyle="rgba(205,200,190,1)";ctx.lineWidth=1;
+        for(var ahs=0;ahs<4;ahs++){
+          var ahf=(ahs/3-0.5)*0.7;
+          ctx.beginPath();ctx.moveTo(ahx+ahf*ahw*0.3,hrzY-ahh*0.9);
+          ctx.lineTo(ahx+ahf*ahw*0.9,hrzY);ctx.stroke();
+        }
+        ctx.globalAlpha=1;
+      }
+    }
+    /* CERES_FEATURES 近接ラベル */
+    var _ceMin=1e9,_ceIdx=-1;
+    for(var _cei=0;_cei<CERES_FEATURES.length;_cei++){
+      var _ced=angSepDeg(lat||0,lngDeg||0,CERES_FEATURES[_cei].lat,CERES_FEATURES[_cei].lng);
+      if(_ced<_ceMin){_ceMin=_ced;_ceIdx=_cei;}
+    }
+    if(_ceMin<12&&_ceIdx>=0){var _ceSel=CERES_FEATURES[_ceIdx];
+      ctx.fillStyle="rgba(225,218,205,0.92)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText(_ceSel.n,W*0.72,H-42);
+      ctx.fillStyle="rgba(195,188,175,0.7)";ctx.font="7px sans-serif";
+      ctx.fillText(_ceSel.info.split(" ")[0],W*0.72,H-30);}
   }else if(plName==="Titan"){
     /* East-west aligned hydrocarbon sand dunes (Titan's linear dunes are 100-150m tall,
        100km+ long, formed by Saturn-tide winds) + dark methane lake patches */
