@@ -114,6 +114,14 @@ function startLandSound(plName){
       var whisInt=setInterval(function(){if(ac.state==="closed")return;var ow=ac.createOscillator();ow.type="sine";ow.frequency.setValueAtTime(2400+Math.random()*1600,ac.currentTime);ow.frequency.exponentialRampToValueAtTime(180,ac.currentTime+1.4);var gw=ac.createGain();gw.gain.value=0.014;ow.connect(gw);gw.connect(master);ow.start();gw.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+1.5);ow.stop(ac.currentTime+1.6);},9000+Math.random()*12000);
       var icePingInt=setInterval(function(){if(ac.state==="closed")return;var op=ac.createOscillator();op.type="triangle";op.frequency.value=1600+Math.random()*1400;var gpn=ac.createGain();gpn.gain.value=0.012;op.connect(gpn);gpn.connect(master);op.start();gpn.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+0.6);op.stop(ac.currentTime+0.65);},7000+Math.random()*11000);
       LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[whisInt,icePingInt]};
+    }else if(plName==="Callisto"){
+      /* 太陽系で最も古く地質活動のない天体: 非常に低い潮汐力(16.69日軌道・木星放射線帯の外側)
+         極めて深い沈黙 + 稀なマイクロインパクト + かすかなプラズマ波動 */
+      var oCl=ac.createOscillator();oCl.type="sine";oCl.frequency.value=15;var gCl=ac.createGain();gCl.gain.value=0.09;oCl.connect(gCl);gCl.connect(master);oCl.start();nodes.push(oCl);
+      var oCl2=ac.createOscillator();oCl2.type="sine";oCl2.frequency.value=30;var gCl2=ac.createGain();gCl2.gain.value=0.035;oCl2.connect(gCl2);gCl2.connect(master);oCl2.start();nodes.push(oCl2);
+      var clImpInt=setInterval(function(){if(ac.state==="closed")return;var bcl=ac.createBufferSource();var bufcl=ac.createBuffer(1,Math.floor(ac.sampleRate*1.1),ac.sampleRate);var dcl=bufcl.getChannelData(0);for(var cli=0;cli<dcl.length;cli++)dcl[cli]=(Math.random()*2-1)*0.4*Math.exp(-cli/ac.sampleRate*6);bcl.buffer=bufcl;var gcl=ac.createGain();gcl.gain.value=0.022;var fcl=ac.createBiquadFilter();fcl.type="lowpass";fcl.frequency.value=55;bcl.connect(fcl);fcl.connect(gcl);gcl.connect(master);bcl.start();},18000+Math.random()*22000);
+      var clPlasInt=setInterval(function(){if(ac.state==="closed")return;var opl=ac.createOscillator();opl.type="sine";opl.frequency.setValueAtTime(380+Math.random()*220,ac.currentTime);opl.frequency.linearRampToValueAtTime(120+Math.random()*80,ac.currentTime+2.2);var gpl=ac.createGain();gpl.gain.value=0.006;opl.connect(gpl);gpl.connect(master);opl.start();gpl.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+2.3);opl.stop(ac.currentTime+2.4);},14000+Math.random()*18000);
+      LAND_AUDIO={ac:ac,master:master,nodes:nodes,intervals:[clImpInt,clPlasInt]};
     }else if(plName==="Miranda"){
       /* Airless moon in tight Uranus orbit: deep tidal resonance (low sub-bass) + sparse icy pings */
       var oMi=ac.createOscillator();oMi.type="sine";oMi.frequency.value=18;var gMi=ac.createGain();gMi.gain.value=0.12;oMi.connect(gMi);gMi.connect(master);oMi.start();nodes.push(oMi);

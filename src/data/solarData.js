@@ -295,6 +295,14 @@ export var GANYMEDE_FEATURES=[
   {n:"トロス・クレーター",en:"Tros",lat:11,lng:27,info:"明るい放射状エジェクタを持つ若いクレーター 直径94km"},
   {n:"ニコルソン地域",en:"Nicholson Regio",lat:-20,lng:0,info:"暗い古地形 明るい溝状地形との境界が明瞭 地殻進化の記録"},
 ];
+/* Callisto geological landmarks (Voyager / Galileo) */
+export var CALLISTO_FEATURES=[
+  {n:"ヴァルハラ盆地",en:"Valhalla Basin",lat:16,lng:10,info:"直径3800kmの多重リング衝突盆地 太陽系最大の衝突構造 外輪まで4000km超"},
+  {n:"アスガルド盆地",en:"Asgard Basin",lat:30,lng:218,info:"直径1400kmの多重リング構造 ヴァルハラに次ぐ第2の大衝突盆地"},
+  {n:"バール・クレーター",en:"Burr",lat:35,lng:155,info:"直径72kmの明るい放射状クレーター 古い地形に輝く比較的若い衝突痕"},
+  {n:"アディンダ環",en:"Adlinda",lat:-58,lng:22,info:"南半球の多重リング構造 直径1600km ヴォイジャー2号が撮影"},
+  {n:"ティール・マクラ",en:"Tyr Macula",lat:23,lng:215,info:"明るい斑点状古地形 古代の地殻変動の痕跡 40億年前の表面"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
