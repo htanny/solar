@@ -287,6 +287,22 @@ export var IO_FEATURES=[
   {n:"トヴァシュタル・パテラ",en:"Tvashtar Paterae",lat:62,lng:122,info:"ニューホライズンズが撮影した高度330kmの巨大プルーム"},
   {n:"ボオサウレ山",en:"Boösaule Montes",lat:-4,lng:270,info:"高さ17.5km 太陽系で最も高い山のひとつ 非火山性隆起"},
 ];
+/* Ganymede geological landmarks (Voyager / Galileo) */
+export var GANYMEDE_FEATURES=[
+  {n:"ガリレオ地域",en:"Galileo Regio",lat:35,lng:145,info:"直径3200kmの暗い古地形 太陽系最大級の暗領域 40億年前の地殻"},
+  {n:"ウルク・スルクス",en:"Uruk Sulcus",lat:0,lng:160,info:"明るい溝状地形 平行な尾根と溝の帯 テクトニクス活動の痕跡"},
+  {n:"エンキ・カテナ",en:"Enki Catena",lat:38,lng:13,info:"13個の連鎖クレーター 分裂彗星(SL9型)の衝突列 全長160km"},
+  {n:"トロス・クレーター",en:"Tros",lat:11,lng:27,info:"明るい放射状エジェクタを持つ若いクレーター 直径94km"},
+  {n:"ニコルソン地域",en:"Nicholson Regio",lat:-20,lng:0,info:"暗い古地形 明るい溝状地形との境界が明瞭 地殻進化の記録"},
+];
+/* Callisto geological landmarks (Voyager / Galileo) */
+export var CALLISTO_FEATURES=[
+  {n:"ヴァルハラ盆地",en:"Valhalla Basin",lat:16,lng:10,info:"直径3800kmの多重リング衝突盆地 太陽系最大の衝突構造 外輪まで4000km超"},
+  {n:"アスガルド盆地",en:"Asgard Basin",lat:30,lng:218,info:"直径1400kmの多重リング構造 ヴァルハラに次ぐ第2の大衝突盆地"},
+  {n:"バール・クレーター",en:"Burr",lat:35,lng:155,info:"直径72kmの明るい放射状クレーター 古い地形に輝く比較的若い衝突痕"},
+  {n:"アディンダ環",en:"Adlinda",lat:-58,lng:22,info:"南半球の多重リング構造 直径1600km ヴォイジャー2号が撮影"},
+  {n:"ティール・マクラ",en:"Tyr Macula",lat:23,lng:215,info:"明るい斑点状古地形 古代の地殻変動の痕跡 40億年前の表面"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},

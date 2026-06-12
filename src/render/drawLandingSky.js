@@ -140,20 +140,21 @@ function drawLandingSky(ctx,W,H,s){
     isNight:isNight,sunAlt:sunAlt
   });
 
-  /* ======== AURORA (Earth: solar-cycle oval; Jupiter: Io-driven, lat>40°) ======== */
+  /* ======== AURORA (Earth: solar-cycle oval; Jupiter: Io-driven, lat>40°;
+     Ganymede: HSTが観測した赤いオーロラベルト — 太陽系唯一の固有磁場を持つ衛星、緯度±25°以上) ======== */
   var absLat=Math.abs(lat||0);
   /* Solar cycle ≈11 yr ≈ 4015 days; at maximum the auroral oval reaches lower latitudes (62°→46°). */
   var solAct=0.5+0.5*Math.sin(t*TAU/4015+1.2);
-  var auThr=plName==="Jupiter"?40:(62-solAct*16);
-  if((plName==="Earth"&&absLat>auThr)||(plName==="Jupiter"&&absLat>40)){
-    var auroraStr=(plName==="Jupiter"?1.5:(0.45+solAct*0.55))*Math.max(0,(absLat-auThr)/35);
+  var auThr=plName==="Jupiter"?40:plName==="Ganymede"?25:(62-solAct*16);
+  if((plName==="Earth"&&absLat>auThr)||(plName==="Jupiter"&&absLat>40)||(plName==="Ganymede"&&absLat>25)){
+    var auroraStr=(plName==="Jupiter"?1.5:plName==="Ganymede"?0.75:(0.45+solAct*0.55))*Math.max(0,(absLat-auThr)/35);
     auroraStr=Math.min(1,auroraStr)*nightAlpha;
     if(auroraStr>0.02){
-      var isJup=plName==="Jupiter";
+      var isJup=plName==="Jupiter",isGan=plName==="Ganymede";
       var auGl=ctx.createLinearGradient(0,hrzY*0.05,0,hrzY*0.4);
-      auGl.addColorStop(0,isJup?"rgba(140,80,220,0)":"rgba(50,220,150,0)");
-      auGl.addColorStop(0.5,isJup?"rgba(110,60,200,"+(auroraStr*0.06).toFixed(2)+")":"rgba(70,255,140,"+(auroraStr*0.05).toFixed(2)+")");
-      auGl.addColorStop(1,isJup?"rgba(60,30,150,0)":"rgba(40,180,200,0)");
+      auGl.addColorStop(0,isJup?"rgba(140,80,220,0)":isGan?"rgba(255,90,100,0)":"rgba(50,220,150,0)");
+      auGl.addColorStop(0.5,isJup?"rgba(110,60,200,"+(auroraStr*0.06).toFixed(2)+")":isGan?"rgba(235,80,95,"+(auroraStr*0.05).toFixed(2)+")":"rgba(70,255,140,"+(auroraStr*0.05).toFixed(2)+")");
+      auGl.addColorStop(1,isJup?"rgba(60,30,150,0)":isGan?"rgba(160,50,80,0)":"rgba(40,180,200,0)");
       ctx.fillStyle=auGl;ctx.fillRect(0,hrzY*0.05,W,hrzY*0.4);
       for(var ai=0;ai<24;ai++){
         var arSh=Math.sin(ai*1.7+t*1.5)*0.5+0.5;
@@ -163,6 +164,8 @@ function drawLandingSky(ctx,W,H,s){
         var aG=ctx.createLinearGradient(ax,ay,ax,ay+aH);
         if(isJup){
           aG.addColorStop(0,"rgba(140,80,230,0)");aG.addColorStop(0.4,"rgba("+Math.floor(110+arSh*30)+",60,210,"+(auroraStr*0.18*arSh).toFixed(2)+")");aG.addColorStop(0.8,"rgba(80,40,180,"+(auroraStr*0.10*arSh).toFixed(2)+")");aG.addColorStop(1,"rgba(50,20,120,0)");
+        }else if(isGan){
+          aG.addColorStop(0,"rgba(255,110,115,0)");aG.addColorStop(0.4,"rgba("+Math.floor(225+arSh*30)+","+Math.floor(70+arSh*30)+",95,"+(auroraStr*0.13*arSh).toFixed(2)+")");aG.addColorStop(0.8,"rgba(170,55,85,"+(auroraStr*0.07*arSh).toFixed(2)+")");aG.addColorStop(1,"rgba(110,35,70,0)");
         }else{
           var auGB=Math.floor(140+arSh*100);
           aG.addColorStop(0,"rgba(60,255,"+auGB+",0)");aG.addColorStop(0.35,"rgba("+Math.floor(40+arSh*40)+",255,"+auGB+","+(auroraStr*0.14*arSh).toFixed(2)+")");aG.addColorStop(0.7,"rgba(60,180,200,"+(auroraStr*0.08*arSh).toFixed(2)+")");aG.addColorStop(1,"rgba(120,60,210,0)");

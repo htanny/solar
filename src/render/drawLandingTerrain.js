@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH, angSepDeg } from "./landingUtils.js";
 
@@ -347,20 +347,127 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
       if(_efeDa<6){ctx.fillStyle="rgba(200,188,220,0.9)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_efe.n,W*0.72,H-42);
         ctx.fillStyle="rgba(182,172,205,0.7)";ctx.font="7px sans-serif";ctx.fillText(_efe.info.split(" ")[0],W*0.72,H-30);break;}}
   }else if(plName==="Ganymede"){
-    /* Mix of dark ancient and bright grooved terrain */
-    var gnr=seedR(999);ctx.globalAlpha=0.18;
-    for(var gni=0;gni<10;gni++){var gnx=gnr()*W,gny=hrzY+8+gnr()*(H-hrzY-15),gnsz=4+gnr()*18;
-      ctx.fillStyle=gnr()<0.45?"rgba(60,55,48,1)":"rgba(155,148,130,1)";ctx.beginPath();ctx.ellipse(gnx,gny,gnsz,gnsz*0.5,gnr()*Math.PI,0,TAU);ctx.fill();}
-    ctx.globalAlpha=0.12;ctx.strokeStyle="rgba(180,172,155,1)";ctx.lineWidth=2;
-    for(var gri=0;gri<5;gri++){var grx=gnr()*W;ctx.beginPath();ctx.moveTo(grx,hrzY);ctx.lineTo(grx+(gnr()-0.5)*60,hrzY+(H-hrzY)*0.8);ctx.stroke();}
+    /* 太陽系最大の衛星: 暗い古地形(40億年前の地殻・クレーター密集)と
+       明るい溝状地形(スルクス — 平行な尾根と溝の帯、テクトニクス活動の痕跡)の二分地殻 */
+    var gnr=seedR(999);
+    /* 暗い古地形のパッチ(レゴ) — 表面の約1/3を占める */
+    for(var gdi=0;gdi<6;gdi++){
+      var gdx=gnr()*W,gdy=hrzY+8+gnr()*(H-hrzY-16),gdR=18+gnr()*40;
+      ctx.globalAlpha=0.22;ctx.fillStyle="rgba(52,46,38,1)";
+      ctx.beginPath();ctx.ellipse(gdx,gdy,gdR,gdR*0.34,(gnr()-0.5)*0.3,0,TAU);ctx.fill();
+      /* 古地形内の密集小クレーター */
+      ctx.globalAlpha=0.20;ctx.fillStyle="rgba(30,26,22,1)";
+      for(var gdc=0;gdc<5;gdc++){
+        var gca=gnr()*TAU,gcd=gnr()*gdR*0.7;
+        ctx.beginPath();ctx.ellipse(gdx+Math.cos(gca)*gcd,gdy+Math.sin(gca)*gcd*0.34,1.5+gnr()*3.5,(1.5+gnr()*3.5)*0.4,0,0,TAU);ctx.fill();
+      }
+    }
+    /* 明るい溝状地形帯(スルクス) — 平行な尾根と溝のセットが帯状に走る */
+    for(var gsi=0;gsi<4;gsi++){
+      var gsy=hrzY+6+gnr()*(H-hrzY-14),gsD=(gsy-hrzY)/(H-hrzY);
+      var gsA=(gnr()-0.5)*0.35,gsX0=gnr()*W*0.4,gsLen=W*0.45+gnr()*W*0.5;
+      var gsN=4+Math.floor(gnr()*4),gsGap=(1.5+gsD*3.5);
+      for(var gsl=0;gsl<gsN;gsl++){
+        var gslOff=(gsl-gsN*0.5)*gsGap;
+        ctx.globalAlpha=gsl%2?0.16:0.10;
+        ctx.strokeStyle=gsl%2?"rgba(196,188,168,1)":"rgba(120,112,96,1)";
+        ctx.lineWidth=gsl%2?(0.8+gsD*1.6):(0.5+gsD*1.0);
+        ctx.beginPath();
+        ctx.moveTo(gsX0,gsy+gslOff);
+        ctx.lineTo(gsX0+Math.cos(gsA)*gsLen,gsy+gslOff+Math.sin(gsA)*gsLen);
+        ctx.stroke();
+      }
+    }
+    /* パリンプセスト(ゴーストクレーター) — 起伏が消えた明るい円形痕 */
+    ctx.globalAlpha=0.10;ctx.strokeStyle="rgba(205,198,180,1)";ctx.lineWidth=1.2;
+    for(var gpi=0;gpi<3;gpi++){
+      var gpx2=gnr()*W,gpy2=hrzY+14+gnr()*(H-hrzY-26),gpR=10+gnr()*22;
+      ctx.beginPath();ctx.ellipse(gpx2,gpy2,gpR,gpR*0.36,0,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.05;ctx.fillStyle="rgba(210,202,185,1)";
+      ctx.beginPath();ctx.ellipse(gpx2,gpy2,gpR,gpR*0.36,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.10;
+    }
+    /* 明るい放射状クレーター(トロス型) — 1つだけ目立たせる */
+    var gtx=((gnr()*W*2+yaw*45)%(W*1.3))-W*0.15,gty=hrzY+18+gnr()*(H-hrzY-32),gtR=5+gnr()*7;
+    if(gtx>-30&&gtx<W+30){
+      ctx.globalAlpha=0.3;ctx.fillStyle="rgba(228,222,208,1)";
+      ctx.beginPath();ctx.ellipse(gtx,gty,gtR,gtR*0.4,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.14;ctx.strokeStyle="rgba(232,226,212,1)";ctx.lineWidth=1;
+      for(var gtr2=0;gtr2<7;gtr2++){
+        var gta=gtr2/7*TAU;
+        ctx.beginPath();ctx.moveTo(gtx+Math.cos(gta)*gtR,gty+Math.sin(gta)*gtR*0.4);
+        ctx.lineTo(gtx+Math.cos(gta)*gtR*(2.2+gnr()*1.5),gty+Math.sin(gta)*gtR*0.4*(2.2+gnr()*1.5));
+        ctx.stroke();
+      }
+    }
     ctx.globalAlpha=1;
+    /* GANYMEDE_FEATURES 近接ラベル */
+    var _gnMin=1e9,_gnIdx=-1;
+    for(var _gfi=0;_gfi<GANYMEDE_FEATURES.length;_gfi++){
+      var _gnd=angSepDeg(lat||0,lngDeg||0,GANYMEDE_FEATURES[_gfi].lat,GANYMEDE_FEATURES[_gfi].lng);
+      if(_gnd<_gnMin){_gnMin=_gnd;_gnIdx=_gfi;}
+    }
+    if(_gnMin<6&&_gnIdx>=0){var _gnSel=GANYMEDE_FEATURES[_gnIdx];
+      ctx.fillStyle="rgba(210,200,180,0.92)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText(_gnSel.n,W*0.72,H-42);
+      ctx.fillStyle="rgba(190,182,165,0.7)";ctx.font="7px sans-serif";
+      ctx.fillText(_gnSel.info.split(" ")[0],W*0.72,H-30);}
   }else if(plName==="Callisto"){
-    /* Old dark ice, dense multi-ring craters */
-    var clr=seedR(111);ctx.globalAlpha=0.22;
-    for(var cali=0;cali<12;cali++){var calx=clr()*W,caly=hrzY+8+clr()*(H-hrzY-15),calsz=5+clr()*20;
-      ctx.fillStyle="rgba(25,22,18,1)";ctx.beginPath();ctx.arc(calx,caly,calsz,0,TAU);ctx.fill();
-      ctx.strokeStyle="rgba(88,82,72,1)";ctx.lineWidth=0.8;ctx.beginPath();ctx.arc(calx,caly,calsz*1.35,0,TAU);ctx.stroke();}
+    /* 太陽系で最も密にクレーターが刻まれた天体: 暗い古代氷地面、低起伏の"緩和"クレーター群、
+       ヴァルハラ盆地(直径3800km)の同心リング、明るい霜の縁取り */
+    var clr=seedR(111);
+    /* 暗い汚れた氷のパッチ — アルベド0.17の非常に暗い表面 */
+    ctx.globalAlpha=0.20;ctx.fillStyle="rgba(20,16,12,1)";
+    for(var cldi=0;cldi<10;cldi++){
+      var cldx=clr()*W,cldy=hrzY+10+clr()*(H-hrzY-20),cldr=22+clr()*55;
+      ctx.beginPath();ctx.ellipse(cldx,cldy,cldr,cldr*0.32,(clr()-0.5)*0.3,0,TAU);ctx.fill();
+    }
     ctx.globalAlpha=1;
+    /* 密集した古代クレーター — 全て低起伏(氷の緩和でリムが低い) */
+    ctx.globalAlpha=0.34;
+    for(var clci=0;clci<28;clci++){
+      var clcx=clr()*W,clcy=hrzY+7+clr()*(H-hrzY-14);
+      var clcD=(clcy-hrzY)/(H-hrzY),clcsz=(1.5+clcD*10+clr()*5*clcD);
+      ctx.fillStyle="rgba(26,22,16,1)";
+      ctx.beginPath();ctx.ellipse(clcx,clcy,clcsz,clcsz*0.65,0,0,TAU);ctx.fill();
+      /* 明るい霜のリム — カリスト特有の白い霜が縁に堆積 */
+      ctx.globalAlpha=0.18;ctx.strokeStyle="rgba(158,148,130,1)";ctx.lineWidth=0.5+clcD*0.8;
+      ctx.beginPath();ctx.ellipse(clcx,clcy,clcsz*1.28,clcsz*0.85,0,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.34;
+    }
+    ctx.globalAlpha=1;
+    /* ヴァルハラ盆地の同心リング — 付近では地平線に弧状の隆起帯が並ぶ */
+    var _vlDist=angSepDeg(lat||0,lngDeg||0,16,10);
+    if(_vlDist<35){
+      var _vlF=Math.max(0,1-_vlDist/35);
+      ctx.globalAlpha=0.28*_vlF;ctx.strokeStyle="rgba(105,98,84,1)";
+      for(var vlri=0;vlri<5;vlri++){
+        ctx.lineWidth=1.0+vlri*0.4;
+        var vlry=hrzY+18+(vlri+1)*((H-hrzY)*0.12);
+        ctx.beginPath();ctx.moveTo(0,vlry);
+        for(var vlrx=0;vlrx<=W;vlrx+=10){ctx.lineTo(vlrx,vlry+Math.sin(vlrx*0.018+vlri*1.1)*2.5+(clr()-0.5)*1.5);}
+        ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
+    /* 明るい霜の堆積物(大きなクレーター周辺に広がる) */
+    ctx.globalAlpha=0.09;ctx.fillStyle="rgba(188,180,162,1)";
+    for(var clfi=0;clfi<6;clfi++){
+      var clfx=clr()*W,clfy=hrzY+14+clr()*(H-hrzY-26),clfsz=16+clr()*38;
+      ctx.beginPath();ctx.ellipse(clfx,clfy,clfsz,clfsz*0.26,(clr()-0.5)*0.5,0,TAU);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    /* CALLISTO_FEATURES 近接ラベル */
+    var _clMin=1e9,_clIdx=-1;
+    for(var _cfi2=0;_cfi2<CALLISTO_FEATURES.length;_cfi2++){
+      var _cld=angSepDeg(lat||0,lngDeg||0,CALLISTO_FEATURES[_cfi2].lat,CALLISTO_FEATURES[_cfi2].lng);
+      if(_cld<_clMin){_clMin=_cld;_clIdx=_cfi2;}
+    }
+    if(_clMin<10&&_clIdx>=0){var _clSel=CALLISTO_FEATURES[_clIdx];
+      ctx.fillStyle="rgba(195,185,165,0.92)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText(_clSel.n,W*0.72,H-42);
+      ctx.fillStyle="rgba(172,164,145,0.7)";ctx.font="7px sans-serif";
+      ctx.fillText(_clSel.info.split(" ")[0],W*0.72,H-30);}
   }else if(plName==="Titan"){
     /* East-west aligned hydrocarbon sand dunes (Titan's linear dunes are 100-150m tall,
        100km+ long, formed by Saturn-tide winds) + dark methane lake patches */

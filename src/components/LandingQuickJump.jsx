@@ -1,5 +1,5 @@
 // @ts-check
-import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES } from "../data/solarData.js";
+import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES } from "../data/solarData.js";
 
 /* 着陸モード下部のクイックジャンプ行設定。
    各天体に対応する着陸地点リストと、ボタンに表示するキー文字列を生成する関数。 */
@@ -22,6 +22,8 @@ var QUICK_JUMP_CONFIG=[
   {match:function(l){return l==="Phobos";},label:"地形",col:"200,178,148",textCol:"222,202,175",sites:PHOBOS_FEATURES,getKey:function(s){return s.en;}},
   {match:function(l){return l==="Europa";},label:"地形",col:"180,165,215",textCol:"205,192,232",sites:EUROPA_FEATURES,getKey:function(s){return s.en;}},
   {match:function(l){return l==="Io";},label:"火山",col:"255,170,60",textCol:"255,205,130",sites:IO_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Ganymede";},label:"地形",col:"205,196,176",textCol:"225,218,200",sites:GANYMEDE_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Callisto";},label:"地形",col:"188,180,162",textCol:"210,202,185",sites:CALLISTO_FEATURES,getKey:function(s){return s.en;}},
 ];
 
 /**
