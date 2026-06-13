@@ -1,5 +1,5 @@
 // @ts-check
-import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES } from "../data/solarData.js";
+import { TAU, APOLLO_SITES, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES, ERIS_FEATURES } from "../data/solarData.js";
 import { fillCirc, seedR } from "./utils.js";
 import { terrainH, angSepDeg } from "./landingUtils.js";
 
@@ -744,6 +744,48 @@ function drawLandingTerrain(ctx,W,H,hrzY,plName,yaw,biome,bConf,sf,rng,t,dayF,la
     for(var _cfi=0;_cfi<CHARON_FEATURES.length;_cfi++){var _cf=CHARON_FEATURES[_cfi];
       var _cfda=angSepDeg(lat||0,lngDeg||0,_cf.lat,_cf.lng);
       if(_cfda<10){ctx.fillStyle="rgba(255,180,140,0.75)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";ctx.fillText(_cf.n,W*0.72,H-42);break;}}
+  }else if(plName==="Eris"){
+    /* 太陽系最遠の準惑星: メタン氷に覆われた超高アルベド(0.96)の白い荒野。
+       大気なし・地質活動なし・太陽は−16等の点光源。9万6千天文単位の彼方の静寂。 */
+    var err=seedR(963);
+    /* メタン霜の明るいまだら — 極薄い網目状の模様 */
+    ctx.globalAlpha=0.12;ctx.fillStyle="rgba(235,234,238,1)";
+    for(var erdi=0;erdi<8;erdi++){
+      var erdx=err()*W,erdy=hrzY+8+err()*(H-hrzY-16),erdr=18+err()*50;
+      ctx.beginPath();ctx.ellipse(erdx,erdy,erdr,erdr*0.28,(err()-0.5)*0.4,0,TAU);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    /* 少数の古い浅いクレーター — 散乱するクレーター数はケレス以下 */
+    ctx.globalAlpha=0.24;
+    for(var erci=0;erci<12;erci++){
+      var ercx=err()*W,ercy=hrzY+6+err()*(H-hrzY-12);
+      var ercD=(ercy-hrzY)/(H-hrzY),ercsz=(1+ercD*8+err()*4*ercD);
+      ctx.fillStyle="rgba(110,108,112,1)";
+      ctx.beginPath();ctx.ellipse(ercx,ercy,ercsz,ercsz*0.60,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=0.11;ctx.strokeStyle="rgba(218,216,222,1)";ctx.lineWidth=0.5+ercD*0.6;
+      ctx.beginPath();ctx.ellipse(ercx,ercy,ercsz*1.18,ercsz*0.73,0,0,TAU);ctx.stroke();
+      ctx.globalAlpha=0.24;
+    }
+    ctx.globalAlpha=1;
+    /* ダイズノミア展望地付近(14°以内)で薄暗い帯が見える — Hubble観測の暗帯を表現 */
+    var _erDDist=angSepDeg(lat||0,lngDeg||0,-14,148);
+    if(_erDDist<22){
+      var _erDF=Math.max(0,1-_erDDist/22);
+      ctx.globalAlpha=0.13*_erDF;ctx.fillStyle="rgba(80,76,82,1)";
+      ctx.beginPath();ctx.ellipse(W*0.5,hrzY+H*0.22,W*0.42,H*0.08,0,0,TAU);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+    /* ERIS_FEATURES 近接ラベル */
+    var _erMin=1e9,_erIdx=-1;
+    for(var _eri=0;_eri<ERIS_FEATURES.length;_eri++){
+      var _erd=angSepDeg(lat||0,lngDeg||0,ERIS_FEATURES[_eri].lat,ERIS_FEATURES[_eri].lng);
+      if(_erd<_erMin){_erMin=_erd;_erIdx=_eri;}
+    }
+    if(_erMin<14&&_erIdx>=0){var _erSel=ERIS_FEATURES[_erIdx];
+      ctx.fillStyle="rgba(220,218,228,0.92)";ctx.font="bold 9px sans-serif";ctx.textAlign="center";
+      ctx.fillText(_erSel.n,W*0.72,H-42);
+      ctx.fillStyle="rgba(195,193,205,0.7)";ctx.font="7px sans-serif";
+      ctx.fillText(_erSel.info.split(" ")[0],W*0.72,H-30);}
   }else if(plName==="Phobos"){
     /* Very dark, heavily cratered carbonaceous body. Dominated by Stickney crater
        and characteristic parallel groove system caused by tidal stress from Mars. */

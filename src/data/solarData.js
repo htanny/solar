@@ -311,6 +311,12 @@ export var CERES_FEATURES=[
   {n:"ハウラニ・クレーター",en:"Haulani",lat:5.8,lng:11,info:"直径34kmの若いクレーター 青みがかった明るいエジェクタ"},
   {n:"ヤロード盆地",en:"Yalode",lat:-42.6,lng:293,info:"直径260kmの衝突盆地 南半球の古地形 ウルヴァラ盆地と隣接"},
 ];
+/* Eris landmarks (spacecraft未到達・Hubble観測ベースの推定地形) */
+export var ERIS_FEATURES=[
+  {n:"ゼナ高地",en:"Xena Highlands",lat:28,lng:62,info:"発見時の愛称Xenaに因む 明るいメタン霜で覆われた丘陵 アルベド0.96"},
+  {n:"ダイズノミア展望地",en:"Dysnomia Rise",lat:-14,lng:148,info:"衛星ダイズノミアが最大視直径で見える地点 表面の暗帯がHubbleで確認"},
+  {n:"ニクテウス平原",en:"Nyctelius Planum",lat:4,lng:275,info:"均一なメタン氷の広大な平原 太陽まで96AU 太陽は−16等の明星として輝く"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
