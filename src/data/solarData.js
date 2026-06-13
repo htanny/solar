@@ -303,6 +303,20 @@ export var CALLISTO_FEATURES=[
   {n:"アディンダ環",en:"Adlinda",lat:-58,lng:22,info:"南半球の多重リング構造 直径1600km ヴォイジャー2号が撮影"},
   {n:"ティール・マクラ",en:"Tyr Macula",lat:23,lng:215,info:"明るい斑点状古地形 古代の地殻変動の痕跡 40億年前の表面"},
 ];
+/* Ceres geological landmarks (Dawn 2015-2018) */
+export var CERES_FEATURES=[
+  {n:"オッカトル・クレーター",en:"Occator",lat:19.8,lng:239,info:"直径92km 中央輝点ケレアリア・ファクラは炭酸ナトリウム塩 地下塩水の噴出痕"},
+  {n:"アフナ山",en:"Ahuna Mons",lat:-10.5,lng:316,info:"高さ4kmの孤立氷火山 太陽系で最も若いクリオボルケーノのひとつ"},
+  {n:"ケルワン盆地",en:"Kerwan",lat:-10.8,lng:124,info:"直径280kmの最大クレーター 浅く緩和した古い衝突盆地"},
+  {n:"ハウラニ・クレーター",en:"Haulani",lat:5.8,lng:11,info:"直径34kmの若いクレーター 青みがかった明るいエジェクタ"},
+  {n:"ヤロード盆地",en:"Yalode",lat:-42.6,lng:293,info:"直径260kmの衝突盆地 南半球の古地形 ウルヴァラ盆地と隣接"},
+];
+/* Eris landmarks (spacecraft未到達・Hubble観測ベースの推定地形) */
+export var ERIS_FEATURES=[
+  {n:"ゼナ高地",en:"Xena Highlands",lat:28,lng:62,info:"発見時の愛称Xenaに因む 明るいメタン霜で覆われた丘陵 アルベド0.96"},
+  {n:"ダイズノミア展望地",en:"Dysnomia Rise",lat:-14,lng:148,info:"衛星ダイズノミアが最大視直径で見える地点 表面の暗帯がHubbleで確認"},
+  {n:"ニクテウス平原",en:"Nyctelius Planum",lat:4,lng:275,info:"均一なメタン氷の広大な平原 太陽まで96AU 太陽は−16等の明星として輝く"},
+];
 /* Triton geological landmarks */
 export var TRITON_FEATURES=[
   {n:"カンタロウプ地形",en:"Cantaloupe Terrain",lat:15,lng:30,info:"メロンの皮状の凹凸地形 直径25-35kmの円形構造が密集"},
