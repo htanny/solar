@@ -1,32 +1,5 @@
 // @ts-check
-import { APOLLO_SITES, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES, ERIS_FEATURES } from "../data/solarData.js";
-
-/* 着陸モード下部のクイックジャンプ行設定。
-   各天体に対応する着陸地点リストと、ボタンに表示するキー文字列を生成する関数。 */
-var APOLLO_LABELS=["11","12","14","15","16","17"];
-var VENERA_LABELS=["V4","V7","V9","V13","V14"];
-
-var QUICK_JUMP_CONFIG=[
-  {match:function(l){return l==="Moon";},label:"アポロ",col:"255,180,30",textCol:"255,220,80",sites:APOLLO_SITES,getKey:function(_s,i){return "A"+APOLLO_LABELS[i];}},
-  {match:function(l){return l==="Venus";},label:"ベネラ",col:"255,160,30",textCol:"255,200,80",sites:VENUS_LANDERS,getKey:function(_s,i){return VENERA_LABELS[i];}},
-  {match:function(l){return l==="Mercury";},label:"探査機",col:"180,200,255",textCol:"200,220,255",sites:MERCURY_SITES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Titan";},label:"地形",col:"218,168,88",textCol:"240,200,130",sites:TITAN_FEATURES,getKey:function(s){return s.n;}},
-  {match:function(l){return l==="Titan";},label:"探査機",col:"255,180,80",textCol:"255,210,140",sites:TITAN_PROBES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Triton";},label:"地形",col:"220,205,185",textCol:"240,225,205",sites:TRITON_FEATURES,getKey:function(s){return s.n;}},
-  {match:function(l){return l==="Enceladus";},label:"地形",col:"200,225,250",textCol:"215,235,255",sites:ENCELADUS_FEATURES,getKey:function(s){return s.n;}},
-  {match:function(l){return l==="Miranda";},label:"地形",col:"160,200,215",textCol:"185,218,230",sites:MIRANDA_FEATURES,getKey:function(s){return s.n;}},
-  {match:function(l){return l==="Pluto";},label:"地形",col:"255,220,180",textCol:"255,230,200",sites:PLUTO_FEATURES,getKey:function(s){return s.n;},
-   extras:[{label:"NH最接近",col:"255,220,80",textCol:"255,230,120",lat:OUTER_PROBES[0].lat,lng:OUTER_PROBES[0].lng}]},
-  {match:function(l){return l==="Charon";},label:"地形",col:"255,200,180",textCol:"255,215,200",sites:CHARON_FEATURES,getKey:function(s){return s.n;}},
-  {match:function(l){return l==="Itokawa"||l==="Ryugu";},label:"着陸点",col:"160,180,255",textCol:"200,215,255",sites:HAYABUSA_SITES,filter:function(s,landing){return s.body===landing;},getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Phobos";},label:"地形",col:"200,178,148",textCol:"222,202,175",sites:PHOBOS_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Europa";},label:"地形",col:"180,165,215",textCol:"205,192,232",sites:EUROPA_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Io";},label:"火山",col:"255,170,60",textCol:"255,205,130",sites:IO_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Ganymede";},label:"地形",col:"205,196,176",textCol:"225,218,200",sites:GANYMEDE_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Callisto";},label:"地形",col:"188,180,162",textCol:"210,202,185",sites:CALLISTO_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Ceres";},label:"地形",col:"218,212,200",textCol:"235,230,218",sites:CERES_FEATURES,getKey:function(s){return s.en;}},
-  {match:function(l){return l==="Eris";},label:"地形",col:"220,218,228",textCol:"238,236,245",sites:ERIS_FEATURES,getKey:function(s){return s.en;}},
-];
+import { QUICK_JUMP_CONFIG } from "../data/solarData.js";
 
 /**
  * @param {Object} props

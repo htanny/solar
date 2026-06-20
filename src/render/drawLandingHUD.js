@@ -1,30 +1,7 @@
 // @ts-check
-import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, VENUS_LANDERS, MERCURY_SITES, TITAN_PROBES, TITAN_FEATURES, HAYABUSA_SITES, TRITON_FEATURES, ENCELADUS_FEATURES, MIRANDA_FEATURES, PLUTO_FEATURES, CHARON_FEATURES, OUTER_PROBES, PHOBOS_FEATURES, EUROPA_FEATURES, IO_FEATURES, GANYMEDE_FEATURES, CALLISTO_FEATURES, CERES_FEATURES, ERIS_FEATURES, PARENT_OF, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
+import { TAU, MAP_CTNS, APOLLO_SITES, LUNAR_MARIA, MARS_LANDMARKS, TITAN_PROBES, HAYABUSA_SITES, OUTER_PROBES, NEAREST_CFG, HUD_TALL, PARENT_OF, PL_MAP, DWARF_MAP, orbitState } from "../data/solarData.js";
 import { fillCirc } from "./utils.js";
 import { angSepDeg } from "./landingUtils.js";
-
-/* 「最寄: ○○ XXkm」表示の天体別設定。sites=地名配列 / r=天体半径(km) / col=表示色。
-   特殊フォーマットを持つ Moon(秤動)・Mars(方位)・Itokawa/Ryugu(m単位+body絞り込み)・
-   HalleyCore(固定文言) は個別ブロックのまま。 */
-var NEAREST_CFG={
-  Venus:{sites:VENUS_LANDERS,r:6051.8,col:"rgba(255,200,120,0.72)"},
-  Mercury:{sites:MERCURY_SITES,r:2439.7,col:"rgba(200,200,228,0.72)"},
-  Titan:{sites:TITAN_FEATURES,r:2575,col:"rgba(255,210,140,0.78)"},
-  Triton:{sites:TRITON_FEATURES,r:1353,col:"rgba(220,205,185,0.78)"},
-  Enceladus:{sites:ENCELADUS_FEATURES,r:252,col:"rgba(200,225,250,0.8)"},
-  Miranda:{sites:MIRANDA_FEATURES,r:236,col:"rgba(200,220,235,0.78)"},
-  Pluto:{sites:PLUTO_FEATURES,r:1188,col:"rgba(255,220,180,0.78)"},
-  Charon:{sites:CHARON_FEATURES,r:606,col:"rgba(255,200,180,0.78)"},
-  Phobos:{sites:PHOBOS_FEATURES,r:11.267,col:"rgba(218,200,178,0.80)"},
-  Europa:{sites:EUROPA_FEATURES,r:1560.8,col:"rgba(185,175,215,0.78)"},
-  Io:{sites:IO_FEATURES,r:1821.6,col:"rgba(255,195,110,0.80)"},
-  Ganymede:{sites:GANYMEDE_FEATURES,r:2634.1,col:"rgba(205,196,176,0.78)"},
-  Callisto:{sites:CALLISTO_FEATURES,r:2410.3,col:"rgba(188,180,162,0.78)"},
-  Ceres:{sites:CERES_FEATURES,r:469.7,col:"rgba(218,212,200,0.78)"},
-  Eris:{sites:ERIS_FEATURES,r:1163,col:"rgba(220,218,228,0.78)"},
-};
-/* 下部に最寄情報行を持つ着陸先（HUD 背景を 104px に拡張する天体） */
-var HUD_TALL={Moon:1,Mars:1,Venus:1,Mercury:1,Titan:1,Itokawa:1,Ryugu:1,Triton:1,Enceladus:1,Miranda:1,Pluto:1,Charon:1,HalleyCore:1,Phobos:1,Europa:1,Io:1,Ganymede:1,Callisto:1,Ceres:1,Eris:1};
 
 /**
  * @param {CanvasRenderingContext2D} ctx

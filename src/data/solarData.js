@@ -374,6 +374,54 @@ export var HAYABUSA_SITES=[
   {n:"はやぶさ2（TD1）",en:"Hayabusa2 TD1",body:"Ryugu",lat:11.0,lng:228.0,date:"2019-02",info:"JAXA はやぶさ2 第1回タッチダウン"},
 ];
 
+/* ===== 着陸クイックジャンプ設定 ===== */
+/* 天体ごとのジャンプボタン行設定。新天体追加時はここに1行追加するだけでよい。 */
+var _ALA=["11","12","14","15","16","17"];
+var _VEL=["V4","V7","V9","V13","V14"];
+export var QUICK_JUMP_CONFIG=[
+  {match:function(l){return l==="Moon";},label:"アポロ",col:"255,180,30",textCol:"255,220,80",sites:APOLLO_SITES,getKey:function(_s,i){return "A"+_ALA[i];}},
+  {match:function(l){return l==="Venus";},label:"ベネラ",col:"255,160,30",textCol:"255,200,80",sites:VENUS_LANDERS,getKey:function(_s,i){return _VEL[i];}},
+  {match:function(l){return l==="Mercury";},label:"探査機",col:"180,200,255",textCol:"200,220,255",sites:MERCURY_SITES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Titan";},label:"地形",col:"218,168,88",textCol:"240,200,130",sites:TITAN_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Titan";},label:"探査機",col:"255,180,80",textCol:"255,210,140",sites:TITAN_PROBES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Triton";},label:"地形",col:"220,205,185",textCol:"240,225,205",sites:TRITON_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Enceladus";},label:"地形",col:"200,225,250",textCol:"215,235,255",sites:ENCELADUS_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Miranda";},label:"地形",col:"160,200,215",textCol:"185,218,230",sites:MIRANDA_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Pluto";},label:"地形",col:"255,220,180",textCol:"255,230,200",sites:PLUTO_FEATURES,getKey:function(s){return s.n;},
+   extras:[{label:"NH最接近",col:"255,220,80",textCol:"255,230,120",lat:OUTER_PROBES[0].lat,lng:OUTER_PROBES[0].lng}]},
+  {match:function(l){return l==="Charon";},label:"地形",col:"255,200,180",textCol:"255,215,200",sites:CHARON_FEATURES,getKey:function(s){return s.n;}},
+  {match:function(l){return l==="Itokawa"||l==="Ryugu";},label:"着陸点",col:"160,180,255",textCol:"200,215,255",sites:HAYABUSA_SITES,filter:function(s,landing){return s.body===landing;},getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Phobos";},label:"地形",col:"200,178,148",textCol:"222,202,175",sites:PHOBOS_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Europa";},label:"地形",col:"180,165,215",textCol:"205,192,232",sites:EUROPA_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Io";},label:"火山",col:"255,170,60",textCol:"255,205,130",sites:IO_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Ganymede";},label:"地形",col:"205,196,176",textCol:"225,218,200",sites:GANYMEDE_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Callisto";},label:"地形",col:"188,180,162",textCol:"210,202,185",sites:CALLISTO_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Ceres";},label:"地形",col:"218,212,200",textCol:"235,230,218",sites:CERES_FEATURES,getKey:function(s){return s.en;}},
+  {match:function(l){return l==="Eris";},label:"地形",col:"220,218,228",textCol:"238,236,245",sites:ERIS_FEATURES,getKey:function(s){return s.en;}},
+];
+
+/* ===== HUD最寄表示設定 ===== */
+/* 天体別「最寄: ○○ XXkm」表示の設定。r=天体半径(km)。新天体追加時はここに1行追加。 */
+export var NEAREST_CFG={
+  Venus:{sites:VENUS_LANDERS,r:6051.8,col:"rgba(255,200,120,0.72)"},
+  Mercury:{sites:MERCURY_SITES,r:2439.7,col:"rgba(200,200,228,0.72)"},
+  Titan:{sites:TITAN_FEATURES,r:2575,col:"rgba(255,210,140,0.78)"},
+  Triton:{sites:TRITON_FEATURES,r:1353,col:"rgba(220,205,185,0.78)"},
+  Enceladus:{sites:ENCELADUS_FEATURES,r:252,col:"rgba(200,225,250,0.8)"},
+  Miranda:{sites:MIRANDA_FEATURES,r:236,col:"rgba(200,220,235,0.78)"},
+  Pluto:{sites:PLUTO_FEATURES,r:1188,col:"rgba(255,220,180,0.78)"},
+  Charon:{sites:CHARON_FEATURES,r:606,col:"rgba(255,200,180,0.78)"},
+  Phobos:{sites:PHOBOS_FEATURES,r:11.267,col:"rgba(218,200,178,0.80)"},
+  Europa:{sites:EUROPA_FEATURES,r:1560.8,col:"rgba(185,175,215,0.78)"},
+  Io:{sites:IO_FEATURES,r:1821.6,col:"rgba(255,195,110,0.80)"},
+  Ganymede:{sites:GANYMEDE_FEATURES,r:2634.1,col:"rgba(205,196,176,0.78)"},
+  Callisto:{sites:CALLISTO_FEATURES,r:2410.3,col:"rgba(188,180,162,0.78)"},
+  Ceres:{sites:CERES_FEATURES,r:469.7,col:"rgba(218,212,200,0.78)"},
+  Eris:{sites:ERIS_FEATURES,r:1163,col:"rgba(220,218,228,0.78)"},
+};
+/* 下部に最寄情報行を持つ着陸先（HUD 背景を 104px に拡張する天体）。新天体追加時はここにも1行追加。 */
+export var HUD_TALL={Moon:1,Mars:1,Venus:1,Mercury:1,Titan:1,Itokawa:1,Ryugu:1,Triton:1,Enceladus:1,Miranda:1,Pluto:1,Charon:1,HalleyCore:1,Phobos:1,Europa:1,Io:1,Ganymede:1,Callisto:1,Ceres:1,Eris:1};
+
 /* Exoplanets - rendered only in landing mode (not in solar view) */
 export var EXOPLANETS=[
   {n:"ProximaB",j:"プロキシマb",e:"Proxima Centauri b",d:0,r:7.0,p:11.2,c:"rgba(165,90,55,1)",t:0,rot:11.2,type:"rock",
