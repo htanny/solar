@@ -72,6 +72,83 @@ function mixRGB(c1,c2,f){
   return Math.round(c1[0]+(c2[0]-c1[0])*f)+","+Math.round(c1[1]+(c2[1]-c1[1])*f)+","+Math.round(c1[2]+(c2[2]-c1[2])*f);
 }
 
+/* ===== ミニドリル: MOON_POS/VENUS_POS から動的に問題を生成 ===== */
+function shuf(arr){return arr.slice().sort(function(){return Math.random()-0.5;});}
+function shufQ(q){
+  var idx=q.opts.map(function(_,i){return i;}).sort(function(){return Math.random()-0.5;});
+  return Object.assign({},q,{opts:idx.map(function(i){return q.opts[i];}),c:idx.indexOf(q.c)});
+}
+var H_NAMES={0:"真夜中0時",3:"3時",6:"明け方6時",9:"9時",12:"正午",15:"15時",18:"夕方18時",21:"21時"};
+function hLabel(h,en){return en?"around "+h+":00":(H_NAMES[h]||h+"時")+"ごろ";}
+var DIR_OFFS=[{off:-6,j:"東",e:"E"},{off:-3,j:"南東",e:"SE"},{off:0,j:"南",e:"S"},{off:3,j:"南西",e:"SW"},{off:6,j:"西",e:"W"}];
+
+/* 金星の固定問題バンク(正解は常に先頭=c:0、出題時にシャッフル) */
+var VENUS_BANK=[
+  {q:"夕方、西の空に見える金星の呼び名は？",qe:"What is Venus called in the western evening sky?",
+   opts:["宵の明星","明けの明星","天狼星","彗星"],optsE:["Evening star","Morning star","Sirius","A comet"],c:0,
+   expl:"日没後の西の空に見えるのが宵の明星(東方最大離角の側)",explE:"Venus after sunset in the west is the evening star",vjump:6},
+  {q:"明けの明星が見えるのはいつ・どの方角？",qe:"When and where is the morning star visible?",
+   opts:["明け方・東の空","夕方・西の空","真夜中・南の空","正午・北の空"],optsE:["Dawn · east","Dusk · west","Midnight · south","Noon · north"],c:0,
+   expl:"太陽より先に昇るとき、明け方の東の空に見える",explE:"It rises before the Sun, visible in the eastern dawn sky",vjump:2},
+  {q:"地球から金星が見えないのはどの位置のとき？",qe:"At which positions is Venus invisible from Earth?",
+   opts:["内合と外合","東方最大離角","西方最大離角","地球に最も近いときすべて"],optsE:["Inferior & superior conjunction","Greatest eastern elongation","Greatest western elongation","Whenever closest to Earth"],c:0,
+   expl:"太陽と同じ方向になる内合・外合では見えない",explE:"At both conjunctions Venus lies in the Sun's direction",vjump:0},
+  {q:"内合の直前の金星はどう見える？",qe:"How does Venus look just before inferior conjunction?",
+   opts:["大きくて細い三日月形","小さくて丸い形","最も小さい半月形","形も大きさも変わらない"],optsE:["Large thin crescent","Small and round","Smallest half-lit","No change"],c:0,
+   expl:"地球に近いほど大きく、太陽との位置関係で細く欠ける",explE:"Closer to Earth = larger; the geometry makes it a thin crescent",vjump:7},
+];
+
+function makeDrillQs(en){
+  var qs=[];
+  var mains=[2,4,6];/* 上弦・満月・下弦 */
+  /* 南中時刻 ×2 */
+  var mm=shuf(mains);
+  [mm[0],mm[1]].forEach(function(mi){
+    var m=MOON_POS[mi];
+    var optsH=shuf([0,6,12,18]);
+    qs.push({
+      q:en?"Around what time does the "+m.e+" reach its highest point (due south)?":m.j+"が南中する（南の空で最も高くなる）のは何時ごろ？",
+      opts:optsH.map(function(h){return hLabel(h,en);}),c:optsH.indexOf(m.southH),
+      expl:en?"The "+m.e+" souths at "+m.southH+":00 — rises 6 h before, sets 6 h after":m.j+"の南中は"+hLabel(m.southH,en)+"。月の出はその6時間前、月の入りは6時間後",
+      jump:{sel:mi,hh:m.southH}});
+  });
+  /* 方角 ×2 */
+  var pool2=shuf([1,2,3,4,5,6,7]);
+  [pool2[0],pool2[1]].forEach(function(mi){
+    var m=MOON_POS[mi];
+    var d=DIR_OFFS[Math.floor(Math.random()*DIR_OFFS.length)];
+    var t=(m.southH+d.off+24)%24;
+    var correct=en?d.e:d.j;
+    var opts=shuf(DIR_OFFS.map(function(x){return en?x.e:x.j;}).filter(function(o){return o!==correct;})).slice(0,3);
+    opts.push(correct);opts=shuf(opts);
+    qs.push({
+      q:en?"In which direction is the "+m.e+" visible "+hLabel(t,en)+"?":hLabel(t,en)+"、"+m.j+"が見えるのはどの方角？",
+      opts:opts,c:opts.indexOf(correct),
+      expl:en?"It souths at "+m.southH+":00, so "+hLabel(t,en)+" it is in the "+d.e+(Math.abs(d.off)===6?" (on the horizon)":""):
+        m.j+"の南中は"+m.southH+"時。"+t+"時は"+(d.off===0?"ちょうど南中":(d.off<0?(-d.off)+"時間前":d.off+"時間後"))+"なので「"+d.j+"」"+(Math.abs(d.off)===6?"（地平線ぎわ）":""),
+      jump:{sel:mi,hh:t}});
+  });
+  /* どの月? ×2 */
+  var tt=shuf([18,0,6]);
+  [tt[0],tt[1]].forEach(function(t){
+    var correct=mains.filter(function(mi){return MOON_POS[mi].southH===t;})[0];
+    var optIdx=shuf([1,2,4,6]);
+    qs.push({
+      q:en?"Which moon is high in the southern sky "+hLabel(t,en)+"?":hLabel(t,en)+"、南の空高くに見える月は？",
+      opts:optIdx.map(function(i){return en?MOON_POS[i].e:MOON_POS[i].j;}),c:optIdx.indexOf(correct),
+      expl:en?"The moon southing at "+t+":00 is the "+MOON_POS[correct].e:t+"時に南中するのは"+MOON_POS[correct].j+"（南中時刻で位相が決まる）",
+      jump:{sel:correct,hh:t}});
+  });
+  /* 金星 ×2 */
+  shuf(VENUS_BANK).slice(0,2).forEach(function(b){
+    qs.push(shufQ({q:en?b.qe:b.q,opts:en?b.optsE:b.opts,c:b.c,expl:en?b.explE:b.expl,vjump:b.vjump}));
+  });
+  return shuf(qs);
+}
+
+function loadDrillStats(){try{return JSON.parse(localStorage.getItem("solar_drill")||'{"n":0,"c":0}');}catch(e){return{n:0,c:0};}}
+function saveDrillStats(addN,addC){try{var s=loadDrillStats();s.n+=addN;s.c+=addC;localStorage.setItem("solar_drill",JSON.stringify(s));}catch(e){}}
+
 /* 輝面率fracの月・金星をSVGパスで描く。litLeft=左側が光る。戻り値: null=全暗, "full"=全灯 */
 function phasePath(cx,cy,r,frac,litLeft){
   if(frac<=0.03)return null;
@@ -99,6 +176,7 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
   var[selM,setSelM]=useState(2);/* 上弦 */
   var[selV,setSelV]=useState(6);/* 東方最大離角 */
   var[hh,setHH]=useState(18);/* 地上ビューの時刻(0-23時) */
+  var[drill,setDrill]=useState(null);/* {qs,idx,score,answered} */
   if(!visible)return null;
   var en=lang==="en";
   var deg2rad=Math.PI/180;
@@ -269,8 +347,9 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
       <button aria-label={en?"Close":"閉じる"} style={bClose} onClick={function(){dispatchPanel({type:"TOGGLE",key:"examOpen"});}}>✕</button>
     </div>
     <div style={{display:"flex",gap:4,marginBottom:8}}>
-      <button style={Object.assign({},tab==="moon"?bT("255,220,120"):bF,{flex:1,padding:"5px 0",fontSize:11})} onClick={function(){setTab("moon");}}>{en?"🌙 Moon Phases":"🌙 月の満ち欠け"}</button>
-      <button style={Object.assign({},tab==="venus"?bT("255,190,130"):bF,{flex:1,padding:"5px 0",fontSize:11})} onClick={function(){setTab("venus");}}>{en?"✨ Venus":"✨ 金星の見え方"}</button>
+      <button style={Object.assign({},tab==="moon"?bT("255,220,120"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("moon");}}>{en?"🌙 Moon":"🌙 月の満ち欠け"}</button>
+      <button style={Object.assign({},tab==="venus"?bT("255,190,130"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("venus");}}>{en?"✨ Venus":"✨ 金星"}</button>
+      <button style={Object.assign({},tab==="drill"?bT("150,230,170"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("drill");}}>{en?"✏️ Drill":"✏️ ドリル"}</button>
     </div>
 
     {tab==="moon"?<div>
@@ -308,7 +387,7 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
         {en?"· Solar eclipse = new moon / lunar eclipse = full moon":"・日食は新月のとき、月食は満月のとき"}<br/>
         {en?"· First quarter souths at dusk, last quarter at dawn":"・上弦は夕方に南中、下弦は明け方に南中"}
       </div>
-    </div>:<div>
+    </div>:tab==="venus"?<div>
       <div style={{fontSize:9,color:"rgba(255,255,255,0.55)",marginBottom:6}}>{en?"Click a Venus position (A–H). Venus orbits inside Earth's orbit, so it is never visible at midnight.":"金星の位置(ア〜ク)をクリック。金星は地球より内側を公転するため、真夜中には決して見えない。"}</div>
       {venusSvg}
       <div style={{display:"flex",gap:10,marginTop:8,alignItems:"center"}}>
@@ -336,6 +415,58 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
         {en?"· Closer to Earth → larger & thinner crescent":"・地球に近づくほど大きく・細く見える"}<br/>
         {en?"· Evening star: west at dusk / morning star: east at dawn":"・宵の明星=夕方西の空、明けの明星=明け方東の空"}
       </div>
+    </div>:<div>
+      {/* ===== ドリルタブ ===== */}
+      {!drill?(function(){
+        var st=loadDrillStats();
+        return <div>
+          <div style={{fontSize:10,lineHeight:"16px",color:"rgba(255,255,255,0.8)",marginBottom:8}}>
+            {en?"8 random questions on when, where, and which phase — generated from the same data as the diagrams. Wrong answer? Jump straight to the diagram to see why.":"「いつ・どの方角・どの月？」を図解と同じデータからランダムに8問出題。まちがえたらその場で図にジャンプして確認できます。"}
+          </div>
+          {st.n>0&&<div style={{fontSize:10,color:"rgba(150,230,170,0.9)",marginBottom:8}}>
+            {en?"Overall: "+st.c+"/"+st.n+" correct ("+Math.round(st.c/st.n*100)+"%)":"通算成績: "+st.n+"問中"+st.c+"問正解（"+Math.round(st.c/st.n*100)+"%）"}
+          </div>}
+          <button style={Object.assign({},bT("150,230,170"),{width:"100%",padding:"8px",fontSize:12})} onClick={function(){setDrill({qs:makeDrillQs(en),idx:0,score:0,answered:null});}}>{en?"▶ Start drill (8 questions)":"▶ ドリル開始（8問）"}</button>
+        </div>;
+      })():drill.idx<drill.qs.length?(function(){
+        var q=drill.qs[drill.idx];
+        return <div>
+          <div style={{fontSize:10,color:"rgba(150,230,170,0.9)",marginBottom:6}}>{(en?"Question ":"問題 ")+(drill.idx+1)+"/"+drill.qs.length+"　"+(en?"Score: ":"正解: ")+drill.score}</div>
+          <div style={{fontSize:11,color:"rgba(255,255,255,0.92)",lineHeight:"17px",marginBottom:8}}>{q.q}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:5}}>
+            {q.opts.map(function(op,oi){
+              var isA=drill.answered!==null,isC=oi===q.c,isCh=oi===drill.answered;
+              return <button key={oi} style={Object.assign({},bF,{textAlign:"left",padding:"6px 10px",fontSize:10,
+                background:isA?(isC?"rgba(80,200,100,0.35)":isCh?"rgba(255,80,80,0.3)":"rgba(255,255,255,0.04)"):"rgba(255,255,255,0.06)",
+                border:isA?(isC?"1px solid rgba(80,200,100,0.6)":isCh?"1px solid rgba(255,80,80,0.5)":"1px solid rgba(255,255,255,0.08)"):"1px solid rgba(255,255,255,0.15)",
+                cursor:isA?"default":"pointer"})}
+                onClick={function(){if(drill.answered!==null)return;setDrill(Object.assign({},drill,{answered:oi,score:oi===q.c?drill.score+1:drill.score}));}}>{op}</button>;
+            })}
+          </div>
+          {drill.answered!==null&&<div>
+            <div style={{marginTop:8,fontSize:9,color:"rgba(150,220,180,0.85)",lineHeight:"14px"}}>💡 {q.expl}</div>
+            <div style={{display:"flex",gap:5,marginTop:8}}>
+              {(q.jump||q.vjump!=null)&&<button style={Object.assign({},bF,{flex:1,fontSize:10,padding:"6px"})} onClick={function(){
+                if(q.jump){setSelM(q.jump.sel);setHH(q.jump.hh);setTab("moon");}
+                else{setSelV(q.vjump);setTab("venus");}
+              }}>{en?"🔍 See diagram":"🔍 図で確認"}</button>}
+              <button style={Object.assign({},bT("100,180,255"),{flex:1,fontSize:10,padding:"6px"})} onClick={function(){
+                var next=drill.idx+1;
+                if(next===drill.qs.length)saveDrillStats(drill.qs.length,drill.score);
+                setDrill(Object.assign({},drill,{idx:next,answered:null}));
+              }}>{en?"Next →":"次の問題 →"}</button>
+            </div>
+          </div>}
+        </div>;
+      })():<div style={{textAlign:"center"}}>
+        <div style={{fontSize:20,marginBottom:8}}>{"⭐".repeat(drill.score)+"☆".repeat(drill.qs.length-drill.score)}</div>
+        <div style={{fontSize:14,color:"rgba(150,230,170,1)",fontWeight:"bold",marginBottom:6}}>{drill.score+"/"+drill.qs.length+(en?" correct":" 正解")}</div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.6)",marginBottom:10}}>{drill.score===drill.qs.length?(en?"Perfect! Ready for the exam 🏆":"満点！本番もこの調子🏆"):drill.score>=drill.qs.length*0.6?(en?"Well done — review the misses in the diagrams ⭐":"よくできました。まちがえた問題は図で復習⭐"):(en?"Study the diagrams and try again!":"図でしくみを確認してもう一度！")}</div>
+        <div style={{display:"flex",gap:6}}>
+          <button style={Object.assign({},bT("150,230,170"),{flex:1,fontSize:11,padding:"7px"})} onClick={function(){setDrill({qs:makeDrillQs(en),idx:0,score:0,answered:null});}}>{en?"Again":"もう一度"}</button>
+          <button style={Object.assign({},bF,{flex:1,fontSize:11,padding:"7px"})} onClick={function(){setDrill(null);}}>{en?"Done":"終了"}</button>
+        </div>
+      </div>}
     </div>}
   </DragPanel>;
 }
