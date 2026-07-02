@@ -5,7 +5,7 @@
 React + Canvas 2D APIによるインタラクティブな太陽系・銀河系・惑星表面の3Dシミュレーター。外部画像アセット不使用、プロシージャル描画のみ。
 
 - **ライブデモ**: https://htanny.github.io/solar/
-- **バージョン**: v2.64.0 (2026-07)
+- **バージョン**: v2.65.0 (2026-07)
 
 ## 技術スタック
 
@@ -59,8 +59,8 @@ src/
     LandingQuickJump.jsx          # 着陸モード下部のクイックジャンプ行
     InstallPrompt.jsx              # PWAインストール促進バナー
     TodayHighlight.jsx              # 「今日の空」おすすめ表示
-    panels/                          # 17種のドラッグ可能UIパネル（InfoPanel・ExoplanetPanel・
-                                      # ExplorerLogPanel・QuizPanel・CompareTablePanel 等）
+    panels/                          # 18種のドラッグ可能UIパネル（InfoPanel・ExoplanetPanel・
+                                      # ExplorerLogPanel・QuizPanel・ExamPanel・CompareTablePanel 等）
 tests/
   interactions.spec.js         # Playwright インタラクションテスト
   visual.spec.js                # Playwright ビジュアル回帰テスト
@@ -163,7 +163,7 @@ git push origin main
 - パッチ変更（バグ修正・小改善）: 末尾の数字を +1（例: v2.64.0 → v2.64.1）
 - 機能追加: 中間の数字を +1（例: v2.64.x → v2.65.0）
 
-## 実装済み機能一覧（v2.64.0）
+## 実装済み機能一覧（v2.65.0）
 
 ### 天体・物理
 - 8惑星（ケプラー軌道・自転・地軸傾斜・昼夜影）
@@ -195,10 +195,11 @@ git push origin main
 - **系外惑星（4）**: ProximaB・Trappist1e・Kepler22b・HD189733b
 - 天体別プロシージャル環境音（Web Audio API、29天体対応）— 火山性トレモア・潮汐共鳴・氷殻クラック音・メタン間欠泉ホワール等
 
-### 探検手帳・ゲーミフィケーション
+### 探検手帳・ゲーミフィケーション・学習
 - 探検手帳パネル（5分類29天体の訪問状況を可視化）
 - 実績バッジ 10種（初着陸・岩石惑星マスター・巨大惑星マスター・ガリレオの目・準惑星ハンター・衛星コレクター・小惑星ホッパー・彗星の核心・恒星間旅行者・グランドツアー）
-- 天文クイズ（初級/中級/上級、計30問、EN/JA対応）
+- 天文クイズ（初級/中級/上級/受験対策、計40問、EN/JA対応、選択肢シャッフル）
+- 受験対策パネル（`ExamPanel`）— 中学受験・中3理科向け「月の満ち欠け」「金星の見え方」のインタラクティブ軌道図解。8位置クリックで地球から見た形・出入り時刻・入試の鉄則を表示
 - 「今日の空」おすすめ表示（今夜見える天文イベントを提案）
 
 ### UI・モード

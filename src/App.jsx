@@ -37,6 +37,7 @@ import AnalyticsPanel from "./components/panels/AnalyticsPanel.jsx";
 import TodayHighlight from "./components/TodayHighlight.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
 import ExplorerLogPanel from "./components/panels/ExplorerLogPanel.jsx";
+import ExamPanel from "./components/panels/ExamPanel.jsx";
 
 export default function App(){
   var cR=useRef(null),fR=useRef(0);
@@ -564,6 +565,7 @@ export default function App(){
           <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
           <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
+          <button style={panels.examOpen?bT("255,140,190"):bF} onClick={function(){togglePanel("examOpen");}} title={lang==="en"?"Moon phases & Venus visibility for JHS exams":"月の満ち欠け・金星の見え方（中学受験・中3理科）"}>📖 {lang==="en"?"Exam Prep":"受験対策"}</button>
           <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
           <button style={panels.explorerOpen?bT("160,220,170"):bF} onClick={function(){togglePanel("explorerOpen");}} title={lang==="en"?"Landing stamp rally & badges":"着陸スタンプラリーと実績バッジ"}>{lang==="en"?"🧭 Explorer Log":"🧭 探検手帳"}</button>
         </div>
@@ -765,6 +767,8 @@ export default function App(){
       {cleanView===0&&!landing&&<CompareTablePanel visible={panels.compareTable} dispatchPanel={dispatchPanel} cmpSort={cmpSort} setCmpSort={setCmpSort} foc={foc} focusOn={focusOn} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
       {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} lang={lang} pn={pn} bF={bF} bT={bT}/>}
+
+      {cleanView===0&&!landing&&<ExamPanel visible={panels.examOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF} bT={bT}/>}
 
       {cleanView===0&&!landing&&<TourPickerPanel visible={panels.tourPick} dispatchPanel={dispatchPanel} startTourLv={startTourLv} lang={lang} pn={pn} bF={bF}/>}
 
