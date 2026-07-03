@@ -22,6 +22,23 @@ export function explorerShareText(visited,en){
   return lines.join("\n");
 }
 
+/* 受験対策ドリルの結果共有テキスト */
+export function drillShareText(score,total,en){
+  var pct=Math.round(score/total*100);
+  var tag=score===total
+    ?(en?"Perfect score! 🏆":"満点でした！🏆")
+    :pct>=75
+    ?(en?"Great job! ⭐":"よくできました！⭐")
+    :(en?"Keep practicing 💪":"あと少し！💪");
+  var lines=[];
+  lines.push(en
+    ?"📖 Exam Prep Drill — Moon phases & Venus: "+score+"/"+total+" ("+pct+"%)"
+    :"📖 受験対策ドリル「月の満ち欠け・金星」— "+total+"問中"+score+"問正解（"+pct+"%）");
+  lines.push(tag);
+  lines.push(en?"Try it yourself ▶ "+APP_URL:"あなたも挑戦 ▶ "+APP_URL);
+  return lines.join("\n");
+}
+
 /* 「今日のみどころ」の共有テキスト（sug は pickSuggestion の戻り値） */
 export function highlightShareText(sug,en){
   var body=sug.kind==="event"
