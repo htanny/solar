@@ -5,7 +5,7 @@
 React + Canvas 2D APIによるインタラクティブな太陽系・銀河系・惑星表面の3Dシミュレーター。外部画像アセット不使用、プロシージャル描画のみ。
 
 - **ライブデモ**: https://htanny.github.io/solar/
-- **バージョン**: v2.68.0 (2026-07)
+- **バージョン**: v2.69.0 (2026-07)
 
 ## 技術スタック
 
@@ -163,7 +163,7 @@ git push origin main
 - パッチ変更（バグ修正・小改善）: 末尾の数字を +1（例: v2.64.0 → v2.64.1）
 - 機能追加: 中間の数字を +1（例: v2.64.x → v2.65.0）
 
-## 実装済み機能一覧（v2.68.0）
+## 実装済み機能一覧（v2.69.0）
 
 ### 天体・物理
 - 8惑星（ケプラー軌道・自転・地軸傾斜・昼夜影）
@@ -223,6 +223,6 @@ git push origin main
 
 - `canvas.toDataURL` はArtifact環境でブロックされる（スクリーンショットはOSネイティブ機能を使用）
 - BGMはブラウザのオートプレイ制限により手動で有効化が必要
-- `localStorage` 使用キー: `solar_cfg`（表示設定）・`solar_bm`（ブックマーク）・`solar_analytics`（利用分析）・`solar_ob`（オンボード完了状態）・`solar_today`（今日のハイライト既読）・`solar_badges`（実績バッジ）・`solar_pwa_dismissed`（PWAバナー非表示）・`solar_drill`（受験ドリル通算成績）
+- `localStorage` 使用キー: `solar_cfg`（表示設定）・`solar_bm`（ブックマーク）・`solar_analytics`（利用分析）・`solar_ob`（オンボード完了状態）・`solar_today`（今日のハイライト既読）・`solar_badges`（実績バッジ）・`solar_pwa_dismissed`（PWAバナー非表示）・`solar_drill`（受験ドリル通算成績）・`solar_exam_seen`（受験対策ボタンのNEWバッジ既読状態）
 - `var` 統一スタイル（`let`/`const` 不使用）— 既存コードに合わせること
 - フレームループ内で `useRef` の `.current` を直接読み書き（`useState` の setter は非同期のため不可）
