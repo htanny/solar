@@ -73,6 +73,7 @@ export default function App(){
   var[landTilt,setLandTilt,landTiltR]=useRefSync(0);
   var[lang,setLang,langR]=useRefSync(initCfg.lang||"ja");
   var[quizState,setQuizState]=useState(null);
+  var[examSeen,setExamSeen]=useState(function(){try{return !!localStorage.getItem("solar_exam_seen");}catch(e){return false;}});
   var[cmpSort,setCmpSort]=useState({col:"d",asc:true});
   var[winW,setWinW]=useState(typeof window!=="undefined"?window.innerWidth:1280);
   useEffect(function(){function onResize(){setWinW(window.innerWidth);}window.addEventListener("resize",onResize);return function(){window.removeEventListener("resize",onResize);};},[]);
@@ -565,7 +566,9 @@ export default function App(){
           <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
           <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
-          <button style={panels.examOpen?bT("255,140,190"):bF} onClick={function(){togglePanel("examOpen");}} title={lang==="en"?"Moon phases & Venus visibility for JHS exams":"月の満ち欠け・金星の見え方（中学受験・中3理科）"}>📖 {lang==="en"?"Exam Prep":"受験対策"}</button>
+          <button style={Object.assign({},panels.examOpen?bT("255,140,190"):bF,{position:"relative"})} onClick={function(){togglePanel("examOpen");if(!examSeen){setExamSeen(true);try{localStorage.setItem("solar_exam_seen","1");}catch(e){}}}} title={lang==="en"?"Moon phases & Venus visibility for JHS exams":"月の満ち欠け・金星の見え方（中学受験・中3理科）"}>📖 {lang==="en"?"Exam Prep":"受験対策"}
+            {!examSeen&&<span style={{position:"absolute",top:-5,right:-5,background:"rgba(255,90,140,1)",color:"#fff",fontSize:7,fontWeight:"bold",padding:"1px 4px",borderRadius:6,lineHeight:1.3,boxShadow:"0 0 6px rgba(255,90,140,0.8)"}}>NEW</span>}
+          </button>
           <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
           <button style={panels.explorerOpen?bT("160,220,170"):bF} onClick={function(){togglePanel("explorerOpen");}} title={lang==="en"?"Landing stamp rally & badges":"着陸スタンプラリーと実績バッジ"}>{lang==="en"?"🧭 Explorer Log":"🧭 探検手帳"}</button>
         </div>
@@ -790,16 +793,17 @@ export default function App(){
       {/* Onboarding tour overlay */}
       {onboardStep>=0&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.78)",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"system-ui,sans-serif"}} onClick={function(e){e.stopPropagation();}}>
         <div style={{background:"rgba(10,14,28,0.98)",border:"1px solid rgba(100,180,255,0.3)",borderRadius:16,padding:"22px 26px",maxWidth:350,width:"90%",color:"rgba(255,255,255,0.92)"}}>
-          <div style={{fontSize:9,color:"rgba(100,180,255,0.5)",letterSpacing:2,marginBottom:7}}>{"STEP "+(onboardStep+1)+" / 5"}</div>
+          <div style={{fontSize:9,color:"rgba(100,180,255,0.5)",letterSpacing:2,marginBottom:7}}>{"STEP "+(onboardStep+1)+" / 6"}</div>
           {onboardStep===0&&<><div style={{fontSize:19,fontWeight:"bold",marginBottom:8}}>🌌 ようこそ</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>太陽系・銀河系・惑星地表を<br/>インタラクティブに探索できる<br/>シミュレーターへようこそ！</div></>}
           {onboardStep===1&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>🖱 ナビゲーション</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>・ドラッグ: 視点を回転<br/>・ホイール / ピンチ: ズーム<br/>・クリック: 天体を選択・詳細表示<br/>・[1-8]キー: 惑星選択</div></>}
           {onboardStep===2&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>🚀 惑星着陸</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>惑星をクリック→情報パネルの<br/>「着陸」ボタンで地表ビューへ。<br/>星空・日食・オーロラなども<br/>リアルに再現されます。</div></>}
           {onboardStep===3&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>🎓 学習ツアー</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>・太陽から海王星まで自動巡回<br/>・各天体の受験頻出ポイントを表示<br/>・中学受験・地学オリンピック対応<br/>・[T]キーでいつでも再開</div></>}
-          {onboardStep===4&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>✨ さあ出発しよう！</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>「学習ツアーを開始」を押すと<br/>解説付きの太陽系巡りが始まります。<br/>いつでも [❓ ガイド] で<br/>このガイドを再表示できます。</div></>}
+          {onboardStep===4&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>📖 受験対策モード</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>「月の満ち欠け」「金星の見え方」を<br/>クリック式の図解と時刻スライダーで攻略。<br/>ミニドリルで理解度を8問チェック。<br/>ツールバーの[📖 受験対策]から。</div></>}
+          {onboardStep===5&&<><div style={{fontSize:17,fontWeight:"bold",marginBottom:8}}>✨ さあ出発しよう！</div><div style={{fontSize:11,color:"rgba(255,255,255,0.65)",lineHeight:1.7}}>「学習ツアーを開始」を押すと<br/>解説付きの太陽系巡りが始まります。<br/>いつでも [❓ ガイド] で<br/>このガイドを再表示できます。</div></>}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:20}}>
             <button style={Object.assign({},bF,{fontSize:9,padding:"3px 10px"})} onClick={function(){setOnboardStep(-1);localStorage.setItem("solar_ob","1");}}>スキップ</button>
-            <div style={{display:"flex",gap:5}}>{[0,1,2,3,4].map(function(i){return <div key={i} style={{width:6,height:6,borderRadius:3,background:i===onboardStep?"rgba(100,180,255,1)":"rgba(255,255,255,0.2)"}}/>;})}</div>
-            <button style={bN} onClick={function(){var n=onboardStep+1;if(n>=5){setOnboardStep(-1);localStorage.setItem("solar_ob","1");setLanding(null);setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"beg"};setFoc("sun");setInfo({type:"sun"});}else setOnboardStep(n);}}>{onboardStep===4?"学習ツアーを開始 🚀":"次へ →"}</button>
+            <div style={{display:"flex",gap:5}}>{[0,1,2,3,4,5].map(function(i){return <div key={i} style={{width:6,height:6,borderRadius:3,background:i===onboardStep?"rgba(100,180,255,1)":"rgba(255,255,255,0.2)"}}/>;})}</div>
+            <button style={bN} onClick={function(){var n=onboardStep+1;if(n>=6){setOnboardStep(-1);localStorage.setItem("solar_ob","1");setLanding(null);setTouring(true);tourRef.current={active:true,idx:0,timer:0,trans:false,lv:"beg"};setFoc("sun");setInfo({type:"sun"});}else setOnboardStep(n);}}>{onboardStep===5?"学習ツアーを開始 🚀":"次へ →"}</button>
           </div>
         </div>
       </div>}
