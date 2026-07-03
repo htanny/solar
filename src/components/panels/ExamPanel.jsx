@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { DragPanel } from "../DragPanel.jsx";
 import { mobileSheet, bClose } from "../../styles/panelStyles.js";
+import { drillShareText, shareOut } from "../../utils/shareCard.js";
+import { track } from "../../utils/analytics.js";
 
 /* 受験対策パネル — 中学受験・中3理科の最頻出単元「月の満ち欠け」「金星の見え方」を
    軌道図(宇宙から見た図)と地球から見た形の対応で学ぶインタラクティブ図解。
@@ -177,6 +179,7 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
   var[selV,setSelV]=useState(6);/* 東方最大離角 */
   var[hh,setHH]=useState(18);/* 地上ビューの時刻(0-23時) */
   var[drill,setDrill]=useState(null);/* {qs,idx,score,answered} */
+  var[shared,setShared]=useState(null);
   if(!visible)return null;
   var en=lang==="en";
   var deg2rad=Math.PI/180;
@@ -465,6 +468,20 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
         <div style={{display:"flex",gap:6}}>
           <button style={Object.assign({},bT("150,230,170"),{flex:1,fontSize:11,padding:"7px"})} onClick={function(){setDrill({qs:makeDrillQs(en),idx:0,score:0,answered:null});}}>{en?"Again":"もう一度"}</button>
           <button style={Object.assign({},bF,{flex:1,fontSize:11,padding:"7px"})} onClick={function(){setDrill(null);}}>{en?"Done":"終了"}</button>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginTop:8,paddingTop:7,borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+          <button style={Object.assign({},bF,{fontSize:9,flex:1})} onClick={function(){
+            shareOut(drillShareText(drill.score,drill.qs.length,en)).then(function(method){
+              if(method){
+                track("share_card",{source:"drill",method:method});
+                setShared(method);
+                setTimeout(function(){setShared(null);},2500);
+              }
+            });
+          }}>📤 {en?"Share result":"結果を共有"}</button>
+          {shared&&<span style={{fontSize:9,color:"rgba(160,220,170,0.9)",flexShrink:0}}>
+            {shared==="clipboard"?(en?"Copied!":"コピーしました！"):(en?"Shared!":"共有しました！")}
+          </span>}
         </div>
       </div>}
     </div>}

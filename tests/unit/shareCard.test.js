@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { explorerShareText, highlightShareText, APP_URL } from "../../src/utils/shareCard.js";
+import { explorerShareText, highlightShareText, drillShareText, APP_URL } from "../../src/utils/shareCard.js";
 import { ALL_BODIES } from "../../src/utils/explorerLog.js";
 
 describe("explorerShareText", function(){
@@ -49,5 +49,35 @@ describe("highlightShareText", function(){
     var sug={kind:"land",s:{k:"Europa",j:"エウロパ — 地下海の世界",e:"Europa — subsurface ocean"}};
     expect(highlightShareText(sug)).toContain("エウロパ");
     expect(highlightShareText(sug,true)).toContain("Europa — subsurface ocean");
+  });
+});
+
+describe("drillShareText", function(){
+  it("満点: 8問中8問正解と🏆とURLを含む", function(){
+    var t=drillShareText(8,8);
+    expect(t).toContain("8問中8問正解");
+    expect(t).toContain("100%");
+    expect(t).toContain("🏆");
+    expect(t).toContain(APP_URL);
+  });
+
+  it("高得点(75%以上): ⭐タグを含む", function(){
+    var t=drillShareText(6,8);
+    expect(t).toContain("8問中6問正解");
+    expect(t).toContain("75%");
+    expect(t).toContain("⭐");
+  });
+
+  it("低得点: 💪タグを含む", function(){
+    var t=drillShareText(2,8);
+    expect(t).toContain("8問中2問正解");
+    expect(t).toContain("💪");
+  });
+
+  it("EN 表示にも対応", function(){
+    var t=drillShareText(8,8,true);
+    expect(t).toContain("Exam Prep Drill");
+    expect(t).toContain("Perfect score");
+    expect(t).toContain("Try it yourself");
   });
 });
