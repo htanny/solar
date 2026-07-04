@@ -104,6 +104,12 @@ var VENUS_BANK=[
   {q:"金星と同じように大きく満ち欠けして見える惑星は？",qe:"Which other planet shows large phases like Venus?",
    opts:["水星","火星","木星","土星"],optsE:["Mercury","Mars","Jupiter","Saturn"],c:0,
    expl:"地球より内側を公転する内惑星（水星・金星）は大きく満ち欠けする",explE:"Inner planets (Mercury and Venus) show large phases",vjump:1},
+  {q:"金星が真夜中に見えない理由は？",qe:"Why is Venus never visible at midnight?",
+   opts:["地球より内側を公転しているから","小さすぎるから","自転が遅いから","真夜中は大気が厚くなるから"],optsE:["It orbits inside Earth's orbit","It is too small","It rotates too slowly","The atmosphere thickens at night"],c:0,
+   expl:"内惑星は太陽から大きく離れて見えないため、太陽と反対側の真夜中の空には来ない",explE:"Inner planets never appear far from the Sun, so they can't be opposite it at midnight",vjump:0},
+  {q:"宵の明星として金星が最も高く見えるのはいつ？",qe:"When is Venus highest as the evening star?",
+   opts:["東方最大離角のとき","内合のとき","外合のとき","西方最大離角のとき"],optsE:["Greatest eastern elongation","Inferior conjunction","Superior conjunction","Greatest western elongation"],c:0,
+   expl:"太陽から東に最も離れて見える東方最大離角のとき、日没後の高度が最大になる",explE:"At greatest eastern elongation Venus is farthest east of the Sun — highest after sunset",vjump:6},
 ];
 
 /* 月の固定問題バンク(正解は常に先頭=c:0、出題時にシャッフル) */
@@ -114,6 +120,9 @@ var MOON_BANK=[
   {q:"月食が起こる可能性があるのはどの月のとき？",qe:"At which moon phase can a lunar eclipse occur?",
    opts:["満月","新月","三日月","上弦の月"],optsE:["Full moon","New moon","Waxing crescent","First quarter"],c:0,
    expl:"太陽-地球-月の順に一直線に並ぶ満月のとき、月が地球の影に入る",explE:"At full moon the order Sun–Earth–Moon puts the Moon in Earth's shadow",jump:{sel:4,hh:0}},
+  {q:"月の出の時刻は毎日どうなる？",qe:"How does moonrise time change each day?",
+   opts:["約50分ずつ遅くなる","約50分ずつ早くなる","変わらない","約2時間ずつ遅くなる"],optsE:["~50 min later each day","~50 min earlier each day","Stays the same","~2 hours later each day"],c:0,
+   expl:"月が公転で1日約12°東へ動くため、出・南中・入りが毎日約50分遅れる",explE:"The Moon moves ~12° east per day, delaying rise/south/set by ~50 min daily",jump:{sel:2,hh:12}},
 ];
 
 function makeDrillQs(en){

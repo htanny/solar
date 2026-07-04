@@ -769,7 +769,7 @@ export default function App(){
 
       {cleanView===0&&!landing&&<CompareTablePanel visible={panels.compareTable} dispatchPanel={dispatchPanel} cmpSort={cmpSort} setCmpSort={setCmpSort} foc={foc} focusOn={focusOn} lang={lang} isPhone={isPhone} pn={pn} bF={bF}/>}
 
-      {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} lang={lang} pn={pn} bF={bF} bT={bT}/>}
+      {cleanView===0&&!landing&&<QuizPanel quizState={quizState} setQuizState={setQuizState} closeQuiz={closeQuiz} startQuiz={startQuiz} openExam={function(){closeQuiz();dispatchPanel({type:"SET",key:"examOpen",value:true});if(!examSeen){setExamSeen(true);try{localStorage.setItem("solar_exam_seen","1");}catch(e){}}}} lang={lang} pn={pn} bF={bF} bT={bT}/>}
 
       {cleanView===0&&!landing&&<ExamPanel visible={panels.examOpen} dispatchPanel={dispatchPanel} lang={lang} isPhone={isPhone} pn={pn} bF={bF} bT={bT}/>}
 

@@ -2,7 +2,8 @@ import { DragPanel } from "../DragPanel.jsx";
 import { QUIZ_DATA } from "../../data/solarData.js";
 import { bClose } from "../../styles/panelStyles.js";
 
-/* Difficulty selector: pick "all", "1" (beginner), "2" (intermediate), "3" (advanced), "4" (exam prep).
+/* Difficulty selector: pick "all", "1" (beginner), "2" (intermediate), "3" (advanced).
+   受験対策(月・金星)の演習は ExamPanel のミニドリルに一元化(下部の案内から誘導)。
    選択肢の並びもここでシャッフルする(元データは正解が先頭=c:0の規約のため、そのまま出すと正解位置が固定になる) */
 function pickQuestions(lv,n){
   var pool=lv==="all"?QUIZ_DATA:QUIZ_DATA.filter(function(q){return q.lv===parseInt(lv,10);});
@@ -17,12 +18,12 @@ function pickQuestions(lv,n){
   });
 }
 
-export default function QuizPanel({quizState,setQuizState,closeQuiz,startQuiz,lang,pn,bF,bT}){
+export default function QuizPanel({quizState,setQuizState,closeQuiz,startQuiz,openExam,lang,pn,bF,bT}){
   if(!quizState)return null;
   var en=lang==="en";
   /* level selection screen */
   if(quizState.lv==null){
-    var levels=[{k:"1",j:"初級",e:"Beginner",col:"100,220,150",desc:"惑星の基本",dEn:"Basic facts"},{k:"2",j:"中級",e:"Intermediate",col:"100,180,255",desc:"力学・観測",dEn:"Physics & observation"},{k:"3",j:"上級",e:"Advanced",col:"255,150,90",desc:"理論・歴史",dEn:"Theory & history"},{k:"4",j:"受験対策",e:"Exam Prep",col:"255,140,190",desc:"月と金星の見え方(中学受験・中3理科)",dEn:"Moon & Venus visibility (JHS exams)"},{k:"all",j:"ミックス",e:"Mixed",col:"200,150,255",desc:"全難易度",dEn:"All levels"}];
+    var levels=[{k:"1",j:"初級",e:"Beginner",col:"100,220,150",desc:"惑星の基本",dEn:"Basic facts"},{k:"2",j:"中級",e:"Intermediate",col:"100,180,255",desc:"力学・観測",dEn:"Physics & observation"},{k:"3",j:"上級",e:"Advanced",col:"255,150,90",desc:"理論・歴史",dEn:"Theory & history"},{k:"all",j:"ミックス",e:"Mixed",col:"200,150,255",desc:"全難易度",dEn:"All levels"}];
     return <DragPanel style={Object.assign({},pn,{top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:320,maxWidth:"calc(100vw - 20px)",padding:"14px 16px",zIndex:30})}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
         <span style={{fontSize:12,fontWeight:"bold",color:"rgba(255,220,80,0.95)"}}>{en?"🎯 Quiz · pick difficulty":"🎯 クイズ · 難易度選択"}</span>
@@ -32,6 +33,9 @@ export default function QuizPanel({quizState,setQuizState,closeQuiz,startQuiz,la
         <div style={{fontWeight:"bold",fontSize:11}}>{en?L.e:L.j} <span style={{color:"rgba(255,255,255,0.5)",fontSize:9,fontWeight:"normal"}}>· {qs.length}{en?" Q":"問"}</span></div>
         <div style={{fontSize:9,color:"rgba(255,255,255,0.6)",marginTop:2}}>{en?L.dEn:L.desc}</div>
       </button>;})}</div>
+      {openExam&&<button style={Object.assign({},bF,{marginTop:8,width:"100%",textAlign:"left",padding:"7px 12px",fontSize:10,color:"rgba(255,180,210,0.9)",border:"1px dashed rgba(255,140,190,0.4)"})} onClick={openExam}>
+        📖 {en?"Exam prep (Moon & Venus) → dedicated drill with diagrams":"受験対策(月・金星)は図解つき専用ドリルへ →"}
+      </button>}
     </DragPanel>;
   }
   /* main quiz screen */
