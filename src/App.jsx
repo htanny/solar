@@ -546,53 +546,61 @@ export default function App(){
       {/* Toggles panel */}
       {cleanView===0&&!landing&&<DragPanel style={Object.assign({},pn,{bottom:isPhone?"calc(60px + env(safe-area-inset-bottom))":10,left:10,maxWidth:300,maxHeight:isPhone?"calc(100dvh - 130px)":"none",overflowY:isPhone?"auto":"visible"})}>
         <div style={Object.assign({},lb,{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:2})}><span>{lang==="en"?"Display ⠿":"表示 ⠿"}</span><button style={Object.assign({},bF,isPhone?{padding:"4px 10px"}:{fontSize:9,padding:"1px 6px",lineHeight:1.4})} onClick={function(){dispatchPanel({type:"TOGGLE",key:"dispColl"});}}>{panels.dispColl?"▼":"▲"}</button></div><div style={{display:panels.dispColl?"none":"block"}}><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{[{k:"orbits",l:"軌道",e:"Orbits"},{k:"trails",l:"軌跡",e:"Trails"},{k:"belt",l:"小惑星帯",e:"Belt"},{k:"trojan",l:"トロヤ群",e:"Trojans"},{k:"kuiper",l:"カイパー帯",e:"Kuiper"},{k:"nasteroid",l:"準惑星名",e:"Dwarf names"},{k:"tilt",l:"地軸",e:"Axis"},{k:"moon",l:"月",e:"Moon"},{k:"labels",l:"ラベル",e:"Labels"},{k:"planets",l:"惑星",e:"Planets"},{k:"lagrange",l:"L点",e:"L points"},{k:"spacecraft",l:"探査機",e:"Probes"},{k:"cme",l:"CME",e:"CME"},{k:"distbar",l:"距離バー",e:"Dist bar"}].map(function(x){return <button key={x.k} style={sh[x.k]?bN:bF} onClick={function(){tog(x.k);}}>{lang==="en"?x.e:x.l}</button>;})}</div>
-        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Real scale":"実スケール"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>{lang==="en"?"Sun":"太陽"}{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>{lang==="en"?"Planets":"惑星"}{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>{lang==="en"?"Distance":"距離"}{!uni&&rDi?" ●":""}</button></div>
-        <div style={{marginTop:6,display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>{lang==="en"?"Unify":"統一比率"}{uni?" ●":""}</button><button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}}>{lang==="en"?"Compare":"比較"}{compare?" ●":""}</button><button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{dispatchPanel({type:"SET",key:"tourPick",value:true});}}}>{touring?(lang==="en"?"Stop Tour":"ツアー停止"):(lang==="en"?"Tour":"学習ツアー")}</button><button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button><button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button><button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?(lang==="en"?"Measuring":"計測中")+(measurePair.length===0?(lang==="en"?"(1st)":"(1つ目)"):measurePair.length===1?(lang==="en"?"(2nd)":"(2つ目)"):""):(lang==="en"?"📐 Measure":"📐計測")}</button></div>
-        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Tools":"ツール"}</div>
-        <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
-          <button style={panels.showDate?bN:bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"showDate"});}}>{lang==="en"?"Date":"日付移動"}</button>
-          <button style={bF} onClick={takeScreenshot}>{lang==="en"?"📷 Capture":"📷 撮影モード"}</button>
-          <button style={bF} onClick={shareURL}>{lang==="en"?"🔗 Share":"🔗 共有"}</button>
-          <button style={bF} onClick={function(){dispatchPanel({type:"SET",key:"importMode",value:true});}}>{lang==="en"?"📥 Import":"📥 読込"}</button>
-          <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Today":"今日"}</button>
-          <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Clear trails":"軌跡クリア"}</button>
-          <button style={panels.showEvents?bT("255,200,80"):bF} onClick={function(){if(!panels.showEvents){eventsRef.current=scanEvents(S.current.t);}togglePanel("showEvents");}}>{lang==="en"?"📅 Events":"📅 天文イベント"}</button>
-          <button style={panels.searchOpen?bT("100,210,255"):bF} onClick={function(){togglePanel("searchOpen");setSearchQ("");}}>{lang==="en"?"🔍 Search":"🔍 検索"}</button>
-          <button style={panels.exoOpen?bT("255,150,90"):bF} onClick={function(){togglePanel("exoOpen");}}>{lang==="en"?"🪐 Exoplanets":"🪐 系外惑星"}</button>
-          <button style={panels.satOpen?bT("180,210,255"):bF} onClick={function(){togglePanel("satOpen");}}>{lang==="en"?"🛰 Moons/SSSB":"🛰 衛星・小天体"}</button>
-          <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){togglePanel("nightSkyOpen");}}>{lang==="en"?"🌙 Tonight":"🌙 今夜の空"}</button>
-          <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){togglePanel("bookOpen");setBookmarkName("");}}>{lang==="en"?"🔖 Bookmarks":"🔖 ブックマーク"}</button>
-          <button style={bF} onClick={function(){setOnboardStep(0);}}>{lang==="en"?"❓ Guide":"❓ ガイド"}</button>
-          <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
-          <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Real scale":"実スケール"}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}><button style={uni?bD:(rSn?bN:bF)} onClick={function(){if(!uni)setRSn(function(p){return!p;});}}>{lang==="en"?"Sun":"太陽"}{!uni&&rSn?" ●":""}</button><button style={uni?bD:(rPl?bN:bF)} onClick={function(){if(!uni)setRPl(function(p){return!p;});}}>{lang==="en"?"Planets":"惑星"}{!uni&&rPl?" ●":""}</button><button style={uni?bD:(rDi?bN:bF)} onClick={function(){if(!uni)setRDi(function(p){return!p;});}}>{lang==="en"?"Distance":"距離"}{!uni&&rDi?" ●":""}</button><button style={uni?bU:bF} onClick={function(){setUni(function(p){return!p;});}}>{lang==="en"?"Unify":"統一比率"}{uni?" ●":""}</button></div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"View modes":"ビューモード"}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+          <button style={compare?bT("100,220,150"):bF} onClick={function(){setCompare(function(p){if(!p)cmpStateRef.current={offX:0,zm:1};return!p;});}} title="全天体を実比率で横一列に並べる">{lang==="en"?"Compare":"サイズ比較"}{compare?" ●":""}</button>
+          <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">{lang==="en"?"🔭 Telescope":"🔭 望遠鏡"}</button>
+          <button style={measureMode?bT("255,180,80"):bF} onClick={function(){setMeasureMode(function(p){if(p)setMeasurePair([]);return!p;});}}>{measureMode?(lang==="en"?"Measuring":"計測中")+(measurePair.length===0?(lang==="en"?"(1st)":"(1つ目)"):measurePair.length===1?(lang==="en"?"(2nd)":"(2つ目)"):""):(lang==="en"?"📐 Measure":"📐計測")}</button>
+          <button style={nBody?bU:bF} onClick={toggleNBody} title="N体重力シミュレーション (統一比率強制)">{lang==="en"?"⚛ N-body":"⚛ N体"}</button>
+        </div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Learn":"学習"}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+          <button style={touring?bT("200,100,255"):bF} onClick={function(){if(touring){stopTour();setFoc("all");setInfo(null);}else{dispatchPanel({type:"SET",key:"tourPick",value:true});}}}>{touring?(lang==="en"?"Stop Tour":"ツアー停止"):(lang==="en"?"🎓 Tour":"🎓 学習ツアー")}</button>
           <button style={quizState?bT("255,200,80"):bF} onClick={function(){if(quizState)closeQuiz();else startQuiz();}}>🎯 {quizState?(lang==="en"?"Quit":"クイズ終了"):(lang==="en"?"Quiz":"クイズ")}</button>
           <button style={Object.assign({},panels.examOpen?bT("255,140,190"):bF,{position:"relative"})} onClick={function(){togglePanel("examOpen");if(!examSeen){setExamSeen(true);try{localStorage.setItem("solar_exam_seen","1");}catch(e){}}}} title={lang==="en"?"Moon phases & Venus visibility for JHS exams":"月の満ち欠け・金星の見え方（中学受験・中3理科）"}>📖 {lang==="en"?"Exam Prep":"受験対策"}
             {!examSeen&&<span style={{position:"absolute",top:-5,right:-5,background:"rgba(255,90,140,1)",color:"#fff",fontSize:7,fontWeight:"bold",padding:"1px 4px",borderRadius:6,lineHeight:1.3,boxShadow:"0 0 6px rgba(255,90,140,0.8)"}}>NEW</span>}
           </button>
-          <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
           <button style={panels.explorerOpen?bT("160,220,170"):bF} onClick={function(){togglePanel("explorerOpen");}} title={lang==="en"?"Landing stamp rally & badges":"着陸スタンプラリーと実績バッジ"}>{lang==="en"?"🧭 Explorer Log":"🧭 探検手帳"}</button>
         </div>
-        <div style={Object.assign({},lb,{marginTop:6,marginBottom:2})}>{lang==="en"?"Visualization":"可視化"}</div>
-        <div style={Object.assign({},lb,{marginTop:2,marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Cosmic structure":"宇宙構造"}</div>
-        <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
-          <button style={habZone?bN:bF} onClick={function(){setHabZone(function(p){return!p;});}} title="ハビタブルゾーン (0.95–1.37 AU)">🌍 HZ</button>
-          <button style={helio?bN:bF} onClick={function(){setHelio(function(p){return!p;});}} title="ヘリオスフィア境界">{lang==="en"?"☀ Heliosphere":"☀ ヘリオ圏"}</button>
-          <button style={nBody?bU:bF} onClick={toggleNBody} title="N体重力シミュレーション (統一比率強制)">{lang==="en"?"⚛ N-body":"⚛ N体"}</button>
-        </div>
-        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Physics":"物理現象"}</div>
-        <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:4}}>
-          <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">{lang==="en"?"🌐 Magnetic":"🌐 磁気圏"}</button>
-          <button style={showEarthInt?bN:bF} onClick={function(){setShowEarthInt(function(p){return!p;});}} title={lang==="en"?"Earth interior cross-section overlay":"地球内部構造オーバーレイ"}>{lang==="en"?"🌍 Interior":"🌍 内部構造"}</button>
-          <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">{lang==="en"?"⭕ Hill":"⭕ ヒル球"}</button>
-          <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">{lang==="en"?"🌑 Shadow":"🌑 影錐"}</button>
-          <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">{lang==="en"?"🌊 Tidal":"🌊 潮汐力"}</button>
-        </div>
-        <div style={Object.assign({},lb,{marginBottom:2,color:"rgba(255,255,255,0.25)",fontSize:8})}>{lang==="en"?"Observation":"観測ツール"}</div>
-        <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
-          <button style={telescopeMode?bT("100,220,150"):bF} onClick={function(){setTelescopeMode(function(p){return!p;});}} title="望遠鏡モード">{lang==="en"?"🔭 Telescope":"🔭 望遠鏡"}</button>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Sky & Data":"観測・データ"}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
+          <button style={panels.showEvents?bT("255,200,80"):bF} onClick={function(){if(!panels.showEvents){eventsRef.current=scanEvents(S.current.t);}togglePanel("showEvents");}}>{lang==="en"?"📅 Events":"📅 天文イベント"}</button>
+          <button style={panels.nightSkyOpen?bT("255,220,80"):bF} onClick={function(){togglePanel("nightSkyOpen");}}>{lang==="en"?"🌙 Tonight":"🌙 今夜の空"}</button>
           <button style={panels.moonCal?bT("200,180,255"):bF} onClick={function(){togglePanel("moonCal");}} title="月相カレンダー">{lang==="en"?"🌙 Phases":"🌙 月相"}</button>
           <button style={panels.meteorOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("meteorOpen");}} title="流星群カレンダー">{lang==="en"?"🌠 Meteors":"🌠 流星群"}</button>
           <button style={panels.orbElemOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("orbElemOpen");}} title="軌道要素（惑星選択時）">{lang==="en"?"📊 Orbit":"📊 軌道"}</button>
+          <button style={panels.compareTable?bT("180,255,200"):bF} onClick={function(){togglePanel("compareTable");}} title="全惑星・準惑星の物理量比較表">{lang==="en"?"📊 Compare":"📊 比較表"}</button>
+          <button style={panels.exoOpen?bT("255,150,90"):bF} onClick={function(){togglePanel("exoOpen");}}>{lang==="en"?"🪐 Exoplanets":"🪐 系外惑星"}</button>
+          <button style={panels.satOpen?bT("180,210,255"):bF} onClick={function(){togglePanel("satOpen");}}>{lang==="en"?"🛰 Moons/SSSB":"🛰 衛星・小天体"}</button>
+        </div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Tools":"ツール"}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
+          <button style={panels.showDate?bN:bF} onClick={function(){dispatchPanel({type:"TOGGLE",key:"showDate"});}}>{lang==="en"?"Date":"日付移動"}</button>
+          <button style={bF} onClick={function(){S.current.t=dateToSimDays(new Date().toISOString().slice(0,10));for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Today":"今日"}</button>
+          <button style={bF} onClick={function(){for(var i=0;i<S.current.trails.length;i++)S.current.trails[i]=[];}}>{lang==="en"?"Clear trails":"軌跡クリア"}</button>
+          <button style={panels.searchOpen?bT("100,210,255"):bF} onClick={function(){togglePanel("searchOpen");setSearchQ("");}}>{lang==="en"?"🔍 Search":"🔍 検索"}</button>
+          <button style={panels.bookOpen?bT("255,220,120"):bF} onClick={function(){togglePanel("bookOpen");setBookmarkName("");}}>{lang==="en"?"🔖 Bookmarks":"🔖 ブックマーク"}</button>
+          <button style={bF} onClick={takeScreenshot}>{lang==="en"?"📷 Capture":"📷 撮影モード"}</button>
+          <button style={bF} onClick={shareURL}>{lang==="en"?"🔗 Share":"🔗 共有"}</button>
+          <button style={bF} onClick={function(){dispatchPanel({type:"SET",key:"importMode",value:true});}}>{lang==="en"?"📥 Import":"📥 読込"}</button>
+        </div>
+        <div style={Object.assign({},lb,{marginTop:8,marginBottom:4})}>{lang==="en"?"Overlays":"可視化オーバーレイ"}</div>
+        <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
+          <button style={habZone?bN:bF} onClick={function(){setHabZone(function(p){return!p;});}} title="ハビタブルゾーン (0.95–1.37 AU)">🌍 HZ</button>
+          <button style={helio?bN:bF} onClick={function(){setHelio(function(p){return!p;});}} title="ヘリオスフィア境界">{lang==="en"?"☀ Heliosphere":"☀ ヘリオ圏"}</button>
+          <button style={magneto?bN:bF} onClick={function(){setMagneto(function(p){return!p;});}} title="地球磁気圏・ヴァン・アレン帯">{lang==="en"?"🌐 Magnetic":"🌐 磁気圏"}</button>
+          <button style={hillSphere?bN:bF} onClick={function(){setHillSphere(function(p){return!p;});}} title="ヒル球（重力圏）">{lang==="en"?"⭕ Hill":"⭕ ヒル球"}</button>
+          <button style={shadowCone?bN:bF} onClick={function(){setShadowCone(function(p){return!p;});}} title="日食影錐（日食中のみ）">{lang==="en"?"🌑 Shadow":"🌑 影錐"}</button>
+          <button style={tidalForce?bN:bF} onClick={function(){setTidalForce(function(p){return!p;});}} title="地球への潮汐力ベクトル">{lang==="en"?"🌊 Tidal":"🌊 潮汐力"}</button>
+          <button style={showEarthInt?bN:bF} onClick={function(){setShowEarthInt(function(p){return!p;});}} title={lang==="en"?"Earth interior cross-section overlay":"地球内部構造オーバーレイ"}>{lang==="en"?"🌍 Interior":"🌍 内部構造"}</button>
+        </div>
+        <div style={{marginTop:8,paddingTop:6,borderTop:"1px solid rgba(255,255,255,0.08)",display:"flex",gap:3,flexWrap:"wrap",alignItems:"center"}}>
+          <button style={bgm?bT("80,200,220"):bF} onClick={function(){setBgm(function(p){return!p;});}}>BGM{bgm?" ♪":""}</button>
+          <button style={lang==="en"?bT("100,220,180"):bF} onClick={function(){setLang(function(p){return p==="ja"?"en":"ja";});}}>EN/JA</button>
+          <button style={bF} onClick={function(){setOnboardStep(0);}}>{lang==="en"?"❓ Guide":"❓ ガイド"}</button>
+          <button style={panels.helpOpen?bT("180,220,255"):bF} onClick={function(){togglePanel("helpOpen");}} title={lang==="en"?"Keyboard shortcuts (?)":"ショートカット (?)"}>⌨</button>
+          <button aria-label={lang==="en"?"Analytics":"利用分析"} style={panels.analyticsOpen?bT("100,200,255"):bF} onClick={function(){togglePanel("analyticsOpen");}} title={lang==="en"?"Usage analytics (local only)":"利用分析（ローカルのみ）"}>📈</button>
           <button style={showFps?bT("100,255,100"):bF} onClick={function(){setShowFps(function(p){return!p;});}} title="FPSカウンター表示">⏱ FPS</button>
         </div>
         {panels.showDate&&<div style={{marginTop:6,display:"flex",gap:4,alignItems:"center"}}>
