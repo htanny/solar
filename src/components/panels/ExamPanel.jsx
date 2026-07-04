@@ -98,6 +98,22 @@ var VENUS_BANK=[
   {q:"内合の直前の金星はどう見える？",qe:"How does Venus look just before inferior conjunction?",
    opts:["大きくて細い三日月形","小さくて丸い形","最も小さい半月形","形も大きさも変わらない"],optsE:["Large thin crescent","Small and round","Smallest half-lit","No change"],c:0,
    expl:"地球に近いほど大きく、太陽との位置関係で細く欠ける",explE:"Closer to Earth = larger; the geometry makes it a thin crescent",vjump:7},
+  {q:"金星が半月形に見えるのはどの位置のとき？",qe:"At which position does Venus appear half-lit?",
+   opts:["最大離角のとき","内合のとき","外合のとき","いつでも半月形"],optsE:["Greatest elongation","Inferior conjunction","Superior conjunction","Always half-lit"],c:0,
+   expl:"太陽・金星・地球の角度が直角に近づく最大離角で、ちょうど半分が光って見える",explE:"At greatest elongation the Sun–Venus–Earth angle is near 90°, so half is lit",vjump:6},
+  {q:"金星と同じように大きく満ち欠けして見える惑星は？",qe:"Which other planet shows large phases like Venus?",
+   opts:["水星","火星","木星","土星"],optsE:["Mercury","Mars","Jupiter","Saturn"],c:0,
+   expl:"地球より内側を公転する内惑星（水星・金星）は大きく満ち欠けする",explE:"Inner planets (Mercury and Venus) show large phases",vjump:1},
+];
+
+/* 月の固定問題バンク(正解は常に先頭=c:0、出題時にシャッフル) */
+var MOON_BANK=[
+  {q:"日食が起こる可能性があるのはどの月のとき？",qe:"At which moon phase can a solar eclipse occur?",
+   opts:["新月","満月","上弦の月","下弦の月"],optsE:["New moon","Full moon","First quarter","Last quarter"],c:0,
+   expl:"太陽-月-地球の順に一直線に並ぶ新月のとき、月が太陽を隠す",explE:"At new moon the order Sun–Moon–Earth lets the Moon hide the Sun",jump:{sel:0,hh:12}},
+  {q:"月食が起こる可能性があるのはどの月のとき？",qe:"At which moon phase can a lunar eclipse occur?",
+   opts:["満月","新月","三日月","上弦の月"],optsE:["Full moon","New moon","Waxing crescent","First quarter"],c:0,
+   expl:"太陽-地球-月の順に一直線に並ぶ満月のとき、月が地球の影に入る",explE:"At full moon the order Sun–Earth–Moon puts the Moon in Earth's shadow",jump:{sel:4,hh:0}},
 ];
 
 function makeDrillQs(en){
@@ -141,11 +157,42 @@ function makeDrillQs(en){
       expl:en?"The moon southing at "+t+":00 is the "+MOON_POS[correct].e:t+"時に南中するのは"+MOON_POS[correct].j+"（南中時刻で位相が決まる）",
       jump:{sel:correct,hh:t}});
   });
+  /* 月の出・月の入り時刻 ×1 */
+  var rsMi=mains[Math.floor(Math.random()*mains.length)],rsM=MOON_POS[rsMi];
+  var isRise=Math.random()<0.5;
+  var rsT=(rsM.southH+(isRise?-6:6)+24)%24;
+  var rsOpts=shuf([0,6,12,18]);
+  qs.push({
+    q:en?"Around what time does the "+rsM.e+(isRise?" rise in the east?":" set in the west?"):rsM.j+"が"+(isRise?"東の地平線から昇る（月の出）":"西の地平線に沈む（月の入り）")+"のは何時ごろ？",
+    opts:rsOpts.map(function(h){return hLabel(h,en);}),c:rsOpts.indexOf(rsT),
+    expl:en?"It souths at "+rsM.southH+":00 — rise is 6 h before, set is 6 h after":rsM.j+"の南中は"+rsM.southH+"時。月の出は6時間前・月の入りは6時間後",
+    jump:{sel:rsMi,hh:rsT}});
+  /* 光る側 ×1 */
+  var ltMi=shuf([1,2,3,5,6,7])[0],ltM=MOON_POS[ltMi];
+  var ltOpts=shuf(en?["Right side","Left side","Evenly all over","Not lit at all"]:["右側","左側","全体が均等に","まったく光らない"]);
+  var ltCorrect=en?(ltM.litLeft?"Left side":"Right side"):(ltM.litLeft?"左側":"右側");
+  qs.push({
+    q:en?"Which side of the "+ltM.e+" appears lit?":ltM.j+"が光って見えるのはどちら側？",
+    opts:ltOpts,c:ltOpts.indexOf(ltCorrect),
+    expl:en?"Waxing (new→full) moons are lit on the right, waning (full→new) on the left":"新月→満月へ向かう間は右側、満月→新月へ戻る間は左側が光る",
+    jump:{sel:ltMi,hh:ltM.southH}});
+  /* 約1週間後の月 ×1 */
+  var wkI=shuf([0,2,4,6])[0],wkNext=(wkI+2)%8;
+  var wkOpts=shuf([0,2,4,6]);
+  qs.push({
+    q:en?"About one week after the "+MOON_POS[wkI].e+", which moon do you see?":MOON_POS[wkI].j+"の約1週間後に見える月は？",
+    opts:wkOpts.map(function(i){return en?MOON_POS[i].e:MOON_POS[i].j;}),c:wkOpts.indexOf(wkNext),
+    expl:en?"The Moon cycles new → first quarter → full → last quarter, ~1 week apart (29.5 days total)":"月は約1週間ごとに新月→上弦→満月→下弦と変わる（ひと回り約29.5日）",
+    jump:{sel:wkNext,hh:MOON_POS[wkNext].southH}});
+  /* 日食・月食 ×1 */
+  var mb=shuf(MOON_BANK)[0];
+  qs.push(shufQ({q:en?mb.qe:mb.q,opts:en?mb.optsE:mb.opts,c:mb.c,expl:en?mb.explE:mb.expl,jump:mb.jump}));
   /* 金星 ×2 */
   shuf(VENUS_BANK).slice(0,2).forEach(function(b){
     qs.push(shufQ({q:en?b.qe:b.q,opts:en?b.optsE:b.opts,c:b.c,expl:en?b.explE:b.expl,vjump:b.vjump}));
   });
-  return shuf(qs);
+  /* 12候補から8問を抽選(毎回構成が変わる) */
+  return shuf(qs).slice(0,8);
 }
 
 function loadDrillStats(){try{return JSON.parse(localStorage.getItem("solar_drill")||'{"n":0,"c":0}');}catch(e){return{n:0,c:0};}}
