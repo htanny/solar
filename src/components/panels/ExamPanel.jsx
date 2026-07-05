@@ -69,6 +69,57 @@ var VENUS_POS=[
 /* 地上ビュー共通: 夜空の星(固定配置) */
 var GV_STARS=[[18,18],[52,34],[88,12],[128,28],[168,16],[205,38],[242,14],[278,30],[38,52],[112,48],[190,55],[262,50],[75,60],[225,62]];
 
+/* ===== 星の動き(日周・年周運動)タブ用データ ===== */
+/* 南の空の星座: refM月のrefH時に南中する。年周運動で1か月に-2時間ずつ早まる。
+   stars=相対座標(南向き・x右=西寄り), lines=結線インデックス */
+var CONSTELLATIONS=[
+  {k:"orion",j:"オリオン座",e:"Orion",season:"冬の星座",seasonE:"winter",refM:1,refH:22,
+   stars:[[-16,-22],[14,-18],[-6,-2],[0,0],[6,2],[-14,20],[16,18]],
+   lines:[[0,1],[0,2],[1,4],[2,3],[3,4],[2,5],[4,6],[5,6]],
+   note:"ベテルギウス(左上の赤い星)とリゲル(右下の青白い星)",
+   noteE:"Betelgeuse (upper-left, red) and Rigel (lower-right, blue-white)"},
+  {k:"scorpius",j:"さそり座",e:"Scorpius",season:"夏の星座",seasonE:"summer",refM:7,refH:21,
+   stars:[[-22,-14],[-12,-10],[-2,-6],[6,0],[10,10],[4,18],[-6,22],[-14,18]],
+   lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]],
+   note:"アンタレス(赤い1等星)を含むS字カーブ。南の低い空",
+   noteE:"S-curve with red Antares, low in the southern sky"},
+];
+/* 北の空: 北極星を中心に反時計回り(15°/h + 30°/月)。11月21時にカシオペヤ座が真上 */
+var CAS_STARS=[[-14,4],[-7,-4],[0,2],[7,-4],[14,4]];
+var DIPPER_STARS=[[-24,2],[-15,-2],[-7,-2],[1,0],[5,8],[15,10],[21,3]];
+
+/* 星の動きの固定問題バンク(正解は常に先頭=c:0、出題時にシャッフル) */
+var STAR_BANK=[
+  {q:"星が東から南の空を通って西へ動いて見えるのはなぜ？",qe:"Why do stars appear to move east → south → west?",
+   opts:["地球が自転しているから","地球が公転しているから","星自身が動いているから","大気で光が曲がるから"],
+   optsE:["Earth rotates","Earth orbits the Sun","The stars themselves move","Light bends in the atmosphere"],c:0,
+   expl:"地球が西→東へ自転するため、星は反対の東→西へ動いて見える（日周運動）",
+   explE:"Earth spins west→east, so stars appear to move east→west (diurnal motion)",stjump:{sky:"s",m:1,hh:22}},
+  {q:"南の空の星は1時間に約何度動く？",qe:"How many degrees per hour do stars move across the southern sky?",
+   opts:["約15°","約30°","約1°","約60°"],optsE:["~15°","~30°","~1°","~60°"],c:0,
+   expl:"360°÷24時間=15°/時（地球の自転による日周運動）",
+   explE:"360° ÷ 24 h = 15°/h (Earth's rotation)",stjump:{sky:"s",m:1,hh:22}},
+  {q:"同じ時刻に見える星座の位置は、1か月で約30°どちらへ動く？",qe:"At the same clock time, how does a constellation shift per month?",
+   opts:["西へ動く","東へ動く","北へ動く","動かない"],optsE:["~30° west","~30° east","~30° north","No shift"],c:0,
+   expl:"地球の公転により、同時刻の星座は1か月で約30°西へ（年周運動）",
+   explE:"Earth's orbit shifts constellations ~30° west per month (annual motion)",stjump:{sky:"s",m:2,hh:22}},
+  {q:"同じ星座が同じ位置に見える時刻は、1か月でどうなる？",qe:"How does the time a constellation reaches the same position change per month?",
+   opts:["約2時間早くなる","約2時間遅くなる","変わらない","約4時間早くなる"],
+   optsE:["~2 h earlier","~2 h later","No change","~4 h earlier"],c:0,
+   expl:"30°÷15°/時=2時間。年周運動により毎月2時間ずつ早く南中する",
+   explE:"30° ÷ 15°/h = 2 h earlier each month",stjump:{sky:"s",m:2,hh:20}},
+  {q:"北の空の星はどのように動いて見える？",qe:"How do stars in the northern sky appear to move?",
+   opts:["北極星を中心に反時計回り","北極星を中心に時計回り","天頂を中心に反時計回り","ほとんど動かない"],
+   optsE:["Counterclockwise around Polaris","Clockwise around Polaris","Counterclockwise around the zenith","They barely move"],c:0,
+   expl:"北極星は地軸の延長上にあるためほぼ動かず、他の星はその周りを反時計回りに1時間15°回る",
+   explE:"Polaris sits on Earth's axis; other stars circle it counterclockwise at 15°/h",stjump:{sky:"n",m:11,hh:21}},
+  {q:"北極星の高度は何と等しい？",qe:"The altitude of Polaris equals what?",
+   opts:["観測地の緯度","観測地の経度","地軸の傾き23.4°","いつも90°"],
+   optsE:["The observer's latitude","The observer's longitude","Earth's tilt 23.4°","Always 90°"],c:0,
+   expl:"北極星の高度=緯度。東京(北緯36°)では高度約36°に見える",
+   explE:"Polaris altitude = latitude (e.g., ~36° in Tokyo)",stjump:{sky:"n",m:11,hh:21}},
+];
+
 /* c1→c2 を f(0..1) で線形補間した "r,g,b" 文字列 */
 function mixRGB(c1,c2,f){
   return Math.round(c1[0]+(c2[0]-c1[0])*f)+","+Math.round(c1[1]+(c2[1]-c1[1])*f)+","+Math.round(c1[2]+(c2[2]-c1[2])*f);
@@ -200,7 +251,19 @@ function makeDrillQs(en){
   shuf(VENUS_BANK).slice(0,2).forEach(function(b){
     qs.push(shufQ({q:en?b.qe:b.q,opts:en?b.optsE:b.opts,c:b.c,expl:en?b.explE:b.expl,vjump:b.vjump}));
   });
-  /* 12候補から8問を抽選(毎回構成が変わる) */
+  /* 星の動き ×2(固定バンク1 + 星座の方角計算1) */
+  var sb=shuf(STAR_BANK)[0];
+  qs.push(shufQ({q:en?sb.qe:sb.q,opts:en?sb.optsE:sb.opts,c:sb.c,expl:en?sb.explE:sb.expl,stjump:sb.stjump}));
+  var sc=CONSTELLATIONS[Math.floor(Math.random()*CONSTELLATIONS.length)];
+  var sOff=[-3,3][Math.floor(Math.random()*2)];
+  var sT=(sc.refH+sOff+24)%24,sDir=sOff<0?(en?"SE":"南東"):(en?"SW":"南西");
+  var sOpts=shuf([en?"SE":"南東",en?"SW":"南西",en?"E":"東",en?"W":"西"]);
+  qs.push({
+    q:en?"The "+sc.e+" souths at "+sc.refH+":00. In which direction is it at "+sT+":00?":sc.j+"が"+sc.refH+"時に南中した。"+sT+"時に見えるのはどの方角？",
+    opts:sOpts,c:sOpts.indexOf(sDir),
+    expl:en?"Stars move 15°/h east→west, so 3 h "+(sOff<0?"before":"after")+" southing it is in the "+sDir:"星は1時間に15°東→西へ動く。南中の3時間"+(sOff<0?"前は「南東」":"後は「南西」"),
+    stjump:{sky:"s",m:sc.refM,hh:sT}});
+  /* 14候補から8問を抽選(毎回構成が変わる) */
   return shuf(qs).slice(0,8);
 }
 
@@ -236,6 +299,9 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
   var[hh,setHH]=useState(18);/* 地上ビューの時刻(0-23時) */
   var[drill,setDrill]=useState(null);/* {qs,idx,score,answered} */
   var[shared,setShared]=useState(null);
+  var[stSky,setStSky]=useState("s");/* 星タブ: "s"=南の空, "n"=北の空 */
+  var[stMonth,setStMonth]=useState(1);/* 星タブ: 月(1-12) */
+  var[stCon,setStCon]=useState(0);/* 星タブ: CONSTELLATIONS index */
   if(!visible)return null;
   var en=lang==="en";
   var deg2rad=Math.PI/180;
@@ -400,14 +466,86 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
     </svg>;
   })();
 
+  /* ===== 星タブ: 南の空(日周+年周運動) ===== */
+  var con=CONSTELLATIONS[stCon];
+  var conSouthH=((con.refH-2*(stMonth-con.refM))%24+24)%24;
+  var starSouth=(function(){
+    var W=300,H=155,hy=122;
+    var sunHA2=((hh-12+36)%24)-12,dayTime=Math.abs(sunHA2)<5.5;
+    var cHA=((hh-conSouthH+36)%24)-12,cUp=Math.abs(cHA)<=6;
+    var cF=(cHA+6)/12,cx2=20+cF*(W-40),cy2=hy-Math.sin(Math.PI*cF)*78-14;
+    var dirs=en?["E","SE","S","SW","W"]:["東","南東","南","南西","西"];
+    var cDir=cF<0.15?dirs[0]:cF<0.35?dirs[1]:cF<0.65?dirs[2]:cF<0.85?dirs[3]:dirs[4];
+    return {dir:cDir,up:cUp,day:dayTime,svg:<svg width="100%" viewBox={"0 0 "+W+" "+H} style={{display:"block",background:"rgb(4,6,20)",borderRadius:6}}>
+      {GV_STARS.map(function(s,i){return <rect key={i} x={s[0]} y={s[1]*1.4} width={1.2} height={1.2} fill="rgba(255,255,255,0.55)"/>;})}
+      {cUp&&<g opacity={dayTime?0.25:1}>
+        {con.lines.map(function(l,i){return <line key={i} x1={cx2+con.stars[l[0]][0]} y1={cy2+con.stars[l[0]][1]} x2={cx2+con.stars[l[1]][0]} y2={cy2+con.stars[l[1]][1]} stroke="rgba(150,190,255,0.55)" strokeWidth={1}/>;})}
+        {con.stars.map(function(s,i){return <circle key={i} cx={cx2+s[0]} cy={cy2+s[1]} r={i===0&&stCon===0?3:2} fill={i===0&&stCon===0?"rgba(255,150,110,1)":i===6&&stCon===0?"rgba(170,200,255,1)":"rgba(240,244,255,1)"}/>;})}
+        <text x={cx2} y={cy2-30} fill="rgba(255,220,120,0.95)" fontSize={10} fontWeight="bold" textAnchor="middle">{en?con.e:con.j}</text>
+        <line x1={cx2} y1={cy2+28} x2={cx2} y2={hy} stroke="rgba(255,220,80,0.3)" strokeWidth={1} strokeDasharray="2 3"/>
+      </g>}
+      {!cUp&&<text x={W/2} y={hy-46} fill="rgba(255,255,255,0.55)" fontSize={10} textAnchor="middle">{(en?con.e:con.j)+(en?" is below the horizon":"は地平線の下（見えない）")}</text>}
+      {cUp&&dayTime&&<text x={W/2} y={16} fill="rgba(255,210,120,0.7)" fontSize={9} textAnchor="middle">{en?"(daytime — too bright to see stars)":"（昼間のため実際には見えない）"}</text>}
+      {/* 日周運動の向き矢印(東→西) */}
+      <path d={"M "+(W*0.30)+" 30 Q "+(W*0.5)+" 16 "+(W*0.70)+" 30"} fill="none" stroke="rgba(140,200,255,0.4)" strokeWidth={1.1}/>
+      <path d={"M "+(W*0.30)+" 30 l 7 -1 l -3.5 6 Z"} fill="rgba(140,200,255,0.4)"/>
+      <text x={W*0.5} y={12} fill="rgba(140,200,255,0.5)" fontSize={8} textAnchor="middle">{en?"15°/h":"1時間に15°"}</text>
+      <rect x={0} y={hy} width={W} height={H-hy} fill="rgba(28,34,26,1)"/>
+      <line x1={0} y1={hy} x2={W} y2={hy} stroke="rgba(255,255,255,0.35)" strokeWidth={1}/>
+      {[0,0.25,0.5,0.75,1].map(function(f,i){return <text key={i} x={20+f*(W-40)} y={hy+16} fill={i===2?"rgba(255,220,120,0.9)":"rgba(255,255,255,0.55)"} fontSize={10} fontWeight={i===2?"bold":"normal"} textAnchor="middle">{dirs[i]}</text>;})}
+      <text x={W-6} y={12} fill="rgba(255,255,255,0.6)" fontSize={10} textAnchor="end">{stMonth+(en?"/":"月 ")+hh+(en?":00":"時")}</text>
+    </svg>};
+  })();
+
+  /* ===== 星タブ: 北の空(北極星中心の反時計回り) ===== */
+  var starNorth=(function(){
+    var W=300,H=190,px2=150,py2=92,R2=58,hy=168;
+    /* カシオペヤ座: 11月21時に北極星の真上。反時計回りに15°/h+30°/月 */
+    var aDeg=((stMonth-11)*30+(hh-21)*15)%360;
+    var aRad=aDeg*Math.PI/180;
+    var casX=px2-R2*Math.sin(aRad),casY=py2-R2*Math.cos(aRad);
+    var dipX=px2+R2*Math.sin(aRad),dipY=py2+R2*Math.cos(aRad);
+    var octant=Math.round(((aDeg%360)+360)%360/45)%8;
+    var octJ=["上","左上","左","左下","下","右下","右","右上"][octant];
+    var octE=["top","upper-left","left","lower-left","bottom","lower-right","right","upper-right"][octant];
+    return {dir:en?octE:octJ,svg:<svg width="100%" viewBox={"0 0 "+W+" "+H} style={{display:"block",background:"rgb(4,6,20)",borderRadius:6}}>
+      {GV_STARS.map(function(s,i){return <rect key={i} x={s[0]} y={s[1]*1.6} width={1.2} height={1.2} fill="rgba(255,255,255,0.45)"/>;})}
+      {/* 回転円と向き */}
+      <circle cx={px2} cy={py2} r={R2} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth={0.8} strokeDasharray="3 3"/>
+      <path d={"M "+(px2+R2*0.75)+" "+(py2-R2*0.72)+" A "+R2*1.04+" "+R2*1.04+" 0 0 0 "+(px2-R2*0.75)+" "+(py2-R2*0.72)} fill="none" stroke="rgba(140,200,255,0.5)" strokeWidth={1.1}/>
+      <path d={"M "+(px2-R2*0.75)+" "+(py2-R2*0.72)+" l 7.5 -2.5 l -2 7 Z"} fill="rgba(140,200,255,0.5)"/>
+      <text x={px2} y={py2-R2-12} fill="rgba(140,200,255,0.6)" fontSize={8} textAnchor="middle">{en?"counterclockwise · 15°/h":"反時計回り・1時間に15°"}</text>
+      {/* 北極星 */}
+      <circle cx={px2} cy={py2} r={3} fill="rgba(255,250,220,1)"/>
+      <text x={px2+8} y={py2+3} fill="rgba(255,240,180,0.9)" fontSize={9}>{en?"Polaris":"北極星"}</text>
+      {/* カシオペヤ座(W字) */}
+      <g transform={"translate("+casX.toFixed(1)+","+casY.toFixed(1)+") rotate("+(-aDeg).toFixed(1)+")"}>
+        {CAS_STARS.slice(0,-1).map(function(s,i){return <line key={i} x1={s[0]} y1={s[1]} x2={CAS_STARS[i+1][0]} y2={CAS_STARS[i+1][1]} stroke="rgba(150,190,255,0.55)" strokeWidth={1}/>;})}
+        {CAS_STARS.map(function(s,i){return <circle key={i} cx={s[0]} cy={s[1]} r={2} fill="rgba(240,244,255,1)"/>;})}
+      </g>
+      <text x={casX} y={casY-14} fill="rgba(255,220,120,0.95)" fontSize={9} fontWeight="bold" textAnchor="middle">{en?"Cassiopeia":"カシオペヤ座"}</text>
+      {/* 北斗七星(反対側) */}
+      <g transform={"translate("+dipX.toFixed(1)+","+dipY.toFixed(1)+") rotate("+(180-aDeg).toFixed(1)+")"}>
+        {DIPPER_STARS.slice(0,-1).map(function(s,i){return <line key={i} x1={s[0]} y1={s[1]} x2={DIPPER_STARS[i+1][0]} y2={DIPPER_STARS[i+1][1]} stroke="rgba(150,190,255,0.5)" strokeWidth={1}/>;})}
+        {DIPPER_STARS.map(function(s,i){return <circle key={i} cx={s[0]} cy={s[1]} r={1.8} fill="rgba(230,238,255,0.95)"/>;})}
+      </g>
+      <text x={dipX} y={dipY+22} fill="rgba(200,220,255,0.8)" fontSize={9} textAnchor="middle">{en?"Big Dipper":"北斗七星"}</text>
+      <rect x={0} y={hy} width={W} height={H-hy} fill="rgba(28,34,26,1)"/>
+      <line x1={0} y1={hy} x2={W} y2={hy} stroke="rgba(255,255,255,0.35)" strokeWidth={1}/>
+      {[{f:0,l:en?"W":"西"},{f:0.5,l:en?"N":"北"},{f:1,l:en?"E":"東"}].map(function(d,i){return <text key={i} x={20+d.f*(W-40)} y={hy+15} fill={i===1?"rgba(255,220,120,0.9)":"rgba(255,255,255,0.55)"} fontSize={10} fontWeight={i===1?"bold":"normal"} textAnchor="middle">{d.l}</text>;})}
+      <text x={W-6} y={12} fill="rgba(255,255,255,0.6)" fontSize={10} textAnchor="end">{stMonth+(en?"/":"月 ")+hh+(en?":00":"時")}</text>
+    </svg>};
+  })();
+
   return <DragPanel style={Object.assign({},pn,{top:10,right:10,left:"auto",width:340,maxWidth:"calc(100vw - 20px)",maxHeight:"calc(100dvh - 100px)",overflowY:"auto",padding:"12px 14px",zIndex:26},mobileSheet(isPhone))}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
       <span style={{fontSize:12,fontWeight:"bold",color:"rgba(255,160,200,0.95)"}}>{en?"📖 Exam Prep":"📖 受験対策"}</span>
       <button aria-label={en?"Close":"閉じる"} style={bClose} onClick={function(){dispatchPanel({type:"TOGGLE",key:"examOpen"});}}>✕</button>
     </div>
     <div style={{display:"flex",gap:4,marginBottom:8}}>
-      <button style={Object.assign({},tab==="moon"?bT("255,220,120"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("moon");}}>{en?"🌙 Moon":"🌙 月の満ち欠け"}</button>
+      <button style={Object.assign({},tab==="moon"?bT("255,220,120"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("moon");}}>{en?"🌙 Moon":"🌙 月"}</button>
       <button style={Object.assign({},tab==="venus"?bT("255,190,130"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("venus");}}>{en?"✨ Venus":"✨ 金星"}</button>
+      <button style={Object.assign({},tab==="stars"?bT("150,190,255"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("stars");}}>{en?"⭐ Stars":"⭐ 星の動き"}</button>
       <button style={Object.assign({},tab==="drill"?bT("150,230,170"):bF,{flex:1,padding:"5px 0",fontSize:10})} onClick={function(){setTab("drill");}}>{en?"✏️ Drill":"✏️ ドリル"}</button>
     </div>
 
@@ -474,13 +612,58 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
         {en?"· Closer to Earth → larger & thinner crescent":"・地球に近づくほど大きく・細く見える"}<br/>
         {en?"· Evening star: west at dusk / morning star: east at dawn":"・宵の明星=夕方西の空、明けの明星=明け方東の空"}
       </div>
+    </div>:tab==="stars"?<div>
+      {/* ===== 星の動きタブ(日周・年周運動) ===== */}
+      <div style={{display:"flex",gap:4,marginBottom:6}}>
+        <button style={Object.assign({},stSky==="s"?bT("150,190,255"):bF,{flex:1,padding:"4px 0",fontSize:10})} onClick={function(){setStSky("s");}}>{en?"Southern sky":"南の空"}</button>
+        <button style={Object.assign({},stSky==="n"?bT("150,190,255"):bF,{flex:1,padding:"4px 0",fontSize:10})} onClick={function(){setStSky("n");}}>{en?"Northern sky":"北の空"}</button>
+      </div>
+      {stSky==="s"?<div>
+        <div style={{display:"flex",gap:4,marginBottom:6,alignItems:"center"}}>
+          {CONSTELLATIONS.map(function(c,i){return <button key={c.k} style={Object.assign({},stCon===i?bT("255,220,120"):bF,{fontSize:10,padding:"4px 10px"})} onClick={function(){setStCon(i);setStMonth(c.refM);setHH(c.refH);}}>{(en?c.e:c.j)+"（"+(en?c.seasonE:c.season)+"）"}</button>;})}
+        </div>
+        <div style={{fontSize:10,fontWeight:"bold",color:"rgba(180,220,255,0.9)",marginBottom:4}}>
+          <span style={{color:"rgba(255,220,120,0.95)"}}>
+            {stMonth+(en?"/ ":"月 ")+hh+(en?":00 — ":"時 — ")+(en?con.e:con.j)+(starSouth.up?(en?" in the "+starSouth.dir:" は「"+starSouth.dir+"」の空"):(en?" below horizon":" は地平線の下"))+(en?" · souths at "+conSouthH+":00":"（南中は"+conSouthH+"時）")}
+          </span>
+        </div>
+        {starSouth.svg}
+      </div>:<div>
+        <div style={{fontSize:10,fontWeight:"bold",color:"rgba(180,220,255,0.9)",marginBottom:4}}>
+          <span style={{color:"rgba(255,220,120,0.95)"}}>
+            {stMonth+(en?"/ ":"月 ")+hh+(en?":00 — Cassiopeia is to the ":"時 — カシオペヤ座は北極星の「")+starNorth.dir+(en?" of Polaris":"」")}
+          </span>
+        </div>
+        {starNorth.svg}
+      </div>}
+      <div style={{display:"flex",gap:8,alignItems:"center",marginTop:6}}>
+        <span style={{fontSize:9,color:"rgba(255,255,255,0.5)",flexShrink:0,minWidth:34}}>{en?"Month":"月"}</span>
+        <input type="range" min={1} max={12} step={1} value={stMonth} onChange={function(e){setStMonth(parseInt(e.target.value,10));}} style={{flex:1,height:isPhone?26:16}}/>
+        <span style={{fontSize:10,color:"rgba(255,220,120,0.9)",flexShrink:0,minWidth:30,textAlign:"right"}}>{stMonth+(en?"":"月")}</span>
+      </div>
+      <div style={{display:"flex",gap:8,alignItems:"center",marginTop:2}}>
+        <span style={{fontSize:9,color:"rgba(255,255,255,0.5)",flexShrink:0,minWidth:34}}>{en?"Time":"時刻"}</span>
+        <input type="range" min={0} max={23} step={1} value={hh} onChange={function(e){setHH(parseInt(e.target.value,10));}} style={{flex:1,height:isPhone?26:16}}/>
+        <span style={{fontSize:10,color:"rgba(255,220,120,0.9)",flexShrink:0,minWidth:30,textAlign:"right"}}>{hh+(en?":00":"時")}</span>
+      </div>
+      <div style={{fontSize:9,color:"rgba(150,220,180,0.85)",marginTop:4,lineHeight:"14px"}}>
+        💡 {stSky==="s"
+          ?(en?"Move the time slider → diurnal motion (15°/h). Move the month slider → annual motion (30°/month west at the same time).":"時刻を動かすと日周運動(1時間15°)、月を動かすと年周運動(同時刻で1か月30°西へ)が見える")
+          :(en?"Northern stars circle Polaris counterclockwise — 15°/h, and 30°/month at the same time.":"北の空は北極星を中心に反時計回り。1時間で15°、同時刻なら1か月で30°回る")}
+      </div>
+      <div style={{marginTop:8,padding:"6px 8px",background:"rgba(255,160,200,0.08)",border:"1px solid rgba(255,160,200,0.25)",borderRadius:5,fontSize:9,lineHeight:"14px",color:"rgba(255,255,255,0.75)"}}>
+        <b style={{color:"rgba(255,180,210,0.95)"}}>{en?"Exam points":"入試の鉄則"}</b><br/>
+        {en?"· Diurnal: 15°/h east→west (Earth's rotation)":"・日周運動: 1時間に15°、東→南→西へ（地球の自転）"}<br/>
+        {en?"· Annual: 30°/month west at the same time = souths 2 h earlier each month":"・年周運動: 同時刻で1か月30°西へ=南中が毎月2時間早まる（地球の公転）"}<br/>
+        {en?"· Northern sky: counterclockwise around Polaris; Polaris altitude = latitude":"・北の空は北極星中心に反時計回り。北極星の高度=観測地の緯度"}
+      </div>
     </div>:<div>
       {/* ===== ドリルタブ ===== */}
       {!drill?(function(){
         var st=loadDrillStats();
         return <div>
           <div style={{fontSize:10,lineHeight:"16px",color:"rgba(255,255,255,0.8)",marginBottom:8}}>
-            {en?"8 random questions on when, where, and which phase — generated from the same data as the diagrams. Wrong answer? Jump straight to the diagram to see why.":"「いつ・どの方角・どの月？」を図解と同じデータからランダムに8問出題。まちがえたらその場で図にジャンプして確認できます。"}
+            {en?"8 random questions on the Moon, Venus, and star motion — generated from the same data as the diagrams. Wrong answer? Jump straight to the diagram to see why.":"月・金星・星の動きから「いつ・どの方角・どの形？」をランダムに8問出題。まちがえたらその場で図にジャンプして確認できます。"}
           </div>
           {st.n>0&&<div style={{fontSize:10,color:"rgba(150,230,170,0.9)",marginBottom:8}}>
             {en?"Overall: "+st.c+"/"+st.n+" correct ("+Math.round(st.c/st.n*100)+"%)":"通算成績: "+st.n+"問中"+st.c+"問正解（"+Math.round(st.c/st.n*100)+"%）"}
@@ -505,8 +688,9 @@ export default function ExamPanel({visible,dispatchPanel,lang,isPhone,pn,bF,bT})
           {drill.answered!==null&&<div>
             <div style={{marginTop:8,fontSize:9,color:"rgba(150,220,180,0.85)",lineHeight:"14px"}}>💡 {q.expl}</div>
             <div style={{display:"flex",gap:5,marginTop:8}}>
-              {(q.jump||q.vjump!=null)&&<button style={Object.assign({},bF,{flex:1,fontSize:10,padding:"6px"})} onClick={function(){
+              {(q.jump||q.vjump!=null||q.stjump)&&<button style={Object.assign({},bF,{flex:1,fontSize:10,padding:"6px"})} onClick={function(){
                 if(q.jump){setSelM(q.jump.sel);setHH(q.jump.hh);setTab("moon");}
+                else if(q.stjump){setStSky(q.stjump.sky);setStMonth(q.stjump.m);setHH(q.stjump.hh);setTab("stars");}
                 else{setSelV(q.vjump);setTab("venus");}
               }}>{en?"🔍 See diagram":"🔍 図で確認"}</button>}
               <button style={Object.assign({},bT("100,180,255"),{flex:1,fontSize:10,padding:"6px"})} onClick={function(){
